@@ -127,3 +127,23 @@ Established from the member objects; the function names are the objects' own sym
    register store semantics for everything else.
 7. For IRIX: retrace interrupt (GIO line 2, INT2 local 1 bit 7, with the port register bit 3 acknowledge), the FIFO interrupt on
    line 0 optional, the pixel DMA entry and the pixel-memory probe (RWAUX1 sequence) or a way to return one of its three outcomes.
+
+## Review (2026-11-23)
+
+Independent review against `lg1.a`, the 4.0.5D and 4.0.5G PROMs, the IP20 `ide` image and the Library photograph; the register-level verdicts are in the
+[REX1 review](../../devices/rex1/README.md#review-2026-11-23). Board-level results:
+
+- **Probe, board order, revision rule (CONFIRMED).** The probe table at 0xbfc4d1f0 holds 0xbf3f0000, 0xbf3f8000, 0. `lightInit` chooses `initBt479` for revision below 2 and
+  `initLUT1` otherwise, then `initVC1` only if the VC1 revision byte is above 0. Init order in the kernel: `initRex`, `rexClear`, `lightInitInfo`, `rexClear`, `initClock`, colour map, VC1.
+- **Chip markings (GRADE kept: observed).** The photograph reads `L1A6654 VC1 REV B` and `L1A6651 LUT1 REV A`, board `030-8077-004 REV A`: correct. The REX package, which the first
+  version called illegible, reads `LSI LOGIC`, a part-number line (L1A67x1, digits uncertain), `REX1.5`, `REV. A` (observed). The "Bt" package beside the LUT1 is observed but its
+  part type is not legible; its presence on a board that also carries the LUT1 means the photograph alone cannot say which variant a given revision uses.
+- **PROM console font and geometry (new, partly settled).** The PROM builds four font records at RAM 0xa8745720 (builder at 0xbfc318a8), 12 bytes each: bitmap pointer, glyph table
+  pointer, then two halfwords (cell height and descent). Glyph records are 8 bytes: halfword offset into the bitmap in halfwords, width, height, signed x and y origin
+  (negated before use), halfword advance. Bitmap rows are padded to 16 bits. Font 0: bitmap 0xbfc542c0, table 0xbfc5535c, 17 and 4, 9 pixel advance, 190 glyph records
+  (index = code - 32, or code - 66 when bit 7 of the code is set). Font 2: 0xbfc559dc, table 0xbfc5693c, 23 and 5, 19 pixel
+  advance. Font 3: 0xbfc56c34, table 0xbfc57358, 14 and 3, 9 pixel advance, 9x11 'A'. Codes below 7 select font 1 (a 7-glyph set of box-drawing pieces at table 0xbfc559a4, bitmap 0xbfc5594c).
+  The character draw routine is 0xbfc41a14; it fills the descriptor and calls the board's draw-bitmap entry (table entry 6). The PROM's console repaint loop (0xbfc30154) advances 9 pixels per
+  character and uses font 0. The window setup function (0xbfc2f864, called with 18178 or 18181) sets cell 9 by 17 and 80 columns, with 36 rows when the screen height is 768
+  and 40 otherwise; for 18181 it first runs the 18179 variant (cell height 20, 10 wide, 20 rows). The 4.0.5D data word at 0xbfc42e20 that picks between them is 1, which selects the 18181 chain;
+  which variant a 1024 by 768 LG1 console finally uses was not fully traced: **unverified**. The font bitmaps themselves were decoded (the 'A' and 'g' glyphs render correctly).

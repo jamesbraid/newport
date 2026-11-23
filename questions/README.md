@@ -7,15 +7,6 @@ Each entry gives the owning file, the routes already tried and the next route to
 
 ## LG1 (Entry graphics board)
 
-### REX1 registers named only by the ide test
-
-Owning file: `devices/rex1/registers.toml`. The offsets of XSTARTF, XENDF, YSTARTF, YSTART, YENDF, XSAVE, MINORSLOPE, COLORRED
-to COLORBLUE, SLOPERED to SLOPEBLUE, LSPATTERN, LSMODE, AWEIGHT, RWAUX2 and SMASK2 to SMASK4 are inferred from the ide REX register
-test's name order and from the offsets that code confirms for their neighbours. Routes tried: the IRIX kernel graphics objects (`lg1.a`),
-the PROM, NetBSD `light.c`. Next route: disassemble the ide REX register test (the `ide` IP20 binary, the function that calls the
-register-test helper once per name; the helper's first two arguments are the offsets) in Ghidra and read the offset arguments
-directly. The helper (at 0x853d670 in the ide image) takes two register addresses, the name and a mask among its arguments; the argument roles were read by a quick register trace, not in full.
-
 ### REX1 command bits 21 and 16, and bits 27:24
 
 `lightInitInfo` issues 0x30200021, 0x30210021 and 0x30200023. What the extra bits do is unknown. Routes tried: the kernel and PROM
@@ -38,10 +29,11 @@ name, the kernel and PROM tables, the shipped diagnostics' strings. Next: the Ex
 Only photographs exist (Library `photos/`): the REX part number is not legible. Next: a higher-resolution photograph of an LG1
 board, or the board's parts list if SGI published one.
 
-### The PROM console geometry and font
+### Which console geometry the LG1 PROM console uses
 
-Where the PROM stores its font and how it derives rows and columns on the LG1 (the drawing routine's bitmap pointer arguments).
-Next: read the console text caller of 0xbfc2d684 (4.0.5D) for the font table address.
+The font records, glyph format and 9 pixel font 0 are in the [LG1 board page](../platforms/lg1/README.md#review-2026-11-23). Not traced: whether the 1024 by 768 console runs the
+80 by 36 window with 9 by 17 cells (window setup 0xbfc2f864, variant 18178) or the 18179 variant that the 4.0.5D data word at 0xbfc42e20 selects through variant 18181. Next: trace
+the callers of 0xbfc31978 and the use of the window fields at object offset 0x58 to 0x78 in the repaint loop 0xbfc30154.
 
 ### The X server's LG1 path
 
