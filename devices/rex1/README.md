@@ -64,8 +64,9 @@ in this object reads) is **inferred**. A model may never assert it.
 
 All established from what the shipped code issues; the chip's behaviour for commands the code never issues is unknown.
 
-- **Coordinates.** XSTARTI, YSTARTI, XENDI, YENDI are 12-bit integers; software sets y = 767 - row, so the origin is the
-  bottom-left. `XYWIN` is initialised to 0x08000800 and a board answering anything else in that register is rejected by
+- **Coordinates.** XSTARTI, YSTARTI, XENDI, YENDI are 12-bit integers; software stores 767 minus its own y, and its own y counts up
+  from the bottom, so the stored value is the row counted from the top: display row = stored y, origin top-left (**inferred**;
+  the evidence is under [Y origin](#y-origin)). `XYWIN` is initialised to 0x08000800 and a board answering anything else in that register is rejected by
   NetBSD's match routine. `SMASK1X/1Y` clip to a rectangle of 10-bit fields; the other three screen masks are for window
   context switches.
 - **Colour.** Foreground is an 8-bit index in `COLORREDI`. Background in `COLORBACK` is used only by NetBSD with ZOPAQUE.
@@ -81,21 +82,85 @@ All established from what the shipped code issues; the chip's behaviour for comm
 | `0x30000329` | solid rectangle XSTARTI..XENDI by YSTARTI..YENDI in the foreground colour | kernel `light_sboxfi`, PROM clear/fill, NetBSD fill |
 | `0x30080329` | rectangle copy: destination is the rectangle, source is displaced by `XYMOVE` | PROM scroll, NetBSD copy |
 | `0x30000001` | one pixel at XSTARTI, YSTARTI | kernel `light_pnt2i`, PROM |
-| `0x300005b9` | glyph row up to 16 wide; each write to `ZPATTERN` GO draws one row, y steps down | kernel `light_drawbitmap`, PROM |
+| `0x300005b9` | glyph row up to 16 wide; each write to `ZPATTERN` GO draws one row, y steps toward YENDI | kernel `light_drawbitmap`, PROM |
 | `0x300005a1` / `0x300005a9` | wide glyph: pieces of up to 16 pixels, last piece (`a9`) ends the row | kernel `light_drawbitmap` |
-| `0x30200021`, `0x30210021`, `0x30200023` | pixel-memory read/write used by the board's memory probe | kernel `lightInitInfo`, PROM |
+| `0x30200021`, `0x30210021`, `0x30200023` | pixel-memory write, write and read through `RWAUX1`, decoded [below](#the-pixel-memory-probe-commands) | kernel `lightInitInfo`, PROM board info (0xbfc0fa00), ide board info |
 
 Pixel result, where the code makes it clear: the rectangle commands set every pixel in the closed range [XSTARTI, XENDI] x
 [YSTARTI, YENDI] to the colour (NetBSD's comment says the end coordinates are inclusive; the PROM clear writes XENDI = 1023 and
 YENDI = 767 through the stored 767 - y form). A pattern draw with ENZPATTERN and XYCONTINUE writes one row per `ZPATTERN` GO
 write: pattern bit 31 maps to the start x, bit 30 to x+1, and so on up to the span end; one-bits are painted with the
 foreground colour; zero-bits leave the pixel unchanged (no ZOPAQUE) in the shipped kernel and PROM, and take `COLORBACK` with
-ZOPAQUE (NetBSD only). After each `ZPATTERN` write the y moves one row down and x returns to the start (the `XYCONTINUE` state).
-Established for the shipped use; the exact y-step rule at the screen edge is unknown.
+ZOPAQUE (NetBSD only). After each `ZPATTERN` write y moves one row toward `YENDI` (see [Y origin](#y-origin)) and x returns to the start (the `XYCONTINUE` state). Established for the shipped use; the exact y-step rule
+at the screen edge is unknown.
 
 The copy: source x and y are the destination's plus the `XYMOVE` halves; the copy direction is chosen by software so
 overlapping scrolls work (the PROM and NetBSD arrange start and end y so that the engine runs the right way), so the model needs
 overlap-safe copying only for those.
+
+### Y origin
+
+Settled 2026-11-23 after the Indigo emulator session found the PROM console upside down with display row = 767 - stored y.
+Stored y is the display row counted from the top of the screen (origin top-left, display row = stored y). Grade: **inferred**
+(every software fact below is established; the hardware origin follows from them, and no manual or measurement states it).
+
+1. **The PROM's console y counts up.** The repaint loop (0xbfc30154, 4.0.5D) starts a pass at the window's base y plus rows times
+   line pitch plus 2 and subtracts the pitch before each row, so the first (top) text row has the largest y. Established.
+2. **Glyph rows go bottom first.** The draw-bitmap routine (0xbfc2d684) stores `YSTARTI` = 767 - (y - the glyph's y origin) and
+   `YENDI` = 0, then the 0x300005b9 command and one `ZPATTERN` write per row. The font bitmaps list rows from the bottom of
+   the glyph: decoded from font 0 (bitmap 0xbfc542c0), the 'A' record's first three rows are the two feet and its last row
+   the apex, and the 'g' record (y origin -4) starts with the bottom of its descender, four rows below the baseline.
+   So glyph row n sits at console y = baseline - 4 + n, one console row higher each time. Established.
+3. **Consequence.** Console y up and stored y = 767 - console y give stored y smallest at the top of the screen. Rows in a glyph
+   therefore go to lower stored y, which is why `YENDI` = 0 sits below every `YSTARTI`: the engine advances rows toward
+   `YENDI`. (The older wording "y steps down" is wrong as a fixed direction.)
+4. **NetBSD agrees (public driver, software expectation).** `light.c` (d894b81) passes unflipped row numbers: glyph `YSTARTI` =
+   row x font height, `YENDI` = that plus height minus one, bitmap rows top first, and its block copy picks `YSTARTI` and
+   `YENDI` by copy direction. Its stored y rises from row to row (`YENDI` above `YSTARTI`), the opposite of the PROM's, so the step
+   direction must follow the order of the two registers and cannot be fixed. A model that always steps to higher stored y draws
+   the PROM glyphs upside down; one that always steps to lower stored y does the same to NetBSD's.
+5. **The kernel takes the same path.** `light_sboxfi` and `light_pnt2i` store 767 minus the caller's y. The callers belong to
+   the IRIX graphics manager, whose y counts up from the bottom; that convention was not traced further.
+
+A model therefore needs: display row = stored y, rows of a glyph or pattern advance from `YSTARTI` toward `YENDI`, and rectangles
+span the closed range between the two whichever order they are in (`light_sboxfi` stores `YSTARTI` <= `YENDI`). What the
+model run showed, upright only with line = y, matches.
+
+### The pixel-memory probe commands
+
+0x30200021, 0x30210021 and 0x30200023 are issued by the kernel (`lightInitInfo`, `light_init.o` 0x10f40), the PROM's board-info
+routine (0xbfc0fa00 in 4.0.5D, the command stores at 0xbfc0fa9c, 0xbfc0fac8 and 0xbfc0fae8; 4.0.5G has it at 0xbfc12940 onward)
+and the IP20 `ide` board-info routine (0xa85694f8 onward). The kernel runs it only when `CONFIGMODE` bits 7:4 read 0 (otherwise
+it stores those bits plus one); the PROM and `ide` run it unconditionally. All three words were read in full.
+
+| Bit | 0x30200021 | 0x30210021 | 0x30200023 | Meaning |
+|---|---|---|---|---|
+| 31:28 = 3 | yes | yes | yes | logic op source-replace (established) |
+| 21 | yes | yes | yes | set in no other command; **inferred** host data through `RWAUX1` |
+| 16 | no | yes | no | **unknown**; with `AUX1` = 0x100 exactly one pixel pair of four is replaced |
+| 5 | yes | yes | yes | QUAD (inferred, as for rectangles) |
+| 1 | no | no | yes | **inferred** read opcode (opcode 3, where 1 is draw) |
+| 0 | yes | yes | yes | DRAW |
+| 3, 7, 8, 9, 10, 19, 23 | no | no | no | no BLOCK, XYCONTINUE, STOPONX/Y, ENZPATTERN, LOGICSRC or ZOPAQUE |
+
+The sequence, identical in all three programs (established; the effects are inferred from the compare constants):
+
+1. `RWMASK` = 0xff; command 0x30200021 stored at SET; `XSTARTI` 0, `YSTARTI` 0, `XENDI` 3, `YENDI` 0. In the kernel `AUX1` is 0 from `initRex`, which runs first. The PROM runs this routine before its own
+   `initRex`-equivalent (call order 0xbfc102a8: board info 0xbfc0fa00, clock and colour map, then 0xbfc0fd00), so its first two writes see the
+   chip's reset `AUX1`, `AUX2`, `XYWIN` and `CONFIGMODE` (reset values unknown): the model must accept the probe with the registers at reset, and `AUX1`'s reset value must not
+   change the first write's result (a reset of 0 is the safe choice). The four probe pixels stay in the frame buffer until the console's full-screen fill (0xbfc2f9f4, inferred) covers them.
+2. Write 0x01081020 to the `RWAUX1` GO alias (0x870): runs the command; the four bytes 01 08 10 20 go to the four pixels of stored
+   row 0, x 0 to 3 (the top row in the origin above). One word, one quad, one pixel per byte; byte order assumed high byte = pixel 0.
+3. Store 0x30210021; `AUX1` = 0x100; write 0x09090909 to the `RWAUX1` GO alias: runs it. Only one pixel pair takes the 09.
+4. Store 0x30200023; read the `RWAUX1` GO alias: runs the read and returns the pixels. The PROM and `ide` read twice and compare the
+   second value; the kernel compares fresh reads. 0x01080909 stores outcome 0 in byte 0x29 of the board info, 0x09091020 stores 1,
+   anything else 0xff (all-replaced 0x09090909 and none-replaced 0x01081020 are both 0xff).
+
+Purpose: inferred to tell which of two pixel-memory arrangements, or none, the board has, in the same info byte that the board
+reports itself through `CONFIGMODE` bits 7:4 on boards that can. No object read afterwards uses the byte (the kernel copies it out
+through the board-info call), and which arrangement each outcome means is unknown. A model needs RWAUX1 as a data port for these
+three words, one 4-pixel quad at stored row 0 and the pair-select behaviour of the second write; outcome 0 or 1 both satisfy every
+shipped reader, so choosing one is an approximation to state.
 
 ### What each shipped routine does per call
 
@@ -161,7 +226,7 @@ glyphs. It never programs the colour map. All differences with this page are not
 
 ## Open
 
-Filed in [questions/README.md](../../questions/README.md): what the command bits 21 and 16 do; what `CONFIGMODE` bits 31 and 22:13 are; the digits of the REX chip's part number; the
+Filed in [questions/README.md](../../questions/README.md): what command bit 16 and `AUX1` bit 8 select in the pixel-memory probe; what `CONFIGMODE` bits 31 and 22:13 are; the digits of the REX chip's part number; the
 format of `RWAUX1`'s memory-probe outcome.
 
 ## Review (2026-11-23)

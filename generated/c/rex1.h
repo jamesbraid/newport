@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b */
+/* input sha256 f106ffd4ce6216cbcb15142d0f93d5a5d571bf5121dd2e782db212231ef32133 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -19,9 +19,14 @@
  * a command written at 0x000 draws nothing, the same word at 0x800 draws, and a
  * read of 0x800 draws what the latched command says. Bits 27:20 of values the
  * kernel and PROM write are zero except bit 23 and bit 24 (ZOPAQUE, ZCONTINUE:
- * not set by shipped code) and bits 21 and 16 in the two probe commands
- * 0x30200021, 0x30210021 and 0x30200023, which lightInitInfo uses to learn the
- * board's pixel memory (see rwaux1); those bits are unknown.
+ * not set by shipped code) and bit 21 (all three) and bit 16 (second only) in
+ * the pixel-memory probe commands 0x30200021, 0x30210021 and 0x30200023 that
+ * lightInitInfo and the PROM board-info routine use (see the CMD_PIXMEM
+ * constants and rwaux1). Bit 21 is inferred to be host data through RWAUX1, bit
+ * 1 of the last to be a read opcode, and bit 16 is unknown. The direction a
+ * pattern or block draw steps y is toward YENDI (inferred from the PROM glyphs,
+ * which end at YENDI 0, and NetBSD glyphs, which end below YSTARTI), not a
+ * fixed down.
  */
 /* command: rw32, reset unknown */
 #define REX1_COMMAND_OFFSET                          0x0u /* established */
@@ -33,7 +38,9 @@
  * 0 of its third field is set and bit 3 when bit 1 is set, then stores it here
  * (only for the window that owns the screen) or in the window's saved context.
  * Which pixel behaviour each of bits 2, 3 and 4 enables: unknown, no shipped
- * code names them. ide's register test reads it back whole (test mask 0x3ff).
+ * code names them. The pixel-memory probe also stores 0x100 (bit 8) here before
+ * its second write; that bit's role is unknown. ide's register test reads it
+ * back whole (test mask 0x3ff).
  */
 /* aux1: rw32, reset unknown */
 #define REX1_AUX1_OFFSET                             0x4u /* established */
@@ -89,8 +96,11 @@
 
 /*
  * Draw start y as an integer, 12 bits kept; the ide test writes it and reads
- * YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus the
- * row, so y grows upward from the bottom of the 768-line screen.
+ * YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus its
+ * own y, which counts up from the bottom, so the stored value is the display
+ * row counted from the top of the 768-line screen (inferred: the PROM console
+ * prints its first text row at the largest console y, and NetBSD stores
+ * unflipped row numbers). See the Y origin section of the REX1 page.
  */
 /* ystarti: rw32, reset unknown */
 #define REX1_YSTARTI_OFFSET                          0x1cu /* established */
@@ -141,8 +151,11 @@
  * written at the GO alias after the rectangle and the copy command are set up.
  * The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can
  * discriminate: write 0x00100005 at 0x34 and 0x30080329 at 0, then a copy from
- * (x+16, y+5) happens when 0x800 is touched (the exact polarity of y under the
- * bottom-up y axis is inferred).
+ * (x+16, y+5) happens when 0x800 is touched (the polarity of y is unsettled:
+ * NetBSD computes source minus destination in top-down rows, while the PROM
+ * copy routine stores the differences of its two coordinate pairs in an order
+ * that matches only if its second pair is the source, and no caller of it was
+ * found in the 4.0.5D console code).
  */
 /* xymove: rw32, reset unknown */
 #define REX1_XYMOVE_OFFSET                           0x34u /* established */
@@ -265,10 +278,19 @@
  * command. lightInitInfo writes 0x01081020 here, then 0x09090909 with a
  * 0x30210021 command, runs 0x30200023 and compares the result word read back at
  * 0x870 with 0x01080909 or 0x09091020 to record a 0, 1 or 0xff in byte 0x29 of
- * the board info it hands to GfxRegisterBoard. What the three outcomes mean for
- * the board (pixel memory population): unknown. A qtest can discriminate only
- * by replaying that sequence, which needs the draw unit to move words between
- * RWAUX1 and the frame buffer.
+ * the board info it hands to GfxRegisterBoard. Data flow (inferred from the
+ * constants): the first write puts the four bytes 01 08 10 20 into pixels 0 to
+ * 3 of stored row 0, the second replaces exactly one pair of them with 09
+ * (outcome 0 = pixels 2 and 3 replaced, outcome 1 = pixels 0 and 1 replaced, if
+ * the high byte is pixel 0), and the read returns the four pixels. All three
+ * commands are executed through RWAUX1's GO alias, so RWAUX1 is the data port
+ * of the probe. What each outcome means for the board (pixel memory
+ * arrangement): unknown; no object read uses info byte 0x29 afterwards. The
+ * PROM runs the probe unconditionally; the kernel runs it only when CONFIGMODE
+ * bits 7:4 read 0. A qtest can discriminate only by replaying that sequence,
+ * which needs the draw unit to move words between RWAUX1 and the frame buffer;
+ * any model that yields 0x01080909 or 0x09091020 satisfies every shipped
+ * reader, and a choice between them is an approximation.
  */
 /* rwaux1: rw32, reset unknown */
 #define REX1_RWAUX1_OFFSET                           0x70u /* established */
@@ -299,8 +321,9 @@
 
 /*
  * Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values
- * are flipped (height minus row minus one) before packing, so they are in REX's
- * bottom-up coordinates.
+ * are flipped (height minus row minus one) before packing, so they use the same
+ * stored-y convention as the drawing registers: row counted from the top of the
+ * screen (see the Y origin section of the REX1 page).
  */
 /* smask1y: rw32, reset unknown */
 #define REX1_SMASK1Y_OFFSET                          0x80u /* established */
@@ -313,10 +336,11 @@
 #define REX1_XENDI_OFFSET                            0x84u /* established */
 
 /*
- * Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads
- * it back through YENDF (0x28) as (value & 0xfff) << 11. light_sboxfi and the
- * PROM fill store 767 minus the top row here and 767 minus the bottom row in
- * YSTARTI, so YSTARTI <= YENDI.
+ * Draw end y (integer, inclusive), top-down row like YSTARTI. The glyph
+ * commands also use the order of YSTARTI and YENDI to pick the direction rows
+ * advance: toward YENDI. The ide test reads it back through YENDF (0x28) as
+ * (value & 0xfff) << 11. light_sboxfi and the PROM fill store 767 minus the top
+ * row here and 767 minus the bottom row in YSTARTI, so YSTARTI <= YENDI.
  */
 /* yendi: rw32, reset unknown */
 #define REX1_YENDI_OFFSET                            0x88u /* established */
@@ -494,9 +518,18 @@
 #define REX1_CMD_GLYPH16                             0x300005b9u
 /* established */
 #define REX1_CMD_GLYPH_PIECE                         0x300005a1u
+#define REX1_CMD_HOSTDATA                            0x200000u /* inferred */
 #define REX1_CMD_LENGTH32                            0x10u /* inferred */
 #define REX1_CMD_LOGICOP_SHIFT                       0x1cu /* established */
 #define REX1_CMD_LOGICSRC                            0x80000u /* inferred */
+#define REX1_CMD_OP_READ                             0x2u /* inferred */
+#define REX1_CMD_PIXMEM_BIT16                        0x10000u /* unknown */
+/* established */
+#define REX1_CMD_PIXMEM_READ                         0x30200023u
+/* established */
+#define REX1_CMD_PIXMEM_WRITE_A                      0x30200021u
+/* established */
+#define REX1_CMD_PIXMEM_WRITE_B                      0x30210021u
 /* established */
 #define REX1_CMD_POINT                               0x30000001u
 #define REX1_CMD_QUAD                                0x20u /* inferred */

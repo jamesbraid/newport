@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b",
+ "input_sha256": "f106ffd4ce6216cbcb15142d0f93d5a5d571bf5121dd2e782db212231ef32133",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -786,6 +786,14 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_HOSTDATA",
+   "value": 2097152,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_LENGTH32",
    "value": 16,
    "count": 1,
@@ -806,6 +814,46 @@
    "value": 524288,
    "count": 1,
    "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_OP_READ",
+   "value": 2,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_PIXMEM_BIT16",
+   "value": 65536,
+   "count": 1,
+   "grade": "unknown"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_PIXMEM_READ",
+   "value": 807403555,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_PIXMEM_WRITE_A",
+   "value": 807403553,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_PIXMEM_WRITE_B",
+   "value": 807469089,
+   "count": 1,
+   "grade": "established"
   },
   {
    "unit": "rex1",

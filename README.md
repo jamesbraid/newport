@@ -32,7 +32,7 @@ REX1, so none of it is established lineage.
   the GO address; REX3's behaviour on reads of GO is not read here.
 - **Different layouts.** The offsets of the shared names differ (REX1 `XSTARTI` 0x0c, REX3 0x148; REX1 `XYMOVE` 0x34, REX3
   0x114), the REX3 screen masks live at 0x1300 and up against REX1's 0x7c/0x80 and 0x4790 onward, and REX1's pixels are 8 bits
-  with y counting up from the bottom while REX3's drawing modes include a `YFLIP` bit. Nothing in this repository shows the
+  with the stored y counted from the top of the screen (see the REX1 page) while REX3's drawing modes include a `YFLIP` bit. Nothing in this repository shows the
   register layouts were derived from each other.
 - **Off-chip chips differ.** REX1 reaches VC1, a Bt479/LUT1 colour map and a clock port through three ports sharing `CONFIGSEL`;
   REX3 reaches VC2, XMAP9, CMAP and Bt445 through its display-control bus (`DCBMODE`/`DCBDATA`). The VC1 and VC2 share a name

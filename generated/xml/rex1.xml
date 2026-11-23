@@ -1,14 +1,14 @@
 <?xml version="1.0" ?>
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b -->
+<!-- input sha256 f106ffd4ce6216cbcb15142d0f93d5a5d571bf5121dd2e782db212231ef32133 -->
 <genxml unit="rex1" prefix="REX1" title="REX1 raster engine on the Indigo Entry graphics board (LG1)">
   <doc>Register file of the REX1 chip as the Indigo's Entry graphics board presents it on the GIO graphics slot. Offsets are bytes from the board base (0x1f3f0000 for the first head, 0x1f3f8000 for a second). Every register is 32 bits wide. A register written at its offset is only stored (the SET alias). The same register at offset + 0x800 (the GO alias) is stored and then the latched command is executed. Names are the ones the shipped diagnostics (ide) print for the REX register test, where it prints one; the rest use the names of the NetBSD sgimips light driver. The three off-chip ports (WCLOCK, RWDAC, RWVC1) are covered here as REX registers; the chips behind them are in devices/vc1 and devices/bt479. Grades follow AGENTS.md: established means the whole routine was read in the shipped Indigo kernel graphics driver or the Indigo PROM; inferred is a reading with the reasoning given; unknown means no shipped software settles it. Nothing was measured on a board.</doc>
   <struct name="COMMAND" size="4" grade="established" register="yes" offset="0x0" access="rw" reset="unknown">
-    <doc>Drawing command. Bits 31:28 hold the logic operation, the low bits the opcode and flags listed as CMD_ constants. A write at 0x000 stores it; a write at 0x800 (or a read of 0x800) executes the command that is now latched, using the coordinate and colour registers as they stand. The PROM's probe writes 0 here and reads 0x800 (a no-op); the kernel's glyph path writes the command, then writes ZPATTERN at its GO alias once per row. A qtest can discriminate: a command written at 0x000 draws nothing, the same word at 0x800 draws, and a read of 0x800 draws what the latched command says. Bits 27:20 of values the kernel and PROM write are zero except bit 23 and bit 24 (ZOPAQUE, ZCONTINUE: not set by shipped code) and bits 21 and 16 in the two probe commands 0x30200021, 0x30210021 and 0x30200023, which lightInitInfo uses to learn the board's pixel memory (see rwaux1); those bits are unknown.</doc>
+    <doc>Drawing command. Bits 31:28 hold the logic operation, the low bits the opcode and flags listed as CMD_ constants. A write at 0x000 stores it; a write at 0x800 (or a read of 0x800) executes the command that is now latched, using the coordinate and colour registers as they stand. The PROM's probe writes 0 here and reads 0x800 (a no-op); the kernel's glyph path writes the command, then writes ZPATTERN at its GO alias once per row. A qtest can discriminate: a command written at 0x000 draws nothing, the same word at 0x800 draws, and a read of 0x800 draws what the latched command says. Bits 27:20 of values the kernel and PROM write are zero except bit 23 and bit 24 (ZOPAQUE, ZCONTINUE: not set by shipped code) and bit 21 (all three) and bit 16 (second only) in the pixel-memory probe commands 0x30200021, 0x30210021 and 0x30200023 that lightInitInfo and the PROM board-info routine use (see the CMD_PIXMEM constants and rwaux1). Bit 21 is inferred to be host data through RWAUX1, bit 1 of the last to be a read opcode, and bit 16 is unknown. The direction a pattern or block draw steps y is toward YENDI (inferred from the PROM glyphs, which end at YENDI 0, and NetBSD glyphs, which end below YSTARTI), not a fixed down.</doc>
   </struct>
   <struct name="AUX1" size="4" grade="established" register="yes" offset="0x4" access="rw" reset="unknown">
-    <doc>Auxiliary control word, one per window context. initRex zeroes it. lightAux1Register builds a value from a window's saved value with bits 4:2 cleared, sets bit 4 when the request word's second field is 1, bit 2 when bit 0 of its third field is set and bit 3 when bit 1 is set, then stores it here (only for the window that owns the screen) or in the window's saved context. Which pixel behaviour each of bits 2, 3 and 4 enables: unknown, no shipped code names them. ide's register test reads it back whole (test mask 0x3ff).</doc>
+    <doc>Auxiliary control word, one per window context. initRex zeroes it. lightAux1Register builds a value from a window's saved value with bits 4:2 cleared, sets bit 4 when the request word's second field is 1, bit 2 when bit 0 of its third field is set and bit 3 when bit 1 is set, then stores it here (only for the window that owns the screen) or in the window's saved context. Which pixel behaviour each of bits 2, 3 and 4 enables: unknown, no shipped code names them. The pixel-memory probe also stores 0x100 (bit 8) here before its second write; that bit's role is unknown. ide's register test reads it back whole (test mask 0x3ff).</doc>
   </struct>
   <struct name="XSTATE" size="4" grade="established" register="yes" offset="0x8" access="rw" reset="unknown">
     <doc>Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says). Offset established by the ide test. The ide test writes all 32 bits and expects them back unmasked.</doc>
@@ -26,7 +26,7 @@
     <doc>Draw end x, fraction (ide mask 0x7ff800).  Offset established by the ide test. Holds the end x with the integer in bits 22:11 (a write to XENDI at 0x84 reads back here as value &amp; 0xfff shifted left 11; written directly, only bits 22:11 stick). Not a fraction field as the name suggests.</doc>
   </struct>
   <struct name="YSTARTI" size="4" grade="established" register="yes" offset="0x1c" access="rw" reset="unknown">
-    <doc>Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value &amp; 0xfff) &lt;&lt; 15. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen.</doc>
+    <doc>Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value &amp; 0xfff) &lt;&lt; 15. Software stores 767 minus its own y, which counts up from the bottom, so the stored value is the display row counted from the top of the 768-line screen (inferred: the PROM console prints its first text row at the largest console y, and NetBSD stores unflipped row numbers). See the Y origin section of the REX1 page.</doc>
   </struct>
   <struct name="YSTARTF" size="4" grade="established" register="yes" offset="0x20" access="rw" reset="unknown">
     <doc>Draw start y, fraction.  Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4.</doc>
@@ -44,7 +44,7 @@
     <doc>Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it. Offset established by the ide test. Written and read back unmasked.</doc>
   </struct>
   <struct name="XYMOVE" size="4" grade="established" register="yes" offset="0x34" access="rw" reset="unknown">
-    <doc>Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination (NetBSD: dx is from_x minus to_x). It is written at the GO alias after the rectangle and the copy command are set up. The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched (the exact polarity of y under the bottom-up y axis is inferred).</doc>
+    <doc>Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination (NetBSD: dx is from_x minus to_x). It is written at the GO alias after the rectangle and the copy command are set up. The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched (the polarity of y is unsettled: NetBSD computes source minus destination in top-down rows, while the PROM copy routine stores the differences of its two coordinate pairs in an order that matches only if its second pair is the source, and no caller of it was found in the 4.0.5D console code).</doc>
   </struct>
   <struct name="COLORREDI" size="4" grade="established" register="yes" offset="0x38" access="rw" reset="unknown">
     <doc>Foreground pixel colour (the ide test reads a write back through COLORRED at 0x3c as (value &amp; 0xff) &lt;&lt; 11), an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red.</doc>
@@ -89,7 +89,7 @@
     <doc>Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write.</doc>
   </struct>
   <struct name="RWAUX1" size="4" grade="established" register="yes" offset="0x70" access="rw" reset="unknown">
-    <doc>Read/write auxiliary word used to read and write pixel memory with a draw command. lightInitInfo writes 0x01081020 here, then 0x09090909 with a 0x30210021 command, runs 0x30200023 and compares the result word read back at 0x870 with 0x01080909 or 0x09091020 to record a 0, 1 or 0xff in byte 0x29 of the board info it hands to GfxRegisterBoard. What the three outcomes mean for the board (pixel memory population): unknown. A qtest can discriminate only by replaying that sequence, which needs the draw unit to move words between RWAUX1 and the frame buffer.</doc>
+    <doc>Read/write auxiliary word used to read and write pixel memory with a draw command. lightInitInfo writes 0x01081020 here, then 0x09090909 with a 0x30210021 command, runs 0x30200023 and compares the result word read back at 0x870 with 0x01080909 or 0x09091020 to record a 0, 1 or 0xff in byte 0x29 of the board info it hands to GfxRegisterBoard. Data flow (inferred from the constants): the first write puts the four bytes 01 08 10 20 into pixels 0 to 3 of stored row 0, the second replaces exactly one pair of them with 09 (outcome 0 = pixels 2 and 3 replaced, outcome 1 = pixels 0 and 1 replaced, if the high byte is pixel 0), and the read returns the four pixels. All three commands are executed through RWAUX1's GO alias, so RWAUX1 is the data port of the probe. What each outcome means for the board (pixel memory arrangement): unknown; no object read uses info byte 0x29 afterwards. The PROM runs the probe unconditionally; the kernel runs it only when CONFIGMODE bits 7:4 read 0. A qtest can discriminate only by replaying that sequence, which needs the draw unit to move words between RWAUX1 and the frame buffer; any model that yields 0x01080909 or 0x09091020 satisfies every shipped reader, and a choice between them is an approximation.</doc>
   </struct>
   <struct name="RWAUX2" size="4" grade="established" register="yes" offset="0x74" access="rw" reset="unknown">
     <doc>Second read/write auxiliary word. Not written by shipped light code. Offset established by the ide test. Fully read/write.</doc>
@@ -101,13 +101,13 @@
     <doc>Screen mask 1, x range: maximum x in bits 25:16 and minimum x in bits 9:0, each clipped to 0..1023 (the object clamps with 0x3ff). Software computes the window's visible rectangle clipped to the screen and writes it here when window 1 is the active one.</doc>
   </struct>
   <struct name="SMASK1Y" size="4" grade="established" register="yes" offset="0x80" access="rw" reset="unknown">
-    <doc>Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values are flipped (height minus row minus one) before packing, so they are in REX's bottom-up coordinates.</doc>
+    <doc>Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values are flipped (height minus row minus one) before packing, so they use the same stored-y convention as the drawing registers: row counted from the top of the screen (see the Y origin section of the REX1 page).</doc>
   </struct>
   <struct name="XENDI" size="4" grade="established" register="yes" offset="0x84" access="rw" reset="unknown">
     <doc>Draw end x (integer, inclusive): the last column a STOPONX command draws. The ide test reads it back through XENDF (0x18) as (value &amp; 0xfff) &lt;&lt; 11.</doc>
   </struct>
   <struct name="YENDI" size="4" grade="established" register="yes" offset="0x88" access="rw" reset="unknown">
-    <doc>Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads it back through YENDF (0x28) as (value &amp; 0xfff) &lt;&lt; 11. light_sboxfi and the PROM fill store 767 minus the top row here and 767 minus the bottom row in YSTARTI, so YSTARTI &lt;= YENDI.</doc>
+    <doc>Draw end y (integer, inclusive), top-down row like YSTARTI. The glyph commands also use the order of YSTARTI and YENDI to pick the direction rows advance: toward YENDI. The ide test reads it back through YENDF (0x28) as (value &amp; 0xfff) &lt;&lt; 11. light_sboxfi and the PROM fill store 767 minus the top row here and 767 minus the bottom row in YSTARTI, so YSTARTI &lt;= YENDI.</doc>
   </struct>
   <struct name="SMASK2X" size="4" grade="established" register="yes" offset="0x4790" access="rw" reset="unknown">
     <doc>First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save and the name-to-word assignment by the ide test's offsets. Packing as smask1x. Offset established by the ide test. The six names map to the six consecutive words in this order.</doc>
@@ -170,9 +170,15 @@
   <constant name="CMD_FILL_RECT" value="0x30000329" grade="established"/>
   <constant name="CMD_GLYPH16" value="0x300005b9" grade="established"/>
   <constant name="CMD_GLYPH_PIECE" value="0x300005a1" grade="established"/>
+  <constant name="CMD_HOSTDATA" value="0x200000" grade="inferred"/>
   <constant name="CMD_LENGTH32" value="0x10" grade="inferred"/>
   <constant name="CMD_LOGICOP_SHIFT" value="0x1c" grade="established"/>
   <constant name="CMD_LOGICSRC" value="0x80000" grade="inferred"/>
+  <constant name="CMD_OP_READ" value="0x2" grade="inferred"/>
+  <constant name="CMD_PIXMEM_BIT16" value="0x10000" grade="unknown"/>
+  <constant name="CMD_PIXMEM_READ" value="0x30200023" grade="established"/>
+  <constant name="CMD_PIXMEM_WRITE_A" value="0x30200021" grade="established"/>
+  <constant name="CMD_PIXMEM_WRITE_B" value="0x30210021" grade="established"/>
   <constant name="CMD_POINT" value="0x30000001" grade="established"/>
   <constant name="CMD_QUAD" value="0x20" grade="inferred"/>
   <constant name="CMD_STOPONX" value="0x100" grade="established"/>

@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b
+// input sha256 f106ffd4ce6216cbcb15142d0f93d5a5d571bf5121dd2e782db212231ef32133
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -41,7 +41,7 @@ pub mod xendf {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x18;
 }
-/// Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus th (established)
+/// Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus it (established)
 pub mod ystarti {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x1c;
@@ -166,7 +166,7 @@ pub mod smask1x {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x7c;
 }
-/// Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values are flipped (height minus row minus one) before packing, so they are in  (established)
+/// Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values are flipped (height minus row minus one) before packing, so they use the (established)
 pub mod smask1y {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x80;
@@ -176,7 +176,7 @@ pub mod xendi {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x84;
 }
-/// Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads it back through YENDF (0x28) as (value & 0xfff) << 11. light_sboxfi and th (established)
+/// Draw end y (integer, inclusive), top-down row like YSTARTI. The glyph commands also use the order of YSTARTI and YENDI to pick the direction rows adva (established)
 pub mod yendi {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x88;
@@ -272,9 +272,15 @@ pub const CMD_ENZPATTERN: u32 = 0x400; // established
 pub const CMD_FILL_RECT: u32 = 0x30000329; // established
 pub const CMD_GLYPH16: u32 = 0x300005b9; // established
 pub const CMD_GLYPH_PIECE: u32 = 0x300005a1; // established
+pub const CMD_HOSTDATA: u32 = 0x200000; // inferred
 pub const CMD_LENGTH32: u32 = 0x10; // inferred
 pub const CMD_LOGICOP_SHIFT: u32 = 0x1c; // established
 pub const CMD_LOGICSRC: u32 = 0x80000; // inferred
+pub const CMD_OP_READ: u32 = 0x2; // inferred
+pub const CMD_PIXMEM_BIT16: u32 = 0x10000; // unknown
+pub const CMD_PIXMEM_READ: u32 = 0x30200023; // established
+pub const CMD_PIXMEM_WRITE_A: u32 = 0x30200021; // established
+pub const CMD_PIXMEM_WRITE_B: u32 = 0x30210021; // established
 pub const CMD_POINT: u32 = 0x30000001; // established
 pub const CMD_QUAD: u32 = 0x20; // inferred
 pub const CMD_STOPONX: u32 = 0x100; // established

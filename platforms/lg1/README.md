@@ -123,10 +123,11 @@ Established from the member objects; the function names are the objects' own sym
 4. The `CONFIGSEL`-addressed ports: write storage for the colour map (256 x 3 bytes, bank 0 enough for the PROM), the VC1 SRAM
    (at least 0x4900 bytes), the VC1 revision window (return a value whose low three bits are not 0 or 1; software subtracts one, and a result of 0 skips VC1 initialisation), SYS_CTL.
 5. An 8 bpp 1024 by 768 frame buffer scanned out through the colour map (video on = SYS_CTL bit 2).
-6. Commands 0x30000329, 0x30080329, 0x30000001, 0x300005b9, 0x300005a1/0x300005a9, with the y-up convention, and the plain
+6. Commands 0x30000329, 0x30080329, 0x30000001, 0x300005b9, 0x300005a1/0x300005a9, with display row = stored y (see the REX1 page, Y origin; rows advance toward `YENDI`), and the plain
    register store semantics for everything else.
-7. For IRIX: retrace interrupt (GIO line 2, INT2 local 1 bit 7, with the port register bit 3 acknowledge), the FIFO interrupt on
-   line 0 optional, the pixel DMA entry and the pixel-memory probe (RWAUX1 sequence) or a way to return one of its three outcomes.
+7. The PROM's board info runs a pixel-memory probe with three commands through `RWAUX1` ([REX1 page](../../devices/rex1/README.md#the-pixel-memory-probe-commands)); either outcome code 0 or 1 satisfies it.
+8. For IRIX: retrace interrupt (GIO line 2, INT2 local 1 bit 7, with the port register bit 3 acknowledge), the FIFO interrupt on
+   line 0 optional, and the pixel DMA entry.
 
 ## Review (2026-11-23)
 
@@ -146,4 +147,18 @@ Independent review against `lg1.a`, the 4.0.5D and 4.0.5G PROMs, the IP20 `ide` 
   The character draw routine is 0xbfc41a14; it fills the descriptor and calls the board's draw-bitmap entry (table entry 6). The PROM's console repaint loop (0xbfc30154) advances 9 pixels per
   character and uses font 0. The window setup function (0xbfc2f864, called with 18178 or 18181) sets cell 9 by 17 and 80 columns, with 36 rows when the screen height is 768
   and 40 otherwise; for 18181 it first runs the 18179 variant (cell height 20, 10 wide, 20 rows). The 4.0.5D data word at 0xbfc42e20 that picks between them is 1, which selects the 18181 chain;
-  which variant a 1024 by 768 LG1 console finally uses was not fully traced: **unverified**. The font bitmaps themselves were decoded (the 'A' and 'g' glyphs render correctly).
+  The font bitmaps themselves were decoded (the 'A' and 'g' glyphs render correctly).
+- **Console geometry (settled 2026-11-23).** The word at 0xbfc42e20 is a constant in the ROM image, not RAM (4.0.5G: 0xbfc45f40, also 1). The console
+  initialiser (0xbfc31978 in 4.0.5D, 0xbfc2c71c in 4.0.5G) reads it: nonzero calls the window setup with 18181, zero with 18178. The word is 1 in
+  both images, so every shipped LG1 console takes 18181, which first runs 18179 and then ORs 7 into the window flags. The 18179 variant sets line pitch 20, descent 6, 80 columns and
+  a fixed 20 rows (the screen height is not consulted); its advance field is 10, which no drawing code read here uses. Text is still drawn with font 0 (cell height 17, descent 4, glyph advance 9), and the window width is 9 times the columns, so the grid is 80 columns of 9 pixels (720) by 20 rows of 20 pixels (400). The frame drawn around it spans the window origin minus 2 to plus
+  9 x columns + 5 and plus line pitch x rows + 5, which is an outer 728 by 408 and an interior of 726 by 406 with the one pixel border: the emulator session's measurement agrees exactly.
+  The 80 by 36 (or 40) window with 9 by 17 cells is the 18178 variant, reached only if that word is zero or the code unknown: not taken by either shipped PROM. Grade: established for the
+  selection, inferred for the unused advance field. The 1024 by 768 LG1 console is therefore 80 by 20 in 9 by 20 cells.
+- **Y of the console.** The PROM's console y counts up from the bottom (first text row at the largest y) and stored y is 767 minus it, so stored y is the row from the top;
+  evidence and grade in the [REX1 page](../../devices/rex1/README.md#y-origin).
+- **What the PROM relies on for visible output.** Reads: initRex-equivalent stores `XYWIN` 0x08000800, `CONFIGMODE` 0x807fe000, `AUX2` 0x20000000, a no-op at the command GO alias and `AUX1` 0 (0xbfc0fd58-0xbfc0fda8), and the
+  board-info routine stores `RWMASK` 0xff (0xbfc0fa94); nothing else in the LG1 init or console path (0xbfc0f000-0xbfc10400, 0xbfc2d430-0xbfc2dab0, 0xbfc2f864-0xbfc31a40) writes the screen masks,
+  `XYWIN` or the write mask again, and no drawing command in the PROM sets a clip or write-mask flag. A model may store `XYWIN`, the four extra screen masks, `SMASK1X/Y` and `RWMASK` without effect on
+  the PROM console, provided drawing reaches the single displayed 8 bpp plane group (the PROM leaves `AUX2` at 0x20000000, the group the kernel clear also hits second) and `XYWIN` = 0x08000800 means no offset (inferred; any other value is unknown).
+  Grade: established for the store list, inferred for the "no effect needed" conclusion (an emulator run shows model behaviour only).

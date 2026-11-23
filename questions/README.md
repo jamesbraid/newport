@@ -7,10 +7,11 @@ Each entry gives the owning file, the routes already tried and the next route to
 
 ## LG1 (Entry graphics board)
 
-### REX1 command bits 21 and 16, and bits 27:24
+### REX1 command bit 16, AUX1 bit 8 and the pixel-memory probe outcomes
 
-`lightInitInfo` issues 0x30200021, 0x30210021 and 0x30200023. What the extra bits do is unknown. Routes tried: the kernel and PROM
-use only. Next: the ide VRAM test (`lg1_vram`) and the `lg1_rexregs` code, which probably exercise them.
+Bits 21 and 1 of the probe commands are decoded (inferred) on the [REX1 page](../devices/rex1/README.md#the-pixel-memory-probe-commands). Open: what bit 16 of 0x30210021 and `AUX1` bit 8
+select so that one pixel pair of four is replaced, and what outcomes 0 and 1 mean for the board. Routes tried: kernel, both PROMs and the `ide` board-info copy (same routine); no object reads info byte
+0x29 afterwards; the `ide` VRAM test uses only the fill, point and glyph commands. Next: the X server and `gfxinfo` readers of the board-info call, if held.
 
 ### CONFIGMODE bits 31 and 22:13, and the FIFO interrupt source
 
@@ -29,12 +30,11 @@ name, the kernel and PROM tables, the shipped diagnostics' strings. Next: the Ex
 Only photographs exist (Library `photos/`): the REX part number is not legible. Next: a higher-resolution photograph of an LG1
 board, or the board's parts list if SGI published one.
 
-### Which console geometry the LG1 PROM console uses
-
-The font records, glyph format and 9 pixel font 0 are in the [LG1 board page](../platforms/lg1/README.md#review-2026-11-23). Not traced: whether the 1024 by 768 console runs the
-80 by 36 window with 9 by 17 cells (window setup 0xbfc2f864, variant 18178) or the 18179 variant that the 4.0.5D data word at 0xbfc42e20 selects through variant 18181. Next: trace
-the callers of 0xbfc31978 and the use of the window fields at object offset 0x58 to 0x78 in the repaint loop 0xbfc30154.
-
 ### The X server's LG1 path
 
 Not located in the files held. Next: a Library search for the IRIX 6.5 X server and `lg1` direct-draw libraries.
+
+### REX1 copy: sign of `XYMOVE`
+
+NetBSD stores source minus destination (top-down rows). The PROM copy routine at 0xbfc2d9f8 stores the differences of its two coordinate pairs (third minus first for x, fourth minus second for y) and draws the rectangle at the second pair, and no caller was found in
+the 4.0.5D console code (the repaint loop redraws instead of scrolling). Routes tried: table-entry callers in 0xbfc2f000-0xbfc41000. Next: other firmware callers of the draw table, the 4.0.5G console.
