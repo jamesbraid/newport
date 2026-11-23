@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 2ea1bcf6a93bc3c718f09bf751eab9d363e09791794bcee45a68e945054d71fc
+// input sha256 32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -16,7 +16,7 @@ pub mod aux1 {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x4;
 }
-/// Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for (inferred)
+/// Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for (established)
 pub mod xstate {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x8;
@@ -26,7 +26,7 @@ pub mod xstarti {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0xc;
 }
-/// Draw start x, fraction. Test mask 0x7fffff. Offset inferred from the sequence of names in the ide test (the same order as the offsets that code elsewh (inferred)
+/// Draw start x, fraction. Test mask 0x7fffff. Offset read from the ide test. Software that draws only rectangles never writes it. Offset established by  (established)
 pub mod xstartf {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x10;
@@ -36,37 +36,37 @@ pub mod xstart {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x14;
 }
-/// Draw end x, fraction (ide mask 0x7ff800). Offset inferred. (inferred)
+/// Draw end x, fraction (ide mask 0x7ff800). Offset established by the ide test. Holds the end x with the integer in bits 22:11 (a write to XENDI at 0x84 (established)
 pub mod xendf {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x18;
 }
-/// Draw start y as an integer, 12 bits kept. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen. (established)
+/// Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus th (established)
 pub mod ystarti {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x1c;
 }
-/// Draw start y, fraction. Offset inferred. (inferred)
+/// Draw start y, fraction. Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4. (established)
 pub mod ystartf {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x20;
 }
-/// Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it. (inferred)
+/// Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it. Offset established by the ide test. Com (established)
 pub mod ystart {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x24;
 }
-/// Draw end y, fraction. Offset inferred. (inferred)
+/// Draw end y, fraction. Offset established by the ide test. Holds the end y with the integer in bits 22:11, as XENDF. (established)
 pub mod yendf {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x28;
 }
-/// Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with t (inferred)
+/// Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with t (established)
 pub mod xsave {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x2c;
 }
-/// Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and (inferred)
+/// Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and (established)
 pub mod minorslope {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x30;
@@ -76,52 +76,52 @@ pub mod xymove {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x34;
 }
-/// Foreground pixel colour, an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this off (established)
+/// Foreground pixel colour (the ide test reads a write back through COLORRED at 0x3c as (value & 0xff) << 11), an 8-bit index into the colour map (the bo (established)
 pub mod colorredi {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x38;
 }
-/// Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. (inferred)
+/// Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red  (established)
 pub mod colorred {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x3c;
 }
-/// Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD. (inferred)
+/// Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD. Offset established by the ide te (established)
 pub mod colorgreeni {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x40;
 }
-/// Green channel with fraction. (inferred)
+/// Green channel with fraction. Offset established by the ide test. 20 bits kept. (established)
 pub mod colorgreen {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x44;
 }
-/// Blue channel integer. (inferred)
+/// Blue channel integer. Offset established by the ide test. A write here appears in COLORBLUE bits 18:11. (established)
 pub mod colorbluei {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x48;
 }
-/// Blue channel with fraction. (inferred)
+/// Blue channel with fraction. Offset established by the ide test. 20 bits kept. (established)
 pub mod colorblue {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x4c;
 }
-/// Red slope for shaded lines and spans. Not written by shipped light code. (inferred)
+/// Red slope for shaded lines and spans. Not written by shipped light code. Offset established by the ide test. Slope registers are signed: the ide test  (established)
 pub mod slopered {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x50;
 }
-/// Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. (inferred)
+/// Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. Offset establ (established)
 pub mod slopegreen {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x54;
 }
-/// Blue slope. Not written by shipped light code. (inferred)
+/// Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED. (established)
 pub mod slopeblue {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x58;
 }
-/// Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); N (inferred)
+/// Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); N (established)
 pub mod colorback {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x5c;
@@ -131,17 +131,17 @@ pub mod zpattern {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x60;
 }
-/// Line stipple pattern. Not written by shipped light code. (inferred)
+/// Line stipple pattern. Not written by shipped light code. Offset established by the ide test. Fully read/write. (established)
 pub mod lspattern {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x64;
 }
-/// Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. (inferred)
+/// Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established (established)
 pub mod lsmode {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x68;
 }
-/// Antialias weight. Not written by shipped light code. (inferred)
+/// Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write. (established)
 pub mod aweight {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x6c;
@@ -151,7 +151,7 @@ pub mod rwaux1 {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x70;
 }
-/// Second read/write auxiliary word. Not written by shipped light code. (inferred)
+/// Second read/write auxiliary word. Not written by shipped light code. Offset established by the ide test. Fully read/write. (established)
 pub mod rwaux2 {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x74;
@@ -171,20 +171,45 @@ pub mod smask1y {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x80;
 }
-/// Draw end x (integer, inclusive): the last column a STOPONX command draws. (established)
+/// Draw end x (integer, inclusive): the last column a STOPONX command draws. The ide test reads it back through XENDF (0x18) as (value & 0xfff) << 11. (established)
 pub mod xendi {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x84;
 }
-/// Draw end y (integer, inclusive), bottom-up like YSTARTI. (established)
+/// Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads it back through YENDF (0x28) as (value & 0xfff) << 11. light_sboxfi and th (established)
 pub mod yendi {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x88;
 }
-/// First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the  (inferred)
+/// First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the  (established)
 pub mod smask2x {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x4790;
+}
+/// Screen mask word 2Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six. (established)
+pub mod smask2y {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x4794;
+}
+/// Screen mask word 3X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six. (established)
+pub mod smask3x {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x4798;
+}
+/// Screen mask word 3Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six. (established)
+pub mod smask3y {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x479c;
+}
+/// Screen mask word 4X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six. (established)
+pub mod smask4x {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47a0;
+}
+/// Screen mask word 4Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six. (established)
+pub mod smask4y {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47a4;
 }
 /// Second auxiliary control word. Both initialisations store 0x20000000. lightSetDestinationPlanes keeps bits 28:0 of the window's saved value, ORs in th (established)
 pub mod aux2 {

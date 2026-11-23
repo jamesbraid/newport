@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 2ea1bcf6a93bc3c718f09bf751eab9d363e09791794bcee45a68e945054d71fc */
+/* input sha256 32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -41,29 +41,33 @@
 /*
  * Draw x state. The only shipped write is the 0x03ff0000 that precedes each
  * full-screen clear; the role is unknown (it may be a pre-loaded x counter for
- * block draws; no source says).
+ * block draws; no source says). Offset established by the ide test. The ide
+ * test writes all 32 bits and expects them back unmasked.
  */
 /* xstate: rw32, reset unknown */
-#define REX1_XSTATE_OFFSET                           0x8u /* inferred */
+#define REX1_XSTATE_OFFSET                           0x8u /* established */
 
 /*
  * Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff)
  * and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here
  * and expects 0x033c0000 from XSTART. A qtest can discriminate: write
- * 0x12345678, read XSTART at 0x14, expect 0x033c0000; read back of XSTARTI
- * itself is 0x678 (inferred; the ide test compares masked values).
+ * 0x12345678, read XSTART at 0x14, expect 0x033c0000; whether XSTARTI itself
+ * reads back is unknown: no shipped code and not the ide test (which reads
+ * XSTART) reads offset 0xc. The ide test confirms the derivation: write at 0xc,
+ * read at 0x14, expect (value & 0xfff) << 15.
  */
 /* xstarti: rw32, reset unknown */
 #define REX1_XSTARTI_OFFSET                          0xcu /* established */
 
 /*
- * Draw start x, fraction. Test mask 0x7fffff. Offset inferred from the sequence
- * of names in the ide test (the same order as the offsets that code elsewhere
- * confirms for its neighbours). Software that draws only rectangles never
- * writes it.
+ * Draw start x, fraction. Test mask 0x7fffff. Offset read from the ide test.
+ * Software that draws only rectangles never writes it. Offset established by
+ * the ide test. A write here appears in XSTART bits 26:4 (the ide test reads
+ * 0x14, not 0x10). 'F' is the ide name; the readback shows the register feeds
+ * XSTART bits 26:4 (inferred as a write alias of XSTART).
  */
 /* xstartf: rw32, reset unknown */
-#define REX1_XSTARTF_OFFSET                          0x10u /* inferred */
+#define REX1_XSTARTF_OFFSET                          0x10u /* established */
 
 /*
  * Draw start x, integer and fraction combined: 27 bits in the ide test mask,
@@ -75,52 +79,61 @@
 #define REX1_XSTART_OFFSET                           0x14u /* established */
 
 /*
- * Draw end x, fraction (ide mask 0x7ff800). Offset inferred.
+ * Draw end x, fraction (ide mask 0x7ff800).  Offset established by the ide
+ * test. Holds the end x with the integer in bits 22:11 (a write to XENDI at
+ * 0x84 reads back here as value & 0xfff shifted left 11; written directly, only
+ * bits 22:11 stick). Not a fraction field as the name suggests.
  */
 /* xendf: rw32, reset unknown */
-#define REX1_XENDF_OFFSET                            0x18u /* inferred */
+#define REX1_XENDF_OFFSET                            0x18u /* established */
 
 /*
- * Draw start y as an integer, 12 bits kept. Software stores 767 minus the row,
- * so y grows upward from the bottom of the 768-line screen.
+ * Draw start y as an integer, 12 bits kept; the ide test writes it and reads
+ * YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus the
+ * row, so y grows upward from the bottom of the 768-line screen.
  */
 /* ystarti: rw32, reset unknown */
 #define REX1_YSTARTI_OFFSET                          0x1cu /* established */
 
 /*
- * Draw start y, fraction. Offset inferred.
+ * Draw start y, fraction.  Offset established by the ide test. Mirror of
+ * XSTARTF for y; a write appears in YSTART bits 26:4.
  */
 /* ystartf: rw32, reset unknown */
-#define REX1_YSTARTF_OFFSET                          0x20u /* inferred */
+#define REX1_YSTARTF_OFFSET                          0x20u /* established */
 
 /*
  * Draw start y, integer and fraction combined, counterpart of XSTART. Offset
- * inferred; no shipped code reads it.
+ * inferred; no shipped code reads it. Offset established by the ide test.
+ * Combined y start, integer in bits 26:15 (the same derivation the probe uses
+ * for XSTART).
  */
 /* ystart: rw32, reset unknown */
-#define REX1_YSTART_OFFSET                           0x24u /* inferred */
+#define REX1_YSTART_OFFSET                           0x24u /* established */
 
 /*
- * Draw end y, fraction. Offset inferred.
+ * Draw end y, fraction.  Offset established by the ide test. Holds the end y
+ * with the integer in bits 22:11, as XENDF.
  */
 /* yendf: rw32, reset unknown */
-#define REX1_YENDF_OFFSET                            0x28u /* inferred */
+#define REX1_YENDF_OFFSET                            0x28u /* established */
 
 /*
  * Saved x start (the x that a block-draw returns to at the start of each row,
  * inferred from its name and the context save). lightPcxSwap saves it with the
- * other window registers.
+ * other window registers. Offset established by the ide test. Twelve bits kept.
  */
 /* xsave: rw32, reset unknown */
-#define REX1_XSAVE_OFFSET                            0x2cu /* inferred */
+#define REX1_XSAVE_OFFSET                            0x2cu /* established */
 
 /*
  * Line-draw minor-axis slope. Never written by the shipped light code for
  * rectangles, text or points. Only the name (ide) and the slot between XSAVE
- * and XYMOVE support it.
+ * and XYMOVE support it. Offset established by the ide test. Written and read
+ * back unmasked.
  */
 /* minorslope: rw32, reset unknown */
-#define REX1_MINORSLOPE_OFFSET                       0x30u /* inferred */
+#define REX1_MINORSLOPE_OFFSET                       0x30u /* established */
 
 /*
  * Copy source offset: x delta in the high 16 bits and y delta in the low 16,
@@ -135,10 +148,11 @@
 #define REX1_XYMOVE_OFFSET                           0x34u /* established */
 
 /*
- * Foreground pixel colour, an 8-bit index into the colour map (the board has 8
- * bits per pixel). The kernel's colour routine stores the index at this offset
- * after the busy bit clears; the PROM's colour routine does too. The ide test
- * calls the register COLORREDI with an 8-bit mask; RED because the chip's
+ * Foreground pixel colour (the ide test reads a write back through COLORRED at
+ * 0x3c as (value & 0xff) << 11), an 8-bit index into the colour map (the board
+ * has 8 bits per pixel). The kernel's colour routine stores the index at this
+ * offset after the busy bit clears; the PROM's colour routine does too. The ide
+ * test calls the register COLORREDI with an 8-bit mask; RED because the chip's
  * colour path starts with red.
  */
 /* colorredi: rw32, reset unknown */
@@ -146,62 +160,70 @@
 
 /*
  * Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset
- * by name order.
+ * by name order. Offset established by the ide test. COLORRED holds the red
+ * channel with its integer part (COLORREDI, 8 bits) in bits 18:11.
  */
 /* colorred: rw32, reset unknown */
-#define REX1_COLORRED_OFFSET                         0x3cu /* inferred */
+#define REX1_COLORRED_OFFSET                         0x3cu /* established */
 
 /*
  * Green channel integer (shaded draws). Never written by shipped light code.
- * Offset from the ide name order and NetBSD.
+ * Offset from the ide name order and NetBSD. Offset established by the ide
+ * test. A write here appears in COLORGREEN bits 18:11.
  */
 /* colorgreeni: rw32, reset unknown */
-#define REX1_COLORGREENI_OFFSET                      0x40u /* inferred */
+#define REX1_COLORGREENI_OFFSET                      0x40u /* established */
 
 /*
- * Green channel with fraction.
+ * Green channel with fraction. Offset established by the ide test. 20 bits
+ * kept.
  */
 /* colorgreen: rw32, reset unknown */
-#define REX1_COLORGREEN_OFFSET                       0x44u /* inferred */
+#define REX1_COLORGREEN_OFFSET                       0x44u /* established */
 
 /*
- * Blue channel integer.
+ * Blue channel integer. Offset established by the ide test. A write here
+ * appears in COLORBLUE bits 18:11.
  */
 /* colorbluei: rw32, reset unknown */
-#define REX1_COLORBLUEI_OFFSET                       0x48u /* inferred */
+#define REX1_COLORBLUEI_OFFSET                       0x48u /* established */
 
 /*
- * Blue channel with fraction.
+ * Blue channel with fraction. Offset established by the ide test. 20 bits kept.
  */
 /* colorblue: rw32, reset unknown */
-#define REX1_COLORBLUE_OFFSET                        0x4cu /* inferred */
+#define REX1_COLORBLUE_OFFSET                        0x4cu /* established */
 
 /*
  * Red slope for shaded lines and spans. Not written by shipped light code.
+ * Offset established by the ide test. Slope registers are signed: the ide test
+ * expects bit 19 of the stored value to read back also in bit 20.
  */
 /* slopered: rw32, reset unknown */
-#define REX1_SLOPERED_OFFSET                         0x50u /* inferred */
+#define REX1_SLOPERED_OFFSET                         0x50u /* established */
 
 /*
  * Green slope. Not written by shipped light code. NetBSD names offset 0x54 of
- * the configuration page WCLOCKREV, which is a different page.
+ * the configuration page WCLOCKREV, which is a different page. Offset
+ * established by the ide test. As SLOPERED.
  */
 /* slopegreen: rw32, reset unknown */
-#define REX1_SLOPEGREEN_OFFSET                       0x54u /* inferred */
+#define REX1_SLOPEGREEN_OFFSET                       0x54u /* established */
 
 /*
- * Blue slope. Not written by shipped light code.
+ * Blue slope. Not written by shipped light code. Offset established by the ide
+ * test. As SLOPERED.
  */
 /* slopeblue: rw32, reset unknown */
-#define REX1_SLOPEBLUE_OFFSET                        0x58u /* inferred */
+#define REX1_SLOPEBLUE_OFFSET                        0x58u /* established */
 
 /*
  * Background colour index used for pattern zeros when ZOPAQUE is set. The
  * shipped kernel and PROM glyph paths never write it (transparent background);
- * NetBSD does.
+ * NetBSD does. Offset established by the ide test. Eight bits kept.
  */
 /* colorback: rw32, reset unknown */
-#define REX1_COLORBACK_OFFSET                        0x5cu /* inferred */
+#define REX1_COLORBACK_OFFSET                        0x5cu /* established */
 
 /*
  * Pixel pattern for the pattern-enabled commands. Software writes it at the GO
@@ -217,23 +239,26 @@
 #define REX1_ZPATTERN_OFFSET                         0x60u /* established */
 
 /*
- * Line stipple pattern. Not written by shipped light code.
+ * Line stipple pattern. Not written by shipped light code. Offset established
+ * by the ide test. Fully read/write.
  */
 /* lspattern: rw32, reset unknown */
-#define REX1_LSPATTERN_OFFSET                        0x64u /* inferred */
+#define REX1_LSPATTERN_OFFSET                        0x64u /* established */
 
 /*
  * Line stipple mode. Not written by shipped light code. NetBSD's
- * configuration-page name CFGMODE for offset 0x68 is a different page.
+ * configuration-page name CFGMODE for offset 0x68 is a different page. Offset
+ * established by the ide test. 20 bits kept.
  */
 /* lsmode: rw32, reset unknown */
-#define REX1_LSMODE_OFFSET                           0x68u /* inferred */
+#define REX1_LSMODE_OFFSET                           0x68u /* established */
 
 /*
- * Antialias weight. Not written by shipped light code.
+ * Antialias weight. Not written by shipped light code. Offset established by
+ * the ide test. Fully read/write.
  */
 /* aweight: rw32, reset unknown */
-#define REX1_AWEIGHT_OFFSET                          0x6cu /* inferred */
+#define REX1_AWEIGHT_OFFSET                          0x6cu /* established */
 
 /*
  * Read/write auxiliary word used to read and write pixel memory with a draw
@@ -249,10 +274,11 @@
 #define REX1_RWAUX1_OFFSET                           0x70u /* established */
 
 /*
- * Second read/write auxiliary word. Not written by shipped light code.
+ * Second read/write auxiliary word. Not written by shipped light code. Offset
+ * established by the ide test. Fully read/write.
  */
 /* rwaux2: rw32, reset unknown */
-#define REX1_RWAUX2_OFFSET                           0x74u /* inferred */
+#define REX1_RWAUX2_OFFSET                           0x74u /* established */
 
 /*
  * Plane write mask for read/write pixel access. lightInitInfo and the PROM
@@ -280,13 +306,17 @@
 #define REX1_SMASK1Y_OFFSET                          0x80u /* established */
 
 /*
- * Draw end x (integer, inclusive): the last column a STOPONX command draws.
+ * Draw end x (integer, inclusive): the last column a STOPONX command draws. The
+ * ide test reads it back through XENDF (0x18) as (value & 0xfff) << 11.
  */
 /* xendi: rw32, reset unknown */
 #define REX1_XENDI_OFFSET                            0x84u /* established */
 
 /*
- * Draw end y (integer, inclusive), bottom-up like YSTARTI.
+ * Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads
+ * it back through YENDF (0x28) as (value & 0xfff) << 11. light_sboxfi and the
+ * PROM fill store 767 minus the top row here and 767 minus the bottom row in
+ * YSTARTI, so YSTARTI <= YENDI.
  */
 /* yendi: rw32, reset unknown */
 #define REX1_YENDI_OFFSET                            0x88u /* established */
@@ -294,12 +324,47 @@
 /*
  * First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y,
  * SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the
- * context save; the assignment of names to words follows the ide order and
- * NetBSD's page base, so it is inferred. Packing as smask1x. Only SMASK2X is
- * declared here; the others are the same register at the stated offsets.
+ * context save and the name-to-word assignment by the ide test's offsets.
+ * Packing as smask1x. Offset established by the ide test. The six names map to
+ * the six consecutive words in this order.
  */
 /* smask2x: rw32, reset unknown */
-#define REX1_SMASK2X_OFFSET                          0x4790u /* inferred */
+#define REX1_SMASK2X_OFFSET                          0x4790u /* established */
+
+/*
+ * Screen mask word 2Y. Packing as smask1x. Added in the 2026-11-23 review so
+ * the generated header names all six.
+ */
+/* smask2y: rw32, reset unknown */
+#define REX1_SMASK2Y_OFFSET                          0x4794u /* established */
+
+/*
+ * Screen mask word 3X. Packing as smask1x. Added in the 2026-11-23 review so
+ * the generated header names all six.
+ */
+/* smask3x: rw32, reset unknown */
+#define REX1_SMASK3X_OFFSET                          0x4798u /* established */
+
+/*
+ * Screen mask word 3Y. Packing as smask1x. Added in the 2026-11-23 review so
+ * the generated header names all six.
+ */
+/* smask3y: rw32, reset unknown */
+#define REX1_SMASK3Y_OFFSET                          0x479cu /* established */
+
+/*
+ * Screen mask word 4X. Packing as smask1x. Added in the 2026-11-23 review so
+ * the generated header names all six.
+ */
+/* smask4x: rw32, reset unknown */
+#define REX1_SMASK4X_OFFSET                          0x47a0u /* established */
+
+/*
+ * Screen mask word 4Y. Packing as smask1x. Added in the 2026-11-23 review so
+ * the generated header names all six.
+ */
+/* smask4y: rw32, reset unknown */
+#define REX1_SMASK4Y_OFFSET                          0x47a4u /* established */
 
 /*
  * Second auxiliary control word. Both initialisations store 0x20000000.

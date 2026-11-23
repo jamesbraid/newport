@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 2ea1bcf6a93bc3c718f09bf751eab9d363e09791794bcee45a68e945054d71fc -->
+<!-- input sha256 32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -16,40 +16,45 @@ Every item has a grade: established, inferred or unknown. A grade says how the i
 |---|---|---|---|---|---|---|---|---|
 | `command` | 0x0 | rw | 32 |  |  | unknown | established |  |
 | `aux1` | 0x4 | rw | 32 |  |  | unknown | established |  |
-| `xstate` | 0x8 | rw | 32 |  |  | unknown | inferred |  |
+| `xstate` | 0x8 | rw | 32 |  |  | unknown | established |  |
 | `xstarti` | 0xc | rw | 32 |  |  | unknown | established |  |
-| `xstartf` | 0x10 | rw | 32 |  |  | unknown | inferred |  |
+| `xstartf` | 0x10 | rw | 32 |  |  | unknown | established |  |
 | `xstart` | 0x14 | rw | 32 |  |  | unknown | established |  |
-| `xendf` | 0x18 | rw | 32 |  |  | unknown | inferred |  |
+| `xendf` | 0x18 | rw | 32 |  |  | unknown | established |  |
 | `ystarti` | 0x1c | rw | 32 |  |  | unknown | established |  |
-| `ystartf` | 0x20 | rw | 32 |  |  | unknown | inferred |  |
-| `ystart` | 0x24 | rw | 32 |  |  | unknown | inferred |  |
-| `yendf` | 0x28 | rw | 32 |  |  | unknown | inferred |  |
-| `xsave` | 0x2c | rw | 32 |  |  | unknown | inferred |  |
-| `minorslope` | 0x30 | rw | 32 |  |  | unknown | inferred |  |
+| `ystartf` | 0x20 | rw | 32 |  |  | unknown | established |  |
+| `ystart` | 0x24 | rw | 32 |  |  | unknown | established |  |
+| `yendf` | 0x28 | rw | 32 |  |  | unknown | established |  |
+| `xsave` | 0x2c | rw | 32 |  |  | unknown | established |  |
+| `minorslope` | 0x30 | rw | 32 |  |  | unknown | established |  |
 | `xymove` | 0x34 | rw | 32 |  |  | unknown | established |  |
 | `colorredi` | 0x38 | rw | 32 |  |  | unknown | established |  |
-| `colorred` | 0x3c | rw | 32 |  |  | unknown | inferred |  |
-| `colorgreeni` | 0x40 | rw | 32 |  |  | unknown | inferred |  |
-| `colorgreen` | 0x44 | rw | 32 |  |  | unknown | inferred |  |
-| `colorbluei` | 0x48 | rw | 32 |  |  | unknown | inferred |  |
-| `colorblue` | 0x4c | rw | 32 |  |  | unknown | inferred |  |
-| `slopered` | 0x50 | rw | 32 |  |  | unknown | inferred |  |
-| `slopegreen` | 0x54 | rw | 32 |  |  | unknown | inferred |  |
-| `slopeblue` | 0x58 | rw | 32 |  |  | unknown | inferred |  |
-| `colorback` | 0x5c | rw | 32 |  |  | unknown | inferred |  |
+| `colorred` | 0x3c | rw | 32 |  |  | unknown | established |  |
+| `colorgreeni` | 0x40 | rw | 32 |  |  | unknown | established |  |
+| `colorgreen` | 0x44 | rw | 32 |  |  | unknown | established |  |
+| `colorbluei` | 0x48 | rw | 32 |  |  | unknown | established |  |
+| `colorblue` | 0x4c | rw | 32 |  |  | unknown | established |  |
+| `slopered` | 0x50 | rw | 32 |  |  | unknown | established |  |
+| `slopegreen` | 0x54 | rw | 32 |  |  | unknown | established |  |
+| `slopeblue` | 0x58 | rw | 32 |  |  | unknown | established |  |
+| `colorback` | 0x5c | rw | 32 |  |  | unknown | established |  |
 | `zpattern` | 0x60 | rw | 32 |  |  | unknown | established |  |
-| `lspattern` | 0x64 | rw | 32 |  |  | unknown | inferred |  |
-| `lsmode` | 0x68 | rw | 32 |  |  | unknown | inferred |  |
-| `aweight` | 0x6c | rw | 32 |  |  | unknown | inferred |  |
+| `lspattern` | 0x64 | rw | 32 |  |  | unknown | established |  |
+| `lsmode` | 0x68 | rw | 32 |  |  | unknown | established |  |
+| `aweight` | 0x6c | rw | 32 |  |  | unknown | established |  |
 | `rwaux1` | 0x70 | rw | 32 |  |  | unknown | established |  |
-| `rwaux2` | 0x74 | rw | 32 |  |  | unknown | inferred |  |
+| `rwaux2` | 0x74 | rw | 32 |  |  | unknown | established |  |
 | `rwmask` | 0x78 | rw | 32 |  |  | unknown | established |  |
 | `smask1x` | 0x7c | rw | 32 |  |  | unknown | established |  |
 | `smask1y` | 0x80 | rw | 32 |  |  | unknown | established |  |
 | `xendi` | 0x84 | rw | 32 |  |  | unknown | established |  |
 | `yendi` | 0x88 | rw | 32 |  |  | unknown | established |  |
-| `smask2x` | 0x4790 | rw | 32 |  |  | unknown | inferred |  |
+| `smask2x` | 0x4790 | rw | 32 |  |  | unknown | established |  |
+| `smask2y` | 0x4794 | rw | 32 |  |  | unknown | established |  |
+| `smask3x` | 0x4798 | rw | 32 |  |  | unknown | established |  |
+| `smask3y` | 0x479c | rw | 32 |  |  | unknown | established |  |
+| `smask4x` | 0x47a0 | rw | 32 |  |  | unknown | established |  |
+| `smask4y` | 0x47a4 | rw | 32 |  |  | unknown | established |  |
 | `aux2` | 0x47a8 | rw | 32 |  |  | unknown | established |  |
 | `diagvram` | 0x47d8 | rw | 32 |  |  | unknown | inferred |  |
 | `wclock` | 0x47e4 | rw | 32 |  |  | unknown | established |  |
@@ -70,15 +75,15 @@ Auxiliary control word, one per window context. initRex zeroes it. lightAux1Regi
 
 ### Register `xstate`
 
-Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says).
+Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says). Offset established by the ide test. The ide test writes all 32 bits and expects them back unmasked.
 
 ### Register `xstarti`
 
-Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here and expects 0x033c0000 from XSTART. A qtest can discriminate: write 0x12345678, read XSTART at 0x14, expect 0x033c0000; read back of XSTARTI itself is 0x678 (inferred; the ide test compares masked values).
+Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here and expects 0x033c0000 from XSTART. A qtest can discriminate: write 0x12345678, read XSTART at 0x14, expect 0x033c0000; whether XSTARTI itself reads back is unknown: no shipped code and not the ide test (which reads XSTART) reads offset 0xc. The ide test confirms the derivation: write at 0xc, read at 0x14, expect (value & 0xfff) << 15.
 
 ### Register `xstartf`
 
-Draw start x, fraction. Test mask 0x7fffff. Offset inferred from the sequence of names in the ide test (the same order as the offsets that code elsewhere confirms for its neighbours). Software that draws only rectangles never writes it.
+Draw start x, fraction. Test mask 0x7fffff. Offset read from the ide test. Software that draws only rectangles never writes it. Offset established by the ide test. A write here appears in XSTART bits 26:4 (the ide test reads 0x14, not 0x10). 'F' is the ide name; the readback shows the register feeds XSTART bits 26:4 (inferred as a write alias of XSTART).
 
 ### Register `xstart`
 
@@ -86,31 +91,31 @@ Draw start x, integer and fraction combined: 27 bits in the ide test mask, integ
 
 ### Register `xendf`
 
-Draw end x, fraction (ide mask 0x7ff800). Offset inferred.
+Draw end x, fraction (ide mask 0x7ff800).  Offset established by the ide test. Holds the end x with the integer in bits 22:11 (a write to XENDI at 0x84 reads back here as value & 0xfff shifted left 11; written directly, only bits 22:11 stick). Not a fraction field as the name suggests.
 
 ### Register `ystarti`
 
-Draw start y as an integer, 12 bits kept. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen.
+Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen.
 
 ### Register `ystartf`
 
-Draw start y, fraction. Offset inferred.
+Draw start y, fraction.  Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4.
 
 ### Register `ystart`
 
-Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it.
+Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it. Offset established by the ide test. Combined y start, integer in bits 26:15 (the same derivation the probe uses for XSTART).
 
 ### Register `yendf`
 
-Draw end y, fraction. Offset inferred.
+Draw end y, fraction.  Offset established by the ide test. Holds the end y with the integer in bits 22:11, as XENDF.
 
 ### Register `xsave`
 
-Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers.
+Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers. Offset established by the ide test. Twelve bits kept.
 
 ### Register `minorslope`
 
-Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it.
+Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it. Offset established by the ide test. Written and read back unmasked.
 
 ### Register `xymove`
 
@@ -118,43 +123,43 @@ Copy source offset: x delta in the high 16 bits and y delta in the low 16, each 
 
 ### Register `colorredi`
 
-Foreground pixel colour, an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red.
+Foreground pixel colour (the ide test reads a write back through COLORRED at 0x3c as (value & 0xff) << 11), an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red.
 
 ### Register `colorred`
 
-Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order.
+Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red channel with its integer part (COLORREDI, 8 bits) in bits 18:11.
 
 ### Register `colorgreeni`
 
-Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD.
+Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD. Offset established by the ide test. A write here appears in COLORGREEN bits 18:11.
 
 ### Register `colorgreen`
 
-Green channel with fraction.
+Green channel with fraction. Offset established by the ide test. 20 bits kept.
 
 ### Register `colorbluei`
 
-Blue channel integer.
+Blue channel integer. Offset established by the ide test. A write here appears in COLORBLUE bits 18:11.
 
 ### Register `colorblue`
 
-Blue channel with fraction.
+Blue channel with fraction. Offset established by the ide test. 20 bits kept.
 
 ### Register `slopered`
 
-Red slope for shaded lines and spans. Not written by shipped light code.
+Red slope for shaded lines and spans. Not written by shipped light code. Offset established by the ide test. Slope registers are signed: the ide test expects bit 19 of the stored value to read back also in bit 20.
 
 ### Register `slopegreen`
 
-Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page.
+Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. Offset established by the ide test. As SLOPERED.
 
 ### Register `slopeblue`
 
-Blue slope. Not written by shipped light code.
+Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED.
 
 ### Register `colorback`
 
-Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); NetBSD does.
+Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); NetBSD does. Offset established by the ide test. Eight bits kept.
 
 ### Register `zpattern`
 
@@ -162,15 +167,15 @@ Pixel pattern for the pattern-enabled commands. Software writes it at the GO ali
 
 ### Register `lspattern`
 
-Line stipple pattern. Not written by shipped light code.
+Line stipple pattern. Not written by shipped light code. Offset established by the ide test. Fully read/write.
 
 ### Register `lsmode`
 
-Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page.
+Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept.
 
 ### Register `aweight`
 
-Antialias weight. Not written by shipped light code.
+Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write.
 
 ### Register `rwaux1`
 
@@ -178,7 +183,7 @@ Read/write auxiliary word used to read and write pixel memory with a draw comman
 
 ### Register `rwaux2`
 
-Second read/write auxiliary word. Not written by shipped light code.
+Second read/write auxiliary word. Not written by shipped light code. Offset established by the ide test. Fully read/write.
 
 ### Register `rwmask`
 
@@ -194,15 +199,35 @@ Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values ar
 
 ### Register `xendi`
 
-Draw end x (integer, inclusive): the last column a STOPONX command draws.
+Draw end x (integer, inclusive): the last column a STOPONX command draws. The ide test reads it back through XENDF (0x18) as (value & 0xfff) << 11.
 
 ### Register `yendi`
 
-Draw end y (integer, inclusive), bottom-up like YSTARTI.
+Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads it back through YENDF (0x28) as (value & 0xfff) << 11. light_sboxfi and the PROM fill store 767 minus the top row here and 767 minus the bottom row in YSTARTI, so YSTARTI <= YENDI.
 
 ### Register `smask2x`
 
-First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save; the assignment of names to words follows the ide order and NetBSD's page base, so it is inferred. Packing as smask1x. Only SMASK2X is declared here; the others are the same register at the stated offsets.
+First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save and the name-to-word assignment by the ide test's offsets. Packing as smask1x. Offset established by the ide test. The six names map to the six consecutive words in this order.
+
+### Register `smask2y`
+
+Screen mask word 2Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.
+
+### Register `smask3x`
+
+Screen mask word 3X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.
+
+### Register `smask3y`
+
+Screen mask word 3Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.
+
+### Register `smask4x`
+
+Screen mask word 4X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.
+
+### Register `smask4y`
+
+Screen mask word 4Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.
 
 ### Register `aux2`
 
@@ -263,7 +288,7 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CMD_LENGTH32` | 0x10 | inferred |  | Command flag named LENGTH32 by NetBSD. Set with the 16-pixel glyph command 0x300005b9, clear with the other two glyph commands. Meaning (32-pixel run, or a pattern width) inferred from the pairing only. |
 | `CMD_LOGICOP_SHIFT` | 0x1c | established |  | Bits 31:28 hold the logic operation. 3 is source-replace: every command the PROM, kernel and NetBSD draw with has it (0x30000000). No other value is issued by the objects read, so the table of operations is unknown. |
 | `CMD_LOGICSRC` | 0x80000 | inferred |  | Command flag: source is the frame buffer at the XYMOVE offset (a screen copy). Used with value 0x30080329 in the PROM's scroll and NetBSD's copy. Role inferred from use. |
-| `CMD_POINT` | 0x30000001 | established |  | Single point: logic op 3, DRAW. light_pnt2i (kernel) and the PROM write it at SET and the GO alias respectively after XSTARTI and YSTARTI. |
+| `CMD_POINT` | 0x30000001 | established |  | Single point: logic op 3, DRAW. light_pnt2i (kernel) and the PROM both store it at SET (0x0) and then read the GO alias (0x800), which runs it, after XSTARTI and YSTARTI. |
 | `CMD_QUAD` | 0x20 | inferred |  | Command flag named QUADMODE by NetBSD. Set in every rectangle command. Role inferred from use only. |
 | `CMD_STOPONX` | 0x100 | established |  | Command flag: the draw's x run ends at XENDI (inclusive; NetBSD notes the end is inclusive). |
 | `CMD_STOPONY` | 0x200 | established |  | Command flag: the draw's y run ends at YENDI. Set for rectangle fill and copy, clear for the glyph rows (the glyph's y advances once per pattern write). |

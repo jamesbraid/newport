@@ -27,7 +27,7 @@ CMD_ZOPAQUE = { value = 0x00800000, grade = "inferred", doc = "Command flag name
 CMD_ZCONTINUE = { value = 0x01000000, grade = "unknown", doc = "Defined by NetBSD, never set by the shipped software read." }
 CMD_LOGICOP_SHIFT = { value = 28, grade = "established", doc = "Bits 31:28 hold the logic operation. 3 is source-replace: every command the PROM, kernel and NetBSD draw with has it (0x30000000). No other value is issued by the objects read, so the table of operations is unknown." }
 CMD_FILL_RECT = { value = 0x30000329, grade = "established", doc = "Solid rectangle: logic op 3, STOPONX, STOPONY, QUAD, BLOCK, DRAW. light_sboxfi writes it at the GO alias after loading XSTARTI, YSTARTI, XENDI and YENDI; the PROM does the same." }
-CMD_POINT = { value = 0x30000001, grade = "established", doc = "Single point: logic op 3, DRAW. light_pnt2i (kernel) and the PROM write it at SET and the GO alias respectively after XSTARTI and YSTARTI." }
+CMD_POINT = { value = 0x30000001, grade = "established", doc = "Single point: logic op 3, DRAW. light_pnt2i (kernel) and the PROM both store it at SET (0x0) and then read the GO alias (0x800), which runs it, after XSTARTI and YSTARTI." }
 CMD_COPY_RECT = { value = 0x30080329, grade = "established", doc = "Screen copy: fill-rectangle with LOGICSRC. The PROM's scroll routine loads the four coordinates, writes XYMOVE (offset 0x34) at its GO alias, and uses this command word; NetBSD issues the same command." }
 CMD_GLYPH16 = { value = 0x300005b9, grade = "established", doc = "Glyph up to 16 pixels wide: ENZPATTERN, STOPONX, XYCONTINUE, QUAD, LENGTH32, BLOCK, DRAW. light_drawbitmap issues it, then writes the ZPATTERN GO alias (0x860) once per row with the row's bits in the high 16." }
 CMD_GLYPH_PIECE = { value = 0x300005a1, grade = "established", doc = "Glyph wider than 16: every 16-pixel piece except the last uses this command (no BLOCK, no LENGTH32), with XSTART advanced by the 0x10 per piece through XENDI loads. The last piece of each row uses 0x300005a9 (adds BLOCK, which is where y advances)." }
@@ -65,9 +65,9 @@ offset = 0x008
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "rexClear (light_init.o) stores 0x03ff0000 here before each clear; ide REX register test prints XSTATE; offset by store position and the ide name order"
-doc = "Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says)."
+grade = "established"
+from = "rexClear (light_init.o) stores 0x03ff0000 here before each clear; ide REX register test prints XSTATE; offset by store position and the ide name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x8, read back 0x8, full 32 bits (helper 0xa853d718) (reviewed 2026-11-23)"
+doc = "Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says). Offset established by the ide test. The ide test writes all 32 bits and expects them back unmasked."
 
 [registers.xstarti]
 offset = 0x00c
@@ -75,17 +75,17 @@ access = "rw"
 width = 32
 reset = "unknown"
 grade = "established"
-from = "lightProbe, light_sboxfi, light_pnt2i; ide REX register test mask 0xfff"
-doc = "Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here and expects 0x033c0000 from XSTART. A qtest can discriminate: write 0x12345678, read XSTART at 0x14, expect 0x033c0000; read back of XSTARTI itself is 0x678 (inferred; the ide test compares masked values)."
+from = "lightProbe, light_sboxfi, light_pnt2i; ide REX register test (write 0xc, read back XSTART 0x14, mask 0xfff shift 15); PROM probe 0xbfc0f9a8 and kernel lightProbe re-read 2026-11-23"
+doc = "Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here and expects 0x033c0000 from XSTART. A qtest can discriminate: write 0x12345678, read XSTART at 0x14, expect 0x033c0000; whether XSTARTI itself reads back is unknown: no shipped code and not the ide test (which reads XSTART) reads offset 0xc. The ide test confirms the derivation: write at 0xc, read at 0x14, expect (value & 0xfff) << 15."
 
 [registers.xstartf]
 offset = 0x010
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (name XSTARTF, mask 0x7fffff); offset from the ide test order and the NetBSD driver's register map"
-doc = "Draw start x, fraction. Test mask 0x7fffff. Offset inferred from the sequence of names in the ide test (the same order as the offsets that code elsewhere confirms for its neighbours). Software that draws only rectangles never writes it."
+grade = "established"
+from = "ide REX register test (name XSTARTF, mask 0x7fffff); offset from the ide test order and the NetBSD driver's register map; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x10, read back XSTART at 0x14, mask 0x7fffff shift 4 (reviewed 2026-11-23)"
+doc = "Draw start x, fraction. Test mask 0x7fffff. Offset read from the ide test. Software that draws only rectangles never writes it. Offset established by the ide test. A write here appears in XSTART bits 26:4 (the ide test reads 0x14, not 0x10). 'F' is the ide name; the readback shows the register feeds XSTART bits 26:4 (inferred as a write alias of XSTART)."
 
 [registers.xstart]
 offset = 0x014
@@ -101,9 +101,9 @@ offset = 0x018
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test name XENDF, mask 0x7ff800; offset by name order"
-doc = "Draw end x, fraction (ide mask 0x7ff800). Offset inferred."
+grade = "established"
+from = "ide REX register test name XENDF, mask 0x7ff800; offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x18, read back 0x18, mask 0x7ff800; XENDI (0x84) write read back here as value & 0xfff shifted left 11 (reviewed 2026-11-23)"
+doc = "Draw end x, fraction (ide mask 0x7ff800).  Offset established by the ide test. Holds the end x with the integer in bits 22:11 (a write to XENDI at 0x84 reads back here as value & 0xfff shifted left 11; written directly, only bits 22:11 stick). Not a fraction field as the name suggests."
 
 [registers.ystarti]
 offset = 0x01c
@@ -112,52 +112,52 @@ width = 32
 reset = "unknown"
 grade = "established"
 from = "light_sboxfi, light_pnt2i (store 767 minus y here); ide test mask 0xfff"
-doc = "Draw start y as an integer, 12 bits kept. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen."
+doc = "Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value & 0xfff) << 15. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen."
 
 [registers.ystartf]
 offset = 0x020
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (YSTARTF, mask 0x7fffff); offset by name order"
-doc = "Draw start y, fraction. Offset inferred."
+grade = "established"
+from = "ide REX register test (YSTARTF, mask 0x7fffff); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x20, read back YSTART at 0x24, mask 0x7fffff shift 4 (reviewed 2026-11-23)"
+doc = "Draw start y, fraction.  Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4."
 
 [registers.ystart]
 offset = 0x024
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (YSTART, mask 0x7ffffff); offset by name order"
-doc = "Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it."
+grade = "established"
+from = "ide REX register test (YSTART, mask 0x7ffffff); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x24, read back 0x24, mask 0x7ffffff; YSTARTI (0x1c) write read back here as value & 0xfff shifted left 15 (reviewed 2026-11-23)"
+doc = "Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it. Offset established by the ide test. Combined y start, integer in bits 26:15 (the same derivation the probe uses for XSTART)."
 
 [registers.yendf]
 offset = 0x028
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (YENDF, mask 0x7ff800); offset by name order"
-doc = "Draw end y, fraction. Offset inferred."
+grade = "established"
+from = "ide REX register test (YENDF, mask 0x7ff800); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x28, read back 0x28, mask 0x7ff800; YENDI (0x88) write read back here as value & 0xfff shifted left 11 (reviewed 2026-11-23)"
+doc = "Draw end y, fraction.  Offset established by the ide test. Holds the end y with the integer in bits 22:11, as XENDF."
 
 [registers.xsave]
 offset = 0x02c
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (XSAVE, mask 0xfff); lightPcxSwap (light.o) saves and restores the word at this offset"
-doc = "Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers."
+grade = "established"
+from = "ide REX register test (XSAVE, mask 0xfff); lightPcxSwap (light.o) saves and restores the word at this offset; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x2c, read back 0x2c, mask 0xfff (reviewed 2026-11-23)"
+doc = "Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers. Offset established by the ide test. Twelve bits kept."
 
 [registers.minorslope]
 offset = 0x030
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test prints MINORSLOPE; offset from the NetBSD driver's register layout is not stated, so by name order between XSAVE and XYMOVE"
-doc = "Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it."
+grade = "established"
+from = "ide REX register test prints MINORSLOPE; offset from the NetBSD driver's register layout is not stated, so by name order between XSAVE and XYMOVE; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x30 read back 0x30, full 32 bits (helper 0xa853d7a4) (reviewed 2026-11-23)"
+doc = "Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it. Offset established by the ide test. Written and read back unmasked."
 
 [registers.xymove]
 offset = 0x034
@@ -175,88 +175,88 @@ width = 32
 reset = "unknown"
 grade = "established"
 from = "light_color (light_tp.o) stores the colour index here; NetBSD fill and glyph code; ide test mask 0xff"
-doc = "Foreground pixel colour, an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red."
+doc = "Foreground pixel colour (the ide test reads a write back through COLORRED at 0x3c as (value & 0xff) << 11), an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red."
 
 [registers.colorred]
 offset = 0x03c
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (COLORRED, mask 0xfffff); offset by name order"
-doc = "Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order."
+grade = "established"
+from = "ide REX register test (COLORRED, mask 0xfffff); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x3c, read back 0x3c, mask 0xfffff; COLORREDI (0x38) write read back here as value & 0xff shifted left 11 (reviewed 2026-11-23)"
+doc = "Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red channel with its integer part (COLORREDI, 8 bits) in bits 18:11."
 
 [registers.colorgreeni]
 offset = 0x040
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (COLORGREENI, mask 0xff); NetBSD offset 0x40"
-doc = "Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD."
+grade = "established"
+from = "ide REX register test (COLORGREENI, mask 0xff); NetBSD offset 0x40; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x40, read back COLORGREEN at 0x44, mask 0xff shift 11 (reviewed 2026-11-23)"
+doc = "Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD. Offset established by the ide test. A write here appears in COLORGREEN bits 18:11."
 
 [registers.colorgreen]
 offset = 0x044
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (COLORGREEN, mask 0xfffff); offset by name order"
-doc = "Green channel with fraction."
+grade = "established"
+from = "ide REX register test (COLORGREEN, mask 0xfffff); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x44, read back 0x44, mask 0xfffff (reviewed 2026-11-23)"
+doc = "Green channel with fraction. Offset established by the ide test. 20 bits kept."
 
 [registers.colorbluei]
 offset = 0x048
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (COLORBLUEI, mask 0xff); NetBSD offset 0x48"
-doc = "Blue channel integer."
+grade = "established"
+from = "ide REX register test (COLORBLUEI, mask 0xff); NetBSD offset 0x48; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x48, read back COLORBLUE at 0x4c, mask 0xff shift 11 (reviewed 2026-11-23)"
+doc = "Blue channel integer. Offset established by the ide test. A write here appears in COLORBLUE bits 18:11."
 
 [registers.colorblue]
 offset = 0x04c
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (COLORBLUE, mask 0xfffff); offset by name order"
-doc = "Blue channel with fraction."
+grade = "established"
+from = "ide REX register test (COLORBLUE, mask 0xfffff); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x4c, read back 0x4c, mask 0xfffff (reviewed 2026-11-23)"
+doc = "Blue channel with fraction. Offset established by the ide test. 20 bits kept."
 
 [registers.slopered]
 offset = 0x050
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (SLOPERED); offset by name order"
-doc = "Red slope for shaded lines and spans. Not written by shipped light code."
+grade = "established"
+from = "ide REX register test (SLOPERED); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x50 read back 0x50 through the helper at 0xa853d87c, which compares a sign-adjusted 21-bit value (bit 19 copied to bit 20) after masking with 0x801fffff (reviewed 2026-11-23)"
+doc = "Red slope for shaded lines and spans. Not written by shipped light code. Offset established by the ide test. Slope registers are signed: the ide test expects bit 19 of the stored value to read back also in bit 20."
 
 [registers.slopegreen]
 offset = 0x054
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (SLOPEGREEN); offset by name order"
-doc = "Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page."
+grade = "established"
+from = "ide REX register test (SLOPEGREEN); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x54, same helper as SLOPERED (reviewed 2026-11-23)"
+doc = "Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. Offset established by the ide test. As SLOPERED."
 
 [registers.slopeblue]
 offset = 0x058
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (SLOPEBLUE); offset by name order"
-doc = "Blue slope. Not written by shipped light code."
+grade = "established"
+from = "ide REX register test (SLOPEBLUE); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x58, same helper as SLOPERED (reviewed 2026-11-23)"
+doc = "Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED."
 
 [registers.colorback]
 offset = 0x05c
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (COLORBACK, mask 0xff); NetBSD light_putchar writes it at 0x5c"
-doc = "Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); NetBSD does."
+grade = "established"
+from = "ide REX register test (COLORBACK, mask 0xff); NetBSD light_putchar writes it at 0x5c; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x5c, read back 0x5c, mask 0xff (reviewed 2026-11-23)"
+doc = "Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); NetBSD does. Offset established by the ide test. Eight bits kept."
 
 [registers.zpattern]
 offset = 0x060
@@ -272,27 +272,27 @@ offset = 0x064
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (LSPATTERN, all bits); offset by name order"
-doc = "Line stipple pattern. Not written by shipped light code."
+grade = "established"
+from = "ide REX register test (LSPATTERN, all bits); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x64, read back 0x64, all 32 bits (reviewed 2026-11-23)"
+doc = "Line stipple pattern. Not written by shipped light code. Offset established by the ide test. Fully read/write."
 
 [registers.lsmode]
 offset = 0x068
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (LSMODE, mask 0xfffff); offset by name order"
-doc = "Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page."
+grade = "established"
+from = "ide REX register test (LSMODE, mask 0xfffff); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x68, read back 0x68, mask 0xfffff (reviewed 2026-11-23)"
+doc = "Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept."
 
 [registers.aweight]
 offset = 0x06c
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (AWEIGHT); offset by name order"
-doc = "Antialias weight. Not written by shipped light code."
+grade = "established"
+from = "ide REX register test (AWEIGHT); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x6c, read back 0x6c, all 32 bits (reviewed 2026-11-23)"
+doc = "Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write."
 
 [registers.rwaux1]
 offset = 0x070
@@ -308,9 +308,9 @@ offset = 0x074
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "ide REX register test (RWAUX2); offset by name order"
-doc = "Second read/write auxiliary word. Not written by shipped light code."
+grade = "established"
+from = "ide REX register test (RWAUX2); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x74, read back 0x74, all 32 bits (reviewed 2026-11-23)"
+doc = "Second read/write auxiliary word. Not written by shipped light code. Offset established by the ide test. Fully read/write."
 
 [registers.rwmask]
 offset = 0x078
@@ -346,7 +346,7 @@ width = 32
 reset = "unknown"
 grade = "established"
 from = "light_sboxfi, PROM 0xbfc2d5c0, drawbitmap; ide test mask 0xfff"
-doc = "Draw end x (integer, inclusive): the last column a STOPONX command draws."
+doc = "Draw end x (integer, inclusive): the last column a STOPONX command draws. The ide test reads it back through XENDF (0x18) as (value & 0xfff) << 11."
 
 [registers.yendi]
 offset = 0x088
@@ -355,16 +355,61 @@ width = 32
 reset = "unknown"
 grade = "established"
 from = "light_sboxfi stores 767 minus y here; PROM 0xbfc2d5c0; drawbitmap stores 0; ide test mask 0xfff"
-doc = "Draw end y (integer, inclusive), bottom-up like YSTARTI."
+doc = "Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads it back through YENDF (0x28) as (value & 0xfff) << 11. light_sboxfi and the PROM fill store 767 minus the top row here and 767 minus the bottom row in YSTARTI, so YSTARTI <= YENDI."
 
 [registers.smask2x]
 offset = 0x4790
 access = "rw"
 width = 32
 reset = "unknown"
-grade = "inferred"
-from = "lightPcxSwap (light.o) saves and restores 0x4790 to 0x47a4 as six consecutive words; ide test names SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y (mask 0x3ff03ff)"
-doc = "First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save; the assignment of names to words follows the ide order and NetBSD's page base, so it is inferred. Packing as smask1x. Only SMASK2X is declared here; the others are the same register at the stated offsets."
+grade = "established"
+from = "lightPcxSwap (light.o) saves and restores 0x4790 to 0x47a4 as six consecutive words; ide test names SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y (mask 0x3ff03ff); ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): SMASK2X 0x4790, SMASK2Y 0x4794, SMASK3X 0x4798, SMASK3Y 0x479c, SMASK4X 0x47a0, SMASK4Y 0x47a4, each mask 0x3ff03ff (reviewed 2026-11-23)"
+doc = "First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save and the name-to-word assignment by the ide test's offsets. Packing as smask1x. Offset established by the ide test. The six names map to the six consecutive words in this order."
+
+[registers.smask2y]
+offset = 0x4794
+access = "rw"
+width = 32
+reset = "unknown"
+grade = "established"
+from = "ide REX register test at 0xa853d968 (mask 0x3ff03ff, write and read back at this offset); lightPcxSwap saves the six words 0x4790 to 0x47a4"
+doc = "Screen mask word 2Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six."
+
+[registers.smask3x]
+offset = 0x4798
+access = "rw"
+width = 32
+reset = "unknown"
+grade = "established"
+from = "ide REX register test at 0xa853d968 (mask 0x3ff03ff, write and read back at this offset); lightPcxSwap saves the six words 0x4790 to 0x47a4"
+doc = "Screen mask word 3X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six."
+
+[registers.smask3y]
+offset = 0x479c
+access = "rw"
+width = 32
+reset = "unknown"
+grade = "established"
+from = "ide REX register test at 0xa853d968 (mask 0x3ff03ff, write and read back at this offset); lightPcxSwap saves the six words 0x4790 to 0x47a4"
+doc = "Screen mask word 3Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six."
+
+[registers.smask4x]
+offset = 0x47a0
+access = "rw"
+width = 32
+reset = "unknown"
+grade = "established"
+from = "ide REX register test at 0xa853d968 (mask 0x3ff03ff, write and read back at this offset); lightPcxSwap saves the six words 0x4790 to 0x47a4"
+doc = "Screen mask word 4X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six."
+
+[registers.smask4y]
+offset = 0x47a4
+access = "rw"
+width = 32
+reset = "unknown"
+grade = "established"
+from = "ide REX register test at 0xa853d968 (mask 0x3ff03ff, write and read back at this offset); lightPcxSwap saves the six words 0x4790 to 0x47a4"
+doc = "Screen mask word 4Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six."
 
 [registers.aux2]
 offset = 0x47a8

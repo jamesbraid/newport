@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "2ea1bcf6a93bc3c718f09bf751eab9d363e09791794bcee45a68e945054d71fc",
+ "input_sha256": "32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -42,7 +42,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -68,7 +68,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -94,7 +94,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -120,7 +120,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -133,7 +133,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -146,7 +146,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -159,7 +159,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -172,7 +172,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -211,7 +211,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -224,7 +224,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -237,7 +237,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -250,7 +250,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -263,7 +263,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -276,7 +276,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -289,7 +289,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -302,7 +302,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -315,7 +315,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -341,7 +341,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -354,7 +354,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -367,7 +367,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -393,7 +393,7 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -471,7 +471,72 @@
    "stride": 4,
    "space": null,
    "reset": "unknown",
-   "grade": "inferred"
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "register",
+   "name": "smask2y",
+   "offset": 18324,
+   "access": "rw",
+   "width": 32,
+   "count": 1,
+   "stride": 4,
+   "space": null,
+   "reset": "unknown",
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "register",
+   "name": "smask3x",
+   "offset": 18328,
+   "access": "rw",
+   "width": 32,
+   "count": 1,
+   "stride": 4,
+   "space": null,
+   "reset": "unknown",
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "register",
+   "name": "smask3y",
+   "offset": 18332,
+   "access": "rw",
+   "width": 32,
+   "count": 1,
+   "stride": 4,
+   "space": null,
+   "reset": "unknown",
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "register",
+   "name": "smask4x",
+   "offset": 18336,
+   "access": "rw",
+   "width": 32,
+   "count": 1,
+   "stride": 4,
+   "space": null,
+   "reset": "unknown",
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "register",
+   "name": "smask4y",
+   "offset": 18340,
+   "access": "rw",
+   "width": 32,
+   "count": 1,
+   "stride": 4,
+   "space": null,
+   "reset": "unknown",
+   "grade": "established"
   },
   {
    "unit": "rex1",

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 2ea1bcf6a93bc3c718f09bf751eab9d363e09791794bcee45a68e945054d71fc -->
+<!-- input sha256 32b46defb7052aecb55b58a66bcf10e5a513a66f9d7dc9843c8c0b369b55646b -->
 <genxml unit="rex1" prefix="REX1" title="REX1 raster engine on the Indigo Entry graphics board (LG1)">
   <doc>Register file of the REX1 chip as the Indigo's Entry graphics board presents it on the GIO graphics slot. Offsets are bytes from the board base (0x1f3f0000 for the first head, 0x1f3f8000 for a second). Every register is 32 bits wide. A register written at its offset is only stored (the SET alias). The same register at offset + 0x800 (the GO alias) is stored and then the latched command is executed. Names are the ones the shipped diagnostics (ide) print for the REX register test, where it prints one; the rest use the names of the NetBSD sgimips light driver. The three off-chip ports (WCLOCK, RWDAC, RWVC1) are covered here as REX registers; the chips behind them are in devices/vc1 and devices/bt479. Grades follow AGENTS.md: established means the whole routine was read in the shipped Indigo kernel graphics driver or the Indigo PROM; inferred is a reading with the reasoning given; unknown means no shipped software settles it. Nothing was measured on a board.</doc>
   <struct name="COMMAND" size="4" grade="established" register="yes" offset="0x0" access="rw" reset="unknown">
@@ -10,89 +10,89 @@
   <struct name="AUX1" size="4" grade="established" register="yes" offset="0x4" access="rw" reset="unknown">
     <doc>Auxiliary control word, one per window context. initRex zeroes it. lightAux1Register builds a value from a window's saved value with bits 4:2 cleared, sets bit 4 when the request word's second field is 1, bit 2 when bit 0 of its third field is set and bit 3 when bit 1 is set, then stores it here (only for the window that owns the screen) or in the window's saved context. Which pixel behaviour each of bits 2, 3 and 4 enables: unknown, no shipped code names them. ide's register test reads it back whole (test mask 0x3ff).</doc>
   </struct>
-  <struct name="XSTATE" size="4" grade="inferred" register="yes" offset="0x8" access="rw" reset="unknown">
-    <doc>Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says).</doc>
+  <struct name="XSTATE" size="4" grade="established" register="yes" offset="0x8" access="rw" reset="unknown">
+    <doc>Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says). Offset established by the ide test. The ide test writes all 32 bits and expects them back unmasked.</doc>
   </struct>
   <struct name="XSTARTI" size="4" grade="established" register="yes" offset="0xc" access="rw" reset="unknown">
-    <doc>Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here and expects 0x033c0000 from XSTART. A qtest can discriminate: write 0x12345678, read XSTART at 0x14, expect 0x033c0000; read back of XSTARTI itself is 0x678 (inferred; the ide test compares masked values).</doc>
+    <doc>Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here and expects 0x033c0000 from XSTART. A qtest can discriminate: write 0x12345678, read XSTART at 0x14, expect 0x033c0000; whether XSTARTI itself reads back is unknown: no shipped code and not the ide test (which reads XSTART) reads offset 0xc. The ide test confirms the derivation: write at 0xc, read at 0x14, expect (value &amp; 0xfff) &lt;&lt; 15.</doc>
   </struct>
-  <struct name="XSTARTF" size="4" grade="inferred" register="yes" offset="0x10" access="rw" reset="unknown">
-    <doc>Draw start x, fraction. Test mask 0x7fffff. Offset inferred from the sequence of names in the ide test (the same order as the offsets that code elsewhere confirms for its neighbours). Software that draws only rectangles never writes it.</doc>
+  <struct name="XSTARTF" size="4" grade="established" register="yes" offset="0x10" access="rw" reset="unknown">
+    <doc>Draw start x, fraction. Test mask 0x7fffff. Offset read from the ide test. Software that draws only rectangles never writes it. Offset established by the ide test. A write here appears in XSTART bits 26:4 (the ide test reads 0x14, not 0x10). 'F' is the ide name; the readback shows the register feeds XSTART bits 26:4 (inferred as a write alias of XSTART).</doc>
   </struct>
   <struct name="XSTART" size="4" grade="established" register="yes" offset="0x14" access="rw" reset="unknown">
     <doc>Draw start x, integer and fraction combined: 27 bits in the ide test mask, integer in bits 26:15. Read at offset 0x14 by the board probe after XSTARTI was written; the value read is the probe's presence test (PROBE_READBACK). Whether a write here reflects in XSTARTI: unknown.</doc>
   </struct>
-  <struct name="XENDF" size="4" grade="inferred" register="yes" offset="0x18" access="rw" reset="unknown">
-    <doc>Draw end x, fraction (ide mask 0x7ff800). Offset inferred.</doc>
+  <struct name="XENDF" size="4" grade="established" register="yes" offset="0x18" access="rw" reset="unknown">
+    <doc>Draw end x, fraction (ide mask 0x7ff800).  Offset established by the ide test. Holds the end x with the integer in bits 22:11 (a write to XENDI at 0x84 reads back here as value &amp; 0xfff shifted left 11; written directly, only bits 22:11 stick). Not a fraction field as the name suggests.</doc>
   </struct>
   <struct name="YSTARTI" size="4" grade="established" register="yes" offset="0x1c" access="rw" reset="unknown">
-    <doc>Draw start y as an integer, 12 bits kept. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen.</doc>
+    <doc>Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTART (0x24) expecting (value &amp; 0xfff) &lt;&lt; 15. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen.</doc>
   </struct>
-  <struct name="YSTARTF" size="4" grade="inferred" register="yes" offset="0x20" access="rw" reset="unknown">
-    <doc>Draw start y, fraction. Offset inferred.</doc>
+  <struct name="YSTARTF" size="4" grade="established" register="yes" offset="0x20" access="rw" reset="unknown">
+    <doc>Draw start y, fraction.  Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4.</doc>
   </struct>
-  <struct name="YSTART" size="4" grade="inferred" register="yes" offset="0x24" access="rw" reset="unknown">
-    <doc>Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it.</doc>
+  <struct name="YSTART" size="4" grade="established" register="yes" offset="0x24" access="rw" reset="unknown">
+    <doc>Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it. Offset established by the ide test. Combined y start, integer in bits 26:15 (the same derivation the probe uses for XSTART).</doc>
   </struct>
-  <struct name="YENDF" size="4" grade="inferred" register="yes" offset="0x28" access="rw" reset="unknown">
-    <doc>Draw end y, fraction. Offset inferred.</doc>
+  <struct name="YENDF" size="4" grade="established" register="yes" offset="0x28" access="rw" reset="unknown">
+    <doc>Draw end y, fraction.  Offset established by the ide test. Holds the end y with the integer in bits 22:11, as XENDF.</doc>
   </struct>
-  <struct name="XSAVE" size="4" grade="inferred" register="yes" offset="0x2c" access="rw" reset="unknown">
-    <doc>Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers.</doc>
+  <struct name="XSAVE" size="4" grade="established" register="yes" offset="0x2c" access="rw" reset="unknown">
+    <doc>Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers. Offset established by the ide test. Twelve bits kept.</doc>
   </struct>
-  <struct name="MINORSLOPE" size="4" grade="inferred" register="yes" offset="0x30" access="rw" reset="unknown">
-    <doc>Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it.</doc>
+  <struct name="MINORSLOPE" size="4" grade="established" register="yes" offset="0x30" access="rw" reset="unknown">
+    <doc>Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it. Offset established by the ide test. Written and read back unmasked.</doc>
   </struct>
   <struct name="XYMOVE" size="4" grade="established" register="yes" offset="0x34" access="rw" reset="unknown">
     <doc>Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination (NetBSD: dx is from_x minus to_x). It is written at the GO alias after the rectangle and the copy command are set up. The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched (the exact polarity of y under the bottom-up y axis is inferred).</doc>
   </struct>
   <struct name="COLORREDI" size="4" grade="established" register="yes" offset="0x38" access="rw" reset="unknown">
-    <doc>Foreground pixel colour, an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red.</doc>
+    <doc>Foreground pixel colour (the ide test reads a write back through COLORRED at 0x3c as (value &amp; 0xff) &lt;&lt; 11), an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red.</doc>
   </struct>
-  <struct name="COLORRED" size="4" grade="inferred" register="yes" offset="0x3c" access="rw" reset="unknown">
-    <doc>Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order.</doc>
+  <struct name="COLORRED" size="4" grade="established" register="yes" offset="0x3c" access="rw" reset="unknown">
+    <doc>Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red channel with its integer part (COLORREDI, 8 bits) in bits 18:11.</doc>
   </struct>
-  <struct name="COLORGREENI" size="4" grade="inferred" register="yes" offset="0x40" access="rw" reset="unknown">
-    <doc>Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD.</doc>
+  <struct name="COLORGREENI" size="4" grade="established" register="yes" offset="0x40" access="rw" reset="unknown">
+    <doc>Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD. Offset established by the ide test. A write here appears in COLORGREEN bits 18:11.</doc>
   </struct>
-  <struct name="COLORGREEN" size="4" grade="inferred" register="yes" offset="0x44" access="rw" reset="unknown">
-    <doc>Green channel with fraction.</doc>
+  <struct name="COLORGREEN" size="4" grade="established" register="yes" offset="0x44" access="rw" reset="unknown">
+    <doc>Green channel with fraction. Offset established by the ide test. 20 bits kept.</doc>
   </struct>
-  <struct name="COLORBLUEI" size="4" grade="inferred" register="yes" offset="0x48" access="rw" reset="unknown">
-    <doc>Blue channel integer.</doc>
+  <struct name="COLORBLUEI" size="4" grade="established" register="yes" offset="0x48" access="rw" reset="unknown">
+    <doc>Blue channel integer. Offset established by the ide test. A write here appears in COLORBLUE bits 18:11.</doc>
   </struct>
-  <struct name="COLORBLUE" size="4" grade="inferred" register="yes" offset="0x4c" access="rw" reset="unknown">
-    <doc>Blue channel with fraction.</doc>
+  <struct name="COLORBLUE" size="4" grade="established" register="yes" offset="0x4c" access="rw" reset="unknown">
+    <doc>Blue channel with fraction. Offset established by the ide test. 20 bits kept.</doc>
   </struct>
-  <struct name="SLOPERED" size="4" grade="inferred" register="yes" offset="0x50" access="rw" reset="unknown">
-    <doc>Red slope for shaded lines and spans. Not written by shipped light code.</doc>
+  <struct name="SLOPERED" size="4" grade="established" register="yes" offset="0x50" access="rw" reset="unknown">
+    <doc>Red slope for shaded lines and spans. Not written by shipped light code. Offset established by the ide test. Slope registers are signed: the ide test expects bit 19 of the stored value to read back also in bit 20.</doc>
   </struct>
-  <struct name="SLOPEGREEN" size="4" grade="inferred" register="yes" offset="0x54" access="rw" reset="unknown">
-    <doc>Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page.</doc>
+  <struct name="SLOPEGREEN" size="4" grade="established" register="yes" offset="0x54" access="rw" reset="unknown">
+    <doc>Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. Offset established by the ide test. As SLOPERED.</doc>
   </struct>
-  <struct name="SLOPEBLUE" size="4" grade="inferred" register="yes" offset="0x58" access="rw" reset="unknown">
-    <doc>Blue slope. Not written by shipped light code.</doc>
+  <struct name="SLOPEBLUE" size="4" grade="established" register="yes" offset="0x58" access="rw" reset="unknown">
+    <doc>Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED.</doc>
   </struct>
-  <struct name="COLORBACK" size="4" grade="inferred" register="yes" offset="0x5c" access="rw" reset="unknown">
-    <doc>Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); NetBSD does.</doc>
+  <struct name="COLORBACK" size="4" grade="established" register="yes" offset="0x5c" access="rw" reset="unknown">
+    <doc>Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); NetBSD does. Offset established by the ide test. Eight bits kept.</doc>
   </struct>
   <struct name="ZPATTERN" size="4" grade="established" register="yes" offset="0x60" access="rw" reset="unknown">
     <doc>Pixel pattern for the pattern-enabled commands. Software writes it at the GO alias (0x860): each write draws one row of the glyph, taking pattern bits 31 downward, the row's bits shifted into the top half for 16-wide glyphs (the kernel shifts each halfword left by 16) and into bit 24 for 8-wide (NetBSD). With STOPONX, XYCONTINUE and BLOCK, y steps by one row after each write. A qtest can discriminate: set XSTARTI, XENDI, YSTARTI, write command 0x300005b9 at 0 and 0x80000000 at 0x860, and exactly one pixel at the start column is drawn.</doc>
   </struct>
-  <struct name="LSPATTERN" size="4" grade="inferred" register="yes" offset="0x64" access="rw" reset="unknown">
-    <doc>Line stipple pattern. Not written by shipped light code.</doc>
+  <struct name="LSPATTERN" size="4" grade="established" register="yes" offset="0x64" access="rw" reset="unknown">
+    <doc>Line stipple pattern. Not written by shipped light code. Offset established by the ide test. Fully read/write.</doc>
   </struct>
-  <struct name="LSMODE" size="4" grade="inferred" register="yes" offset="0x68" access="rw" reset="unknown">
-    <doc>Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page.</doc>
+  <struct name="LSMODE" size="4" grade="established" register="yes" offset="0x68" access="rw" reset="unknown">
+    <doc>Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept.</doc>
   </struct>
-  <struct name="AWEIGHT" size="4" grade="inferred" register="yes" offset="0x6c" access="rw" reset="unknown">
-    <doc>Antialias weight. Not written by shipped light code.</doc>
+  <struct name="AWEIGHT" size="4" grade="established" register="yes" offset="0x6c" access="rw" reset="unknown">
+    <doc>Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write.</doc>
   </struct>
   <struct name="RWAUX1" size="4" grade="established" register="yes" offset="0x70" access="rw" reset="unknown">
     <doc>Read/write auxiliary word used to read and write pixel memory with a draw command. lightInitInfo writes 0x01081020 here, then 0x09090909 with a 0x30210021 command, runs 0x30200023 and compares the result word read back at 0x870 with 0x01080909 or 0x09091020 to record a 0, 1 or 0xff in byte 0x29 of the board info it hands to GfxRegisterBoard. What the three outcomes mean for the board (pixel memory population): unknown. A qtest can discriminate only by replaying that sequence, which needs the draw unit to move words between RWAUX1 and the frame buffer.</doc>
   </struct>
-  <struct name="RWAUX2" size="4" grade="inferred" register="yes" offset="0x74" access="rw" reset="unknown">
-    <doc>Second read/write auxiliary word. Not written by shipped light code.</doc>
+  <struct name="RWAUX2" size="4" grade="established" register="yes" offset="0x74" access="rw" reset="unknown">
+    <doc>Second read/write auxiliary word. Not written by shipped light code. Offset established by the ide test. Fully read/write.</doc>
   </struct>
   <struct name="RWMASK" size="4" grade="established" register="yes" offset="0x78" access="rw" reset="unknown">
     <doc>Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept.</doc>
@@ -104,13 +104,28 @@
     <doc>Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values are flipped (height minus row minus one) before packing, so they are in REX's bottom-up coordinates.</doc>
   </struct>
   <struct name="XENDI" size="4" grade="established" register="yes" offset="0x84" access="rw" reset="unknown">
-    <doc>Draw end x (integer, inclusive): the last column a STOPONX command draws.</doc>
+    <doc>Draw end x (integer, inclusive): the last column a STOPONX command draws. The ide test reads it back through XENDF (0x18) as (value &amp; 0xfff) &lt;&lt; 11.</doc>
   </struct>
   <struct name="YENDI" size="4" grade="established" register="yes" offset="0x88" access="rw" reset="unknown">
-    <doc>Draw end y (integer, inclusive), bottom-up like YSTARTI.</doc>
+    <doc>Draw end y (integer, inclusive), bottom-up like YSTARTI. The ide test reads it back through YENDF (0x28) as (value &amp; 0xfff) &lt;&lt; 11. light_sboxfi and the PROM fill store 767 minus the top row here and 767 minus the bottom row in YSTARTI, so YSTARTI &lt;= YENDI.</doc>
   </struct>
-  <struct name="SMASK2X" size="4" grade="inferred" register="yes" offset="0x4790" access="rw" reset="unknown">
-    <doc>First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save; the assignment of names to words follows the ide order and NetBSD's page base, so it is inferred. Packing as smask1x. Only SMASK2X is declared here; the others are the same register at the stated offsets.</doc>
+  <struct name="SMASK2X" size="4" grade="established" register="yes" offset="0x4790" access="rw" reset="unknown">
+    <doc>First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save and the name-to-word assignment by the ide test's offsets. Packing as smask1x. Offset established by the ide test. The six names map to the six consecutive words in this order.</doc>
+  </struct>
+  <struct name="SMASK2Y" size="4" grade="established" register="yes" offset="0x4794" access="rw" reset="unknown">
+    <doc>Screen mask word 2Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.</doc>
+  </struct>
+  <struct name="SMASK3X" size="4" grade="established" register="yes" offset="0x4798" access="rw" reset="unknown">
+    <doc>Screen mask word 3X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.</doc>
+  </struct>
+  <struct name="SMASK3Y" size="4" grade="established" register="yes" offset="0x479c" access="rw" reset="unknown">
+    <doc>Screen mask word 3Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.</doc>
+  </struct>
+  <struct name="SMASK4X" size="4" grade="established" register="yes" offset="0x47a0" access="rw" reset="unknown">
+    <doc>Screen mask word 4X. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.</doc>
+  </struct>
+  <struct name="SMASK4Y" size="4" grade="established" register="yes" offset="0x47a4" access="rw" reset="unknown">
+    <doc>Screen mask word 4Y. Packing as smask1x. Added in the 2026-11-23 review so the generated header names all six.</doc>
   </struct>
   <struct name="AUX2" size="4" grade="established" register="yes" offset="0x47a8" access="rw" reset="unknown">
     <doc>Second auxiliary control word. Both initialisations store 0x20000000. lightSetDestinationPlanes keeps bits 28:0 of the window's saved value, ORs in the request's top three bits and, for the window on screen, waits for the engine to go idle and stores the result here, so the top three bits select which plane group a draw reaches. The meaning of each of those three bits: unknown (no shipped code names the groups). The ide mask 0x7fffffff shows 31 bits kept.</doc>

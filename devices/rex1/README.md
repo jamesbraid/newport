@@ -18,8 +18,7 @@ command values agree with what is written here and it supplied none of it. The c
 
 - **Chip marking, observed** in a photograph of an LG1 board (Library
   `photos/sgistuff-indigo/indigo-lg1a-1001.jpg`): the large LSI Logic gate-array package on the right-hand half of the board
-  (beside eight small memory parts) carries a part number that is not legible enough in the image to transcribe. Treat the
-  part number as **unknown**. The software name "REX" (lightProbe's board info, the ide test's "REX register r/w test") is **established**.
+  (beside eight small memory parts) is marked "LSI LOGIC", "REX1.5", "REV. A" (**observed**, read at high magnification, text upside down on the board as photographed). The part number line above it reads L1A6761 or a near misprint of it: treat the digits as **unknown**. The software name "REX" (lightProbe's board info, the ide test's "REX register r/w test") is **established**.
 - **Revision as software sees it.** `WCLOCK` read with `CONFIGSEL` = 4: bits 2:0 are a board revision. The kernel takes
   `rev < 2` to be an LG1 (Bt479 colour map, first clock table, `htp` function table `lg1_htp_fncs`) and `rev >= 2` an LG2
   (LUT1 colour map, second clock table, `lg2_htp_fncs`). Bits 5:3 are a monitor type (6 selects a variant of the colour map
@@ -102,8 +101,8 @@ overlap-safe copying only for those.
 
 | Routine | Register writes |
 |---|---|
-| `light_sboxfi(x0, y0, x1, y1)` | busy wait; `YENDI` = 767 - y1; `YSTARTI` = 767 - y0; `XSTARTI` = x0; `XENDI` = x1; command 0x30000329 at GO |
-| `light_pnt2i(x, y)` | busy wait; `XSTARTI`, `YSTARTI` = 767 - y; command 0x30000001 at SET |
+| `light_sboxfi(x0, y0, x1, y1)` | busy wait; `YENDI` = 767 - y0; `YSTARTI` = 767 - y1; `XSTARTI` = x0; `XENDI` = x1; command 0x30000329 at GO (for y0 <= y1 the stored YSTARTI <= YENDI) |
+| `light_pnt2i(x, y)` | busy wait; `XSTARTI`, `YSTARTI` = 767 - y; command 0x30000001 at SET, then a read of the GO alias runs it |
 | `light_color(c)` | busy wait; `COLORREDI` = c |
 | `light_drawbitmap` | busy wait; XSTARTI, YSTARTI, XENDI = x + w - 1, YENDI = 0; GO command 0; command 0x300005b9 (or `a1/a9` pieces); one `ZPATTERN` GO write per row |
 
@@ -162,6 +161,34 @@ glyphs. It never programs the colour map. All differences with this page are not
 
 ## Open
 
-Filed in [questions/README.md](../../questions/README.md): the offsets of the registers known only by the ide test's names;
-what the command bits 21 and 16 do; what `CONFIGMODE` bits 31 and 22:13 are; the part number of the REX chip; the
+Filed in [questions/README.md](../../questions/README.md): what the command bits 21 and 16 do; what `CONFIGMODE` bits 31 and 22:13 are; the digits of the REX chip's part number; the
 format of `RWAUX1`'s memory-probe outcome.
+
+## Review (2026-11-23)
+
+Independent review of the register map and drawing model against `lg1.a` (`light.o`, `light_init.o`, `light_tp.o`), the 4.0.5D PROM
+and the IP20 `ide` image, re-disassembled from the shipped objects. Verdicts per claim:
+
+- **Probe (CONFIRMED).** `lightProbe` and the PROM probe (0xbfc0f9a8) store 0x12345678 at +0xc, 0 at +0x0, read +0x800, read +0x14 and
+  compare with 0x033c0000. 0x678 << 15 = 0x033c0000. The ide test confirms the derivation directly: it writes +0xc and reads +0x14
+  expecting (value & 0xfff) << 15. Correction: the PROM probe calls a one-instruction return between the GO read and the compare, so it
+  has no real delay, as already written. Whether XSTARTI at +0xc itself reads back is **unknown**: neither the probe nor the ide test reads it.
+- **SET/GO and busy (CONFIRMED).** `light_pnt2i` and the PROM fill/point routines store the command at SET and then *read* the GO alias;
+  the fill/glyph/copy paths write GO. Busy is `CONFIGMODE` (0x47f8) bit 0 in every routine. The kernel's `lightProbe` wait is 300000 iterations of a
+  1 microsecond delay and comes before the probe stores.
+- **Commands (CONFIRMED).** 0x30000329, 0x30080329 (PROM copy at 0xbfc2d9f8: command at SET, XYMOVE written at 0x834), 0x30000001,
+  0x300005b9 and the 0x300005a1/0x300005a9 piece loop are as listed. **WRONG** in the first version: the `light_sboxfi` row had the y stores swapped.
+  The code stores `YSTARTI` = 767 - y1 and `YENDI` = 767 - y0 (arguments x0, y0, x1, y1), the PROM fill does the same, so YSTARTI <= YENDI for y0 <= y1.
+  The kernel's `light_pnt2i` also reads the GO alias after storing the command at SET.
+- **CONFIGSEL port sharing (CONFIRMED).** WCLOCK, RWDAC and RWVC1 use it. The board revision, monitor type and bit 6 are read with CONFIGSEL 4 (GO read, 1 microsecond,
+  SET read); bit 6 clear stores 1 in the info word at +0x2c. The VC1 revision read is CONFIGSEL 3 after the address counter was set to 5. `initClock` writes the selector through its
+  GO alias (0x4fec). Not a fault: `lightInit` runs `rexClear` twice, the second after `lightInitInfo`, whose pixel-memory probe leaves pixels behind.
+- **Offsets named only by the ide test (UPGRADED to established).** The ide test at 0xa853d968 calls a helper (0xa853d670) with the write offset, the read-back offset, the
+  name, a mask and a shift, and all 41 offsets are now read directly. Every inferred offset was right. Findings that change the model: XSTARTF (0x10), XENDF
+  (0x18), YSTARTF (0x20), YENDF (0x28) are not fractions; the test reads XSTART/YSTART back after writing XSTARTI/XSTARTF and reads XENDF/YENDF back after
+  writing XENDI/YENDI (shift 11, mask 0xfff), and COLORREDI/GREENI/BLUEI (0x38/0x40/0x48) read back through COLORRED/GREEN/BLUE (0x3c/0x44/0x4c)
+  as (value & 0xff) << 11. The slope registers (0x50 to 0x58) read back sign-adjusted (bit 19 copied to bit 20). The six SMASK2 to SMASK4 words are named
+  by the ide test's own offsets (0x4790 to 0x47a4), and are now all in the register list. After each write the test stores 0 at 0x800 three times (a no-op command at GO),
+  so a model that derives read-back values at GO time passes; one that derives them on every write passes too.
+- **Start-up (CONFIRMED)** for the kernel stores in `initRex`, `rexClear`, `initClock`, `lightInitInfo`; the PROM `initRex`-equivalent matches store for store.
+- **Not settled.** `CONFIGMODE` bit 31 inversion and bits 22:13, command bits 21 and 16, the `RWAUX1` outcome meanings.
