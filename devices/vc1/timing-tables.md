@@ -140,5 +140,5 @@ board revision byte (below 2, the first; 2 and above, the second). The kernel's 
 
 ```
 rev below 2   c4 00 10 24 30 40 59 60 72 80 90 ad b6 d1 e0 f0 c4
-rev 2 and up  c4 0c 17 20 30 4f 51 60 71 80 90 ad b6 d1 e0 f0 00
+rev 2 and up  c4 0c 17 20 30 4f 51 60 71 80 90 ad b6 d1 e0 f0 c4
 ```

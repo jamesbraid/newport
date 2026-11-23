@@ -24,7 +24,7 @@ read the GO alias. The indices the shipped code uses:
 |---|---|---|
 | 0 | palette address, written before a run of palette bytes | `initBt479`, `lg1_mapcolor`: the index then three bytes through selector 1 |
 | 1 | palette data: three consecutive bytes (red, green, blue) per entry; the address advances after the third | `initBt479` loops 256 times writing three bytes |
-| 2 | pixel read mask, written 0xff once colours are loaded | `initBt479`, `lg1_mapcolor` |
+| 2 | pixel read mask, written 0xff (`initBt479` writes it before the palette; `lg1_mapcolor` after) | `initBt479`, `lg1_mapcolor` |
 | 3 | read address; a write of 0 before a palette read | `light_read_bt_colormaps` |
 | 6 | command: written after an index of 0x82 on selector 0 | below |
 
@@ -36,7 +36,7 @@ Established as a sequence, role inferred. To change which of four 256-entry bank
 selector 0 with the value 0x82, then selector 6 with a bank value, then returns to selector 0 with the palette index.
 `initBt479` writes the bank values 0x00 (the real palette), 0x10, 0x20 and 0x30 (each followed by 256 entries of zero); the
 mapcolor routine writes 0x0f; the readback routine writes (bank << 4) | 0x0f for banks 0 to 3. The low nibble and what the two
-values (0x0f against 0x00) do: **unknown**. The PROM's colour-set routine writes 0x3f for the Bt479 variant.
+values (0x0f against 0x00) do: **unknown**. The PROM's colour-set routine (0xbfc2d4e8) writes 0x0f on the Bt479 path, as `lg1_mapcolor` does; 0x3f is the mask `lg2_mapcolor` applies on the LUT1 path. On the LUT1 path the PROM writes (monitor flag | 2) to selector 6.
 
 At the end of `initBt479` the first loop writes selector 0 = i then selector 6 = 0 for i in 0 to 0x7f (clears 128 registers
 at those addresses; role **unknown**), then a command word written three times in a row to selector 6 after selecting address

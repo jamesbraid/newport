@@ -40,7 +40,7 @@ VC1 the selector value picks which of its eight windows the next `RWVC1` access 
 | 6 | SYS_CTL | one byte of chip control |
 | 7 | unused | no shipped code selects it |
 
-Every write stores the byte in `RWVC1` and then in its GO alias (offset + 0x800); the second store is what moves the byte to
+`vc1LoadSRAM` also reads the word at board offset 0x7fc after every SRAM data byte and discards it; no register is defined there, so a model must accept a read (any value) at 0x7fc without a fault. Every write stores the byte in `RWVC1` and then in its GO alias (offset + 0x800); the second store is what moves the byte to
 the chip. A read writes `CONFIGSEL`, reads the GO alias (discarding the result), waits, then reads `RWVC1` (the PROM and
 NetBSD agree; the kernel's colour-map reads read the GO alias directly and use its value). **Established** from every routine
 named above. The 16-bit address counter is shared by windows 0, 1 and 2 and auto-increments after each data byte
