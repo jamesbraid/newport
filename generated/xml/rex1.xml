@@ -1,0 +1,175 @@
+<?xml version="1.0" ?>
+<!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
+<!-- defs-gen 3 -->
+<!-- input sha256 2ea1bcf6a93bc3c718f09bf751eab9d363e09791794bcee45a68e945054d71fc -->
+<genxml unit="rex1" prefix="REX1" title="REX1 raster engine on the Indigo Entry graphics board (LG1)">
+  <doc>Register file of the REX1 chip as the Indigo's Entry graphics board presents it on the GIO graphics slot. Offsets are bytes from the board base (0x1f3f0000 for the first head, 0x1f3f8000 for a second). Every register is 32 bits wide. A register written at its offset is only stored (the SET alias). The same register at offset + 0x800 (the GO alias) is stored and then the latched command is executed. Names are the ones the shipped diagnostics (ide) print for the REX register test, where it prints one; the rest use the names of the NetBSD sgimips light driver. The three off-chip ports (WCLOCK, RWDAC, RWVC1) are covered here as REX registers; the chips behind them are in devices/vc1 and devices/bt479. Grades follow AGENTS.md: established means the whole routine was read in the shipped Indigo kernel graphics driver or the Indigo PROM; inferred is a reading with the reasoning given; unknown means no shipped software settles it. Nothing was measured on a board.</doc>
+  <struct name="COMMAND" size="4" grade="established" register="yes" offset="0x0" access="rw" reset="unknown">
+    <doc>Drawing command. Bits 31:28 hold the logic operation, the low bits the opcode and flags listed as CMD_ constants. A write at 0x000 stores it; a write at 0x800 (or a read of 0x800) executes the command that is now latched, using the coordinate and colour registers as they stand. The PROM's probe writes 0 here and reads 0x800 (a no-op); the kernel's glyph path writes the command, then writes ZPATTERN at its GO alias once per row. A qtest can discriminate: a command written at 0x000 draws nothing, the same word at 0x800 draws, and a read of 0x800 draws what the latched command says. Bits 27:20 of values the kernel and PROM write are zero except bit 23 and bit 24 (ZOPAQUE, ZCONTINUE: not set by shipped code) and bits 21 and 16 in the two probe commands 0x30200021, 0x30210021 and 0x30200023, which lightInitInfo uses to learn the board's pixel memory (see rwaux1); those bits are unknown.</doc>
+  </struct>
+  <struct name="AUX1" size="4" grade="established" register="yes" offset="0x4" access="rw" reset="unknown">
+    <doc>Auxiliary control word, one per window context. initRex zeroes it. lightAux1Register builds a value from a window's saved value with bits 4:2 cleared, sets bit 4 when the request word's second field is 1, bit 2 when bit 0 of its third field is set and bit 3 when bit 1 is set, then stores it here (only for the window that owns the screen) or in the window's saved context. Which pixel behaviour each of bits 2, 3 and 4 enables: unknown, no shipped code names them. ide's register test reads it back whole (test mask 0x3ff).</doc>
+  </struct>
+  <struct name="XSTATE" size="4" grade="inferred" register="yes" offset="0x8" access="rw" reset="unknown">
+    <doc>Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says).</doc>
+  </struct>
+  <struct name="XSTARTI" size="4" grade="established" register="yes" offset="0xc" access="rw" reset="unknown">
+    <doc>Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 here and expects 0x033c0000 from XSTART. A qtest can discriminate: write 0x12345678, read XSTART at 0x14, expect 0x033c0000; read back of XSTARTI itself is 0x678 (inferred; the ide test compares masked values).</doc>
+  </struct>
+  <struct name="XSTARTF" size="4" grade="inferred" register="yes" offset="0x10" access="rw" reset="unknown">
+    <doc>Draw start x, fraction. Test mask 0x7fffff. Offset inferred from the sequence of names in the ide test (the same order as the offsets that code elsewhere confirms for its neighbours). Software that draws only rectangles never writes it.</doc>
+  </struct>
+  <struct name="XSTART" size="4" grade="established" register="yes" offset="0x14" access="rw" reset="unknown">
+    <doc>Draw start x, integer and fraction combined: 27 bits in the ide test mask, integer in bits 26:15. Read at offset 0x14 by the board probe after XSTARTI was written; the value read is the probe's presence test (PROBE_READBACK). Whether a write here reflects in XSTARTI: unknown.</doc>
+  </struct>
+  <struct name="XENDF" size="4" grade="inferred" register="yes" offset="0x18" access="rw" reset="unknown">
+    <doc>Draw end x, fraction (ide mask 0x7ff800). Offset inferred.</doc>
+  </struct>
+  <struct name="YSTARTI" size="4" grade="established" register="yes" offset="0x1c" access="rw" reset="unknown">
+    <doc>Draw start y as an integer, 12 bits kept. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen.</doc>
+  </struct>
+  <struct name="YSTARTF" size="4" grade="inferred" register="yes" offset="0x20" access="rw" reset="unknown">
+    <doc>Draw start y, fraction. Offset inferred.</doc>
+  </struct>
+  <struct name="YSTART" size="4" grade="inferred" register="yes" offset="0x24" access="rw" reset="unknown">
+    <doc>Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it.</doc>
+  </struct>
+  <struct name="YENDF" size="4" grade="inferred" register="yes" offset="0x28" access="rw" reset="unknown">
+    <doc>Draw end y, fraction. Offset inferred.</doc>
+  </struct>
+  <struct name="XSAVE" size="4" grade="inferred" register="yes" offset="0x2c" access="rw" reset="unknown">
+    <doc>Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers.</doc>
+  </struct>
+  <struct name="MINORSLOPE" size="4" grade="inferred" register="yes" offset="0x30" access="rw" reset="unknown">
+    <doc>Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it.</doc>
+  </struct>
+  <struct name="XYMOVE" size="4" grade="established" register="yes" offset="0x34" access="rw" reset="unknown">
+    <doc>Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination (NetBSD: dx is from_x minus to_x). It is written at the GO alias after the rectangle and the copy command are set up. The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched (the exact polarity of y under the bottom-up y axis is inferred).</doc>
+  </struct>
+  <struct name="COLORREDI" size="4" grade="established" register="yes" offset="0x38" access="rw" reset="unknown">
+    <doc>Foreground pixel colour, an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this offset after the busy bit clears; the PROM's colour routine does too. The ide test calls the register COLORREDI with an 8-bit mask; RED because the chip's colour path starts with red.</doc>
+  </struct>
+  <struct name="COLORRED" size="4" grade="inferred" register="yes" offset="0x3c" access="rw" reset="unknown">
+    <doc>Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order.</doc>
+  </struct>
+  <struct name="COLORGREENI" size="4" grade="inferred" register="yes" offset="0x40" access="rw" reset="unknown">
+    <doc>Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD.</doc>
+  </struct>
+  <struct name="COLORGREEN" size="4" grade="inferred" register="yes" offset="0x44" access="rw" reset="unknown">
+    <doc>Green channel with fraction.</doc>
+  </struct>
+  <struct name="COLORBLUEI" size="4" grade="inferred" register="yes" offset="0x48" access="rw" reset="unknown">
+    <doc>Blue channel integer.</doc>
+  </struct>
+  <struct name="COLORBLUE" size="4" grade="inferred" register="yes" offset="0x4c" access="rw" reset="unknown">
+    <doc>Blue channel with fraction.</doc>
+  </struct>
+  <struct name="SLOPERED" size="4" grade="inferred" register="yes" offset="0x50" access="rw" reset="unknown">
+    <doc>Red slope for shaded lines and spans. Not written by shipped light code.</doc>
+  </struct>
+  <struct name="SLOPEGREEN" size="4" grade="inferred" register="yes" offset="0x54" access="rw" reset="unknown">
+    <doc>Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page.</doc>
+  </struct>
+  <struct name="SLOPEBLUE" size="4" grade="inferred" register="yes" offset="0x58" access="rw" reset="unknown">
+    <doc>Blue slope. Not written by shipped light code.</doc>
+  </struct>
+  <struct name="COLORBACK" size="4" grade="inferred" register="yes" offset="0x5c" access="rw" reset="unknown">
+    <doc>Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); NetBSD does.</doc>
+  </struct>
+  <struct name="ZPATTERN" size="4" grade="established" register="yes" offset="0x60" access="rw" reset="unknown">
+    <doc>Pixel pattern for the pattern-enabled commands. Software writes it at the GO alias (0x860): each write draws one row of the glyph, taking pattern bits 31 downward, the row's bits shifted into the top half for 16-wide glyphs (the kernel shifts each halfword left by 16) and into bit 24 for 8-wide (NetBSD). With STOPONX, XYCONTINUE and BLOCK, y steps by one row after each write. A qtest can discriminate: set XSTARTI, XENDI, YSTARTI, write command 0x300005b9 at 0 and 0x80000000 at 0x860, and exactly one pixel at the start column is drawn.</doc>
+  </struct>
+  <struct name="LSPATTERN" size="4" grade="inferred" register="yes" offset="0x64" access="rw" reset="unknown">
+    <doc>Line stipple pattern. Not written by shipped light code.</doc>
+  </struct>
+  <struct name="LSMODE" size="4" grade="inferred" register="yes" offset="0x68" access="rw" reset="unknown">
+    <doc>Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page.</doc>
+  </struct>
+  <struct name="AWEIGHT" size="4" grade="inferred" register="yes" offset="0x6c" access="rw" reset="unknown">
+    <doc>Antialias weight. Not written by shipped light code.</doc>
+  </struct>
+  <struct name="RWAUX1" size="4" grade="established" register="yes" offset="0x70" access="rw" reset="unknown">
+    <doc>Read/write auxiliary word used to read and write pixel memory with a draw command. lightInitInfo writes 0x01081020 here, then 0x09090909 with a 0x30210021 command, runs 0x30200023 and compares the result word read back at 0x870 with 0x01080909 or 0x09091020 to record a 0, 1 or 0xff in byte 0x29 of the board info it hands to GfxRegisterBoard. What the three outcomes mean for the board (pixel memory population): unknown. A qtest can discriminate only by replaying that sequence, which needs the draw unit to move words between RWAUX1 and the frame buffer.</doc>
+  </struct>
+  <struct name="RWAUX2" size="4" grade="inferred" register="yes" offset="0x74" access="rw" reset="unknown">
+    <doc>Second read/write auxiliary word. Not written by shipped light code.</doc>
+  </struct>
+  <struct name="RWMASK" size="4" grade="established" register="yes" offset="0x78" access="rw" reset="unknown">
+    <doc>Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept.</doc>
+  </struct>
+  <struct name="SMASK1X" size="4" grade="established" register="yes" offset="0x7c" access="rw" reset="unknown">
+    <doc>Screen mask 1, x range: maximum x in bits 25:16 and minimum x in bits 9:0, each clipped to 0..1023 (the object clamps with 0x3ff). Software computes the window's visible rectangle clipped to the screen and writes it here when window 1 is the active one.</doc>
+  </struct>
+  <struct name="SMASK1Y" size="4" grade="established" register="yes" offset="0x80" access="rw" reset="unknown">
+    <doc>Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values are flipped (height minus row minus one) before packing, so they are in REX's bottom-up coordinates.</doc>
+  </struct>
+  <struct name="XENDI" size="4" grade="established" register="yes" offset="0x84" access="rw" reset="unknown">
+    <doc>Draw end x (integer, inclusive): the last column a STOPONX command draws.</doc>
+  </struct>
+  <struct name="YENDI" size="4" grade="established" register="yes" offset="0x88" access="rw" reset="unknown">
+    <doc>Draw end y (integer, inclusive), bottom-up like YSTARTI.</doc>
+  </struct>
+  <struct name="SMASK2X" size="4" grade="inferred" register="yes" offset="0x4790" access="rw" reset="unknown">
+    <doc>First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the context save; the assignment of names to words follows the ide order and NetBSD's page base, so it is inferred. Packing as smask1x. Only SMASK2X is declared here; the others are the same register at the stated offsets.</doc>
+  </struct>
+  <struct name="AUX2" size="4" grade="established" register="yes" offset="0x47a8" access="rw" reset="unknown">
+    <doc>Second auxiliary control word. Both initialisations store 0x20000000. lightSetDestinationPlanes keeps bits 28:0 of the window's saved value, ORs in the request's top three bits and, for the window on screen, waits for the engine to go idle and stores the result here, so the top three bits select which plane group a draw reaches. The meaning of each of those three bits: unknown (no shipped code names the groups). The ide mask 0x7fffffff shows 31 bits kept.</doc>
+  </struct>
+  <struct name="DIAGVRAM" size="4" grade="inferred" register="yes" offset="0x47d8" access="rw" reset="unknown">
+    <doc>VRAM diagnostic access. No shipped kernel or PROM runtime path touches it; the ide VRAM test is the only candidate user and was not read. Offset and role: unknown.</doc>
+  </struct>
+  <struct name="WCLOCK" size="4" grade="established" register="yes" offset="0x47e4" access="rw" reset="unknown">
+    <doc>Port to the pixel clock generator and the board configuration byte; the byte is picked by CFGSEL. Reading with CFGSEL 4 (after a dummy read of the GO alias and a one microsecond wait) returns: bits 2:0 board revision, bits 5:3 monitor type, bit 6 set when no video board is present. light_init stores them in bytes 0x28, 0x2b and 0x2c of the board info. Writing with CFGSEL 2 clocks the clock generator's program bytes in: initClock writes 17 bytes in a row to the SET and GO aliases, selected by board revision (below 2: the first of the two 17-byte clock tables in the driver, 2 and above: the second). A qtest can discriminate: CFGSEL 4 then a read of GO and SET returns the configured byte; a model needs a settable board revision to take the revision 1 path (the PROM and kernel need the revision below 2 branch for the Bt479 colour map).</doc>
+  </struct>
+  <struct name="RWDAC" size="4" grade="established" register="yes" offset="0x47e8" access="rw" reset="unknown">
+    <doc>Port to the colour map chip. CFGSEL picks the chip register (see CFGSEL constants). Software writes the same byte to RWDAC and to its GO alias; the second write is what performs the transfer. A read of its GO alias returns the chip register's value. light_read_bt_colormaps reads the GO alias directly for the palette, the Bt479-based path also reads RWDAC; whether the SET read after a GO read adds anything: unknown, NetBSD's VC1 read does read GO then SET.</doc>
+  </struct>
+  <struct name="CONFIGSEL" size="4" grade="established" register="yes" offset="0x47ec" access="rw" reset="unknown">
+    <doc>Three-bit function selector shared by WCLOCK, RWDAC and RWVC1: the value written here is the chip register index the next access to any of the three ports addresses. Values 0 to 6 are used (CFGSEL constants); 7 is not written by shipped code. Readback returns the written value (lightPositionCursor saves and later restores it by reading it back). A qtest can discriminate: write 5, read back 5; write 8, read back 0 (the 0x7 mask, from the ide test).</doc>
+  </struct>
+  <struct name="RWVC1" size="4" grade="established" register="yes" offset="0x47f0" access="rw" reset="unknown">
+    <doc>Port to the video controller (VC1), same SET/GO scheme as RWDAC with its GO alias 0x800 above it. NetBSD's read: write CFGSEL, read the GO alias, read the SET alias; the PROM does the same, with the kernel's read-modify-write sequences storing the value to both aliases. The VC1's internal register file behind CFGSEL is in devices/vc1.</doc>
+  </struct>
+  <struct name="TOGGLECTXT" size="4" grade="inferred" register="yes" offset="0x47f4" access="w" reset="unknown">
+    <doc>Written with 0 in the middle of a window context swap, after the registers for the outgoing window have been saved and before the incoming ones are loaded. Role inferred: switches REX to the other of two register contexts (its ide-visible name is not printed). Whether a read is defined: unknown.</doc>
+  </struct>
+  <struct name="CONFIGMODE" size="4" grade="established" register="yes" offset="0x47f8" access="rw" reset="unknown">
+    <doc>Configuration and status. Bit 0 is the engine busy flag: all software spins until it is clear before touching a drawing register (the kernel and the PROM do it in every drawing routine). Bits 28:24 (mask 0x1f000000) must also be zero before a VC1 access in lightPositionCursor and the retrace handler: inferred to be a count of commands still queued in the FIFO, which the busy bit alone does not cover. Bits 7:4 are read by lightInitInfo (value 0 triggers the pixel-memory probe described under rwaux1, any other value plus one is stored as a board option byte). initRex and the pixel DMA path store 0x807fe000. lightPcxSwap saves the word xor 0x80000000 and restores it unchanged, so bit 31 is read inverted of what was written. Bit 31 and bits 22:13 role: unknown. A qtest can discriminate: bit 0 reads 1 while a command is executing and 0 after; the PROM's 300000 microsecond polling loop in lightProbe (done when bit 0 clears) must not time out.</doc>
+  </struct>
+  <struct name="XYWIN" size="4" grade="established" register="yes" offset="0x47fc" access="rw" reset="unknown">
+    <doc>Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (the window offset of 2048 that centres a 12-bit coordinate space; the centring is inferred). NetBSD's match accepts a board whose XYWIN reads 0x08000800. The ide test keeps 12 bits per half.</doc>
+  </struct>
+  <constant name="BASE_HEAD0" value="0x1f3f0000" grade="established"/>
+  <constant name="BASE_HEAD1" value="0x1f3f8000" grade="established"/>
+  <constant name="CFGSEL_DAC_ADDR" value="0x0" grade="established"/>
+  <constant name="CFGSEL_HADDR" value="0x5" grade="established"/>
+  <constant name="CFGSEL_LADDR" value="0x4" grade="established"/>
+  <constant name="CFGSEL_PALETTE" value="0x1" grade="established"/>
+  <constant name="CFGSEL_PIXMASK" value="0x2" grade="established"/>
+  <constant name="CFGSEL_RDADDR" value="0x3" grade="established"/>
+  <constant name="CFGSEL_SYSCTL" value="0x6" grade="established"/>
+  <constant name="CMD_BLOCK" value="0x8" grade="established"/>
+  <constant name="CMD_COPY_RECT" value="0x30080329" grade="established"/>
+  <constant name="CMD_DRAW" value="0x1" grade="established"/>
+  <constant name="CMD_ENZPATTERN" value="0x400" grade="established"/>
+  <constant name="CMD_FILL_RECT" value="0x30000329" grade="established"/>
+  <constant name="CMD_GLYPH16" value="0x300005b9" grade="established"/>
+  <constant name="CMD_GLYPH_PIECE" value="0x300005a1" grade="established"/>
+  <constant name="CMD_LENGTH32" value="0x10" grade="inferred"/>
+  <constant name="CMD_LOGICOP_SHIFT" value="0x1c" grade="established"/>
+  <constant name="CMD_LOGICSRC" value="0x80000" grade="inferred"/>
+  <constant name="CMD_POINT" value="0x30000001" grade="established"/>
+  <constant name="CMD_QUAD" value="0x20" grade="inferred"/>
+  <constant name="CMD_STOPONX" value="0x100" grade="established"/>
+  <constant name="CMD_STOPONY" value="0x200" grade="established"/>
+  <constant name="CMD_XYCONTINUE" value="0x80" grade="established"/>
+  <constant name="CMD_ZCONTINUE" value="0x1000000" grade="unknown"/>
+  <constant name="CMD_ZOPAQUE" value="0x800000" grade="inferred"/>
+  <constant name="GO_OFFSET" value="0x800" grade="established"/>
+  <constant name="PROBE_READBACK" value="0x33c0000" grade="established"/>
+  <constant name="VC1_SYSCTL_CURSOR" value="0x10" grade="inferred"/>
+  <constant name="VC1_SYSCTL_CURSOR_ON" value="0x20" grade="inferred"/>
+  <constant name="VC1_SYSCTL_VIDEO_ON" value="0x4" grade="established"/>
+  <constant name="XRES" value="0x400" grade="established"/>
+  <constant name="YRES" value="0x300" grade="established"/>
+</genxml>

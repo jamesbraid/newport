@@ -1,0 +1,6 @@
+[project]
+name = "newport"
+
+[checks]
+address_bits = 20
+max_reg_offset = 0xfffff

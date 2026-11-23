@@ -1,0 +1,266 @@
+// @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
+// defs-gen 3
+// input sha256 2ea1bcf6a93bc3c718f09bf751eab9d363e09791794bcee45a68e945054d71fc
+// REX1 raster engine on the Indigo Entry graphics board (LG1)
+#![allow(dead_code)]
+#![allow(clippy::doc_markdown)]
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
+/// Drawing command. Bits 31:28 hold the logic operation, the low bits the opcode and flags listed as CMD_ constants. A write at 0x000 stores it; a write  (established)
+pub mod command {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x0;
+}
+/// Auxiliary control word, one per window context. initRex zeroes it. lightAux1Register builds a value from a window's saved value with bits 4:2 cleared, (established)
+pub mod aux1 {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x4;
+}
+/// Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for (inferred)
+pub mod xstate {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x8;
+}
+/// Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 h (established)
+pub mod xstarti {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0xc;
+}
+/// Draw start x, fraction. Test mask 0x7fffff. Offset inferred from the sequence of names in the ide test (the same order as the offsets that code elsewh (inferred)
+pub mod xstartf {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x10;
+}
+/// Draw start x, integer and fraction combined: 27 bits in the ide test mask, integer in bits 26:15. Read at offset 0x14 by the board probe after XSTARTI (established)
+pub mod xstart {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x14;
+}
+/// Draw end x, fraction (ide mask 0x7ff800). Offset inferred. (inferred)
+pub mod xendf {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x18;
+}
+/// Draw start y as an integer, 12 bits kept. Software stores 767 minus the row, so y grows upward from the bottom of the 768-line screen. (established)
+pub mod ystarti {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x1c;
+}
+/// Draw start y, fraction. Offset inferred. (inferred)
+pub mod ystartf {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x20;
+}
+/// Draw start y, integer and fraction combined, counterpart of XSTART. Offset inferred; no shipped code reads it. (inferred)
+pub mod ystart {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x24;
+}
+/// Draw end y, fraction. Offset inferred. (inferred)
+pub mod yendf {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x28;
+}
+/// Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with t (inferred)
+pub mod xsave {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x2c;
+}
+/// Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and (inferred)
+pub mod minorslope {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x30;
+}
+/// Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination (NetBSD: dx is from_x minus to_x). It is writ (established)
+pub mod xymove {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x34;
+}
+/// Foreground pixel colour, an 8-bit index into the colour map (the board has 8 bits per pixel). The kernel's colour routine stores the index at this off (established)
+pub mod colorredi {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x38;
+}
+/// Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. (inferred)
+pub mod colorred {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x3c;
+}
+/// Green channel integer (shaded draws). Never written by shipped light code. Offset from the ide name order and NetBSD. (inferred)
+pub mod colorgreeni {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x40;
+}
+/// Green channel with fraction. (inferred)
+pub mod colorgreen {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x44;
+}
+/// Blue channel integer. (inferred)
+pub mod colorbluei {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x48;
+}
+/// Blue channel with fraction. (inferred)
+pub mod colorblue {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x4c;
+}
+/// Red slope for shaded lines and spans. Not written by shipped light code. (inferred)
+pub mod slopered {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x50;
+}
+/// Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. (inferred)
+pub mod slopegreen {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x54;
+}
+/// Blue slope. Not written by shipped light code. (inferred)
+pub mod slopeblue {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x58;
+}
+/// Background colour index used for pattern zeros when ZOPAQUE is set. The shipped kernel and PROM glyph paths never write it (transparent background); N (inferred)
+pub mod colorback {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x5c;
+}
+/// Pixel pattern for the pattern-enabled commands. Software writes it at the GO alias (0x860): each write draws one row of the glyph, taking pattern bits (established)
+pub mod zpattern {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x60;
+}
+/// Line stipple pattern. Not written by shipped light code. (inferred)
+pub mod lspattern {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x64;
+}
+/// Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. (inferred)
+pub mod lsmode {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x68;
+}
+/// Antialias weight. Not written by shipped light code. (inferred)
+pub mod aweight {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x6c;
+}
+/// Read/write auxiliary word used to read and write pixel memory with a draw command. lightInitInfo writes 0x01081020 here, then 0x09090909 with a 0x3021 (established)
+pub mod rwaux1 {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x70;
+}
+/// Second read/write auxiliary word. Not written by shipped light code. (inferred)
+pub mod rwaux2 {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x74;
+}
+/// Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xf (established)
+pub mod rwmask {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x78;
+}
+/// Screen mask 1, x range: maximum x in bits 25:16 and minimum x in bits 9:0, each clipped to 0..1023 (the object clamps with 0x3ff). Software computes t (established)
+pub mod smask1x {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x7c;
+}
+/// Screen mask 1, y range, same packing, clipped to 0..767 (0x2ff). The y values are flipped (height minus row minus one) before packing, so they are in  (established)
+pub mod smask1y {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x80;
+}
+/// Draw end x (integer, inclusive): the last column a STOPONX command draws. (established)
+pub mod xendi {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x84;
+}
+/// Draw end y (integer, inclusive), bottom-up like YSTARTI. (established)
+pub mod yendi {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x88;
+}
+/// First of six consecutive screen-mask words, in the order SMASK2X, SMASK2Y, SMASK3X, SMASK3Y, SMASK4X, SMASK4Y. The six-word run is established by the  (inferred)
+pub mod smask2x {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x4790;
+}
+/// Second auxiliary control word. Both initialisations store 0x20000000. lightSetDestinationPlanes keeps bits 28:0 of the window's saved value, ORs in th (established)
+pub mod aux2 {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47a8;
+}
+/// VRAM diagnostic access. No shipped kernel or PROM runtime path touches it; the ide VRAM test is the only candidate user and was not read. Offset and r (inferred)
+pub mod diagvram {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47d8;
+}
+/// Port to the pixel clock generator and the board configuration byte; the byte is picked by CFGSEL. Reading with CFGSEL 4 (after a dummy read of the GO  (established)
+pub mod wclock {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47e4;
+}
+/// Port to the colour map chip. CFGSEL picks the chip register (see CFGSEL constants). Software writes the same byte to RWDAC and to its GO alias; the se (established)
+pub mod rwdac {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47e8;
+}
+/// Three-bit function selector shared by WCLOCK, RWDAC and RWVC1: the value written here is the chip register index the next access to any of the three p (established)
+pub mod configsel {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47ec;
+}
+/// Port to the video controller (VC1), same SET/GO scheme as RWDAC with its GO alias 0x800 above it. NetBSD's read: write CFGSEL, read the GO alias, read (established)
+pub mod rwvc1 {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47f0;
+}
+/// Written with 0 in the middle of a window context swap, after the registers for the outgoing window have been saved and before the incoming ones are lo (inferred)
+pub mod togglectxt {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47f4;
+}
+/// Configuration and status. Bit 0 is the engine busy flag: all software spins until it is clear before touching a drawing register (the kernel and the P (established)
+pub mod configmode {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47f8;
+}
+/// Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (the window offset of 2048 that centres a 12-bit coordinate space; the ce (established)
+pub mod xywin {
+    pub const WIDTH: u32 = 32;
+    pub const OFFSET: u64 = 0x47fc;
+}
+pub const BASE_HEAD0: u32 = 0x1f3f0000; // established
+pub const BASE_HEAD1: u32 = 0x1f3f8000; // established
+pub const CFGSEL_DAC_ADDR: u32 = 0x0; // established
+pub const CFGSEL_HADDR: u32 = 0x5; // established
+pub const CFGSEL_LADDR: u32 = 0x4; // established
+pub const CFGSEL_PALETTE: u32 = 0x1; // established
+pub const CFGSEL_PIXMASK: u32 = 0x2; // established
+pub const CFGSEL_RDADDR: u32 = 0x3; // established
+pub const CFGSEL_SYSCTL: u32 = 0x6; // established
+pub const CMD_BLOCK: u32 = 0x8; // established
+pub const CMD_COPY_RECT: u32 = 0x30080329; // established
+pub const CMD_DRAW: u32 = 0x1; // established
+pub const CMD_ENZPATTERN: u32 = 0x400; // established
+pub const CMD_FILL_RECT: u32 = 0x30000329; // established
+pub const CMD_GLYPH16: u32 = 0x300005b9; // established
+pub const CMD_GLYPH_PIECE: u32 = 0x300005a1; // established
+pub const CMD_LENGTH32: u32 = 0x10; // inferred
+pub const CMD_LOGICOP_SHIFT: u32 = 0x1c; // established
+pub const CMD_LOGICSRC: u32 = 0x80000; // inferred
+pub const CMD_POINT: u32 = 0x30000001; // established
+pub const CMD_QUAD: u32 = 0x20; // inferred
+pub const CMD_STOPONX: u32 = 0x100; // established
+pub const CMD_STOPONY: u32 = 0x200; // established
+pub const CMD_XYCONTINUE: u32 = 0x80; // established
+pub const CMD_ZCONTINUE: u32 = 0x1000000; // unknown
+pub const CMD_ZOPAQUE: u32 = 0x800000; // inferred
+pub const GO_OFFSET: u32 = 0x800; // established
+pub const PROBE_READBACK: u32 = 0x33c0000; // established
+pub const VC1_SYSCTL_CURSOR: u32 = 0x10; // inferred
+pub const VC1_SYSCTL_CURSOR_ON: u32 = 0x20; // inferred
+pub const VC1_SYSCTL_VIDEO_ON: u32 = 0x4; // established
+pub const XRES: u32 = 0x400; // established
+pub const YRES: u32 = 0x300; // established
