@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 f106ffd4ce6216cbcb15142d0f93d5a5d571bf5121dd2e782db212231ef32133
+// input sha256 a9b540b053951113d377ad91413b60051cbda1f71e313a0edcdf1331ed03f96a
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -16,10 +16,40 @@ pub mod aux1 {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x4;
 }
-/// Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for (established)
+/// Packed draw state word. The kernel stores 0x03ff0000 here before each full-screen clear (rexClear, the command word 0x329 with no logic-operation nibb (established)
 pub mod xstate {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x8;
+    pub mod logicop { // bits 31:24, inferred
+        pub const SHIFT: u32 = 24;
+        pub const MASK: u32 = 0xff;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod planemask { // bits 23:16, inferred
+        pub const SHIFT: u32 = 16;
+        pub const MASK: u32 = 0xff;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod colour { // bits 7:0, inferred
+        pub const SHIFT: u32 = 0;
+        pub const MASK: u32 = 0xff;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
 }
 /// Draw start x as an integer. Twelve bits are kept (the ide test mask is 0xfff) and appear in XSTART at bit 15 and above: lightProbe writes 0x12345678 h (established)
 pub mod xstarti {
@@ -71,7 +101,7 @@ pub mod minorslope {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x30;
 }
-/// Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination (NetBSD: dx is from_x minus to_x). It is writ (established)
+/// Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination, in stored coordinates (display row = stored  (established)
 pub mod xymove {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x34;
@@ -236,12 +266,12 @@ pub mod configsel {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x47ec;
 }
-/// Port to the video controller (VC1), same SET/GO scheme as RWDAC with its GO alias 0x800 above it. NetBSD's read: write CFGSEL, read the GO alias, read (established)
+/// Port to the video controller (VC1), same SET/GO scheme as RWDAC with its GO alias 0x800 above it. A write stores the byte at SET and again at GO; a GO (established)
 pub mod rwvc1 {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x47f0;
 }
-/// Written with 0 in the middle of a window context swap, after the registers for the outgoing window have been saved and before the incoming ones are lo (inferred)
+/// Written with 0 in the middle of a window context swap. lightPcxSwap reads ten registers (XSTART, YSTART, COLORRED, COLORGREEN, COLORBLUE, LSPATTERN, L (inferred)
 pub mod togglectxt {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x47f4;
@@ -267,12 +297,16 @@ pub const CFGSEL_RDADDR: u32 = 0x3; // established
 pub const CFGSEL_SYSCTL: u32 = 0x6; // established
 pub const CMD_BLOCK: u32 = 0x8; // established
 pub const CMD_COPY_RECT: u32 = 0x30080329; // established
+pub const CMD_COPY_RECT_STATE: u32 = 0x80329; // established
 pub const CMD_DRAW: u32 = 0x1; // established
 pub const CMD_ENZPATTERN: u32 = 0x400; // established
 pub const CMD_FILL_RECT: u32 = 0x30000329; // established
+pub const CMD_FILL_RECT_STATE: u32 = 0x329; // established
 pub const CMD_GLYPH16: u32 = 0x300005b9; // established
 pub const CMD_GLYPH_PIECE: u32 = 0x300005a1; // established
 pub const CMD_HOSTDATA: u32 = 0x200000; // inferred
+pub const CMD_HOSTDATA_READ: u32 = 0x2000ab; // established
+pub const CMD_HOSTDATA_WRITE: u32 = 0x2000a9; // established
 pub const CMD_LENGTH32: u32 = 0x10; // inferred
 pub const CMD_LOGICOP_SHIFT: u32 = 0x1c; // established
 pub const CMD_LOGICSRC: u32 = 0x80000; // inferred
@@ -283,8 +317,11 @@ pub const CMD_PIXMEM_WRITE_A: u32 = 0x30200021; // established
 pub const CMD_PIXMEM_WRITE_B: u32 = 0x30210021; // established
 pub const CMD_POINT: u32 = 0x30000001; // established
 pub const CMD_QUAD: u32 = 0x20; // inferred
+pub const CMD_SPAN: u32 = 0x121; // established
+pub const CMD_SPAN_LSPATTERN: u32 = 0x921; // inferred
 pub const CMD_STOPONX: u32 = 0x100; // established
 pub const CMD_STOPONY: u32 = 0x200; // established
+pub const CMD_TILE_HOSTDATA: u32 = 0x200121; // established
 pub const CMD_XYCONTINUE: u32 = 0x80; // established
 pub const CMD_ZCONTINUE: u32 = 0x1000000; // unknown
 pub const CMD_ZOPAQUE: u32 = 0x800000; // inferred

@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 f106ffd4ce6216cbcb15142d0f93d5a5d571bf5121dd2e782db212231ef32133 -->
+<!-- input sha256 a9b540b053951113d377ad91413b60051cbda1f71e313a0edcdf1331ed03f96a -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -75,7 +75,13 @@ Auxiliary control word, one per window context. initRex zeroes it. lightAux1Regi
 
 ### Register `xstate`
 
-Draw x state. The only shipped write is the 0x03ff0000 that precedes each full-screen clear; the role is unknown (it may be a pre-loaded x counter for block draws; no source says). Offset established by the ide test. The ide test writes all 32 bits and expects them back unmasked.
+Packed draw state word. The kernel stores 0x03ff0000 here before each full-screen clear (rexClear, the command word 0x329 with no logic-operation nibble), and the X server (X server driver functions rexInitHW, rexDrawSolidRects, rexDrawPoints, rexDrawImage, rexCopyRect, rexImageGlyphBltTE8) stores it before nearly every draw. The X server builds it as colour index in bits 7:0, plane write mask in bits 23:16 and the X raster-operation code in bits 31:24 (GXcopy is 3, so the clear value 0x03ff0000 is: replace, all eight planes, colour 0; the copy path ORs 0x20 into the top byte). Those field roles are inferred from what the writers pack, not from a manual. Open and settled only as a model constraint: the X server fills with command 0x329 and the colour from here, while the kernel fills with 0x30000329 and the colour from COLORREDI and never writes XSTATE (rexImageGlyphBltTE8 also fills its background with 0x30000329 using only the colour it packed here). The one reading that satisfies every shipped writer is that XSTATE bits 7:0 and COLORREDI are the same eight bits of state. The ide test writes all 32 bits and expects them back unmasked.
+
+| Bits | Field | Grade | Values | Source | Description |
+|---|---|---|---|---|---|
+| 31:24 | `logicop` | inferred |  |  |  |
+| 23:16 | `planemask` | inferred |  |  |  |
+| 7:0 | `colour` | inferred |  |  |  |
 
 ### Register `xstarti`
 
@@ -87,7 +93,7 @@ Draw start x, fraction. Test mask 0x7fffff. Offset read from the ide test. Softw
 
 ### Register `xstart`
 
-Draw start x, integer and fraction combined: 27 bits in the ide test mask, integer in bits 26:15. Read at offset 0x14 by the board probe after XSTARTI was written; the value read is the probe's presence test (PROBE_READBACK). Whether a write here reflects in XSTARTI: unknown.
+Draw start x, integer and fraction combined: 27 bits in the ide test mask, integer in bits 26:15. Read at offset 0x14 by the board probe after XSTARTI was written; the value read is the probe presence test (PROBE_READBACK). lightPcxSwap reads it back and later stores the saved value at 0x14 itself, so a store here must be kept whole (the same holds for YSTART at 0x24, COLORRED/GREEN/BLUE at 0x3c/0x44/0x4c and the slope registers at 0x50 to 0x58): a model that derives XSTART only from XSTARTI loses a context restore. Whether a write here also reflects in XSTARTI: unknown.
 
 ### Register `xendf`
 
@@ -119,7 +125,7 @@ Line-draw minor-axis slope. Never written by the shipped light code for rectangl
 
 ### Register `xymove`
 
-Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination (NetBSD: dx is from_x minus to_x). It is written at the GO alias after the rectangle and the copy command are set up. The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched (the polarity of y is unsettled: NetBSD computes source minus destination in top-down rows, while the PROM copy routine stores the differences of its two coordinate pairs in an order that matches only if its second pair is the source, and no caller of it was found in the 4.0.5D console code).
+Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination, in stored coordinates (display row = stored y). The X server (X server driver function rexCopyRect) computes dx as source x minus destination x0 and dy as source y minus destination y0, masks dy to 16 bits and stores (dx << 16) | dy at the GO alias (0x834) after the rectangle and the copy command 0x80329 are set up; it chooses XSTARTI..XENDI ascending when dx is not negative and descending when it is, and YSTARTI..YENDI ascending when dy is not negative and descending when it is, so the engine must honour either order of the two registers. That fixes the sign for the X server and agrees with NetBSD. The only remaining doubt is the PROM copy routine, whose callers were not found. For a destination x0 below 4 and dx negative the X server also stores XYWIN 0x07fc0800 around the copy (see XYWIN). The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x80329 or 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched, and a rectangle with YSTARTI greater than YENDI copies bottom row first.
 
 ### Register `colorredi`
 
@@ -243,7 +249,7 @@ Port to the pixel clock generator and the board configuration byte; the byte is 
 
 ### Register `rwdac`
 
-Port to the colour map chip. CFGSEL picks the chip register (see CFGSEL constants). Software writes the same byte to RWDAC and to its GO alias; the second write is what performs the transfer. A read of its GO alias returns the chip register's value. light_read_bt_colormaps reads the GO alias directly for the palette, the Bt479-based path also reads RWDAC; whether the SET read after a GO read adds anything: unknown, NetBSD's VC1 read does read GO then SET.
+Port to the colour map chip. CFGSEL picks the chip register (see CFGSEL constants). Software writes the same byte to RWDAC and to its GO alias; the second write is what performs the transfer. A read of its GO alias returns the chip register value. light_read_bt_colormaps and light_read_lut_colormaps issue one GO read, discard it, and then read the GO alias 768 times per bank (bulk reads: the same one-deep pipeline as RWVC1 fits). The X server reads the command register back (CONFIGSEL 6: GO read, then RWDAC read) for read-modify-write of the blank bit (X server driver function rexBlankScreen) and in rexDisplayCursor, so the DAC command register must be readable. Whether the SET read after a GO read adds anything beyond the pipeline: unknown.
 
 ### Register `configsel`
 
@@ -251,19 +257,19 @@ Three-bit function selector shared by WCLOCK, RWDAC and RWVC1: the value written
 
 ### Register `rwvc1`
 
-Port to the video controller (VC1), same SET/GO scheme as RWDAC with its GO alias 0x800 above it. NetBSD's read: write CFGSEL, read the GO alias, read the SET alias; the PROM does the same, with the kernel's read-modify-write sequences storing the value to both aliases. The VC1's internal register file behind CFGSEL is in devices/vc1.
+Port to the video controller (VC1), same SET/GO scheme as RWDAC with its GO alias 0x800 above it. A write stores the byte at SET and again at GO; a GO store alone also works (lightSetDisplayMode stores only the GO alias). Reads: every reader does GO read then SET read for a single byte, and the bulk readers (light_read_displaymodes, light_read_scan) issue one GO read whose value they discard and then read only the GO alias, once per byte. Both fit a one-deep read pipeline: a GO read returns the byte fetched by the previous GO read and starts the fetch of the next, and a SET read returns the byte the last GO read fetched; a model where a GO read returns and consumes the current byte makes every bulk reader skip its first byte. The kernel retrace handler and lightPositionCursor read the VC1 address counter back through CONFIGSEL 4 (low) and 5 (high) while a user process may be in the middle of a data transfer; see devices/vc1. The VC1 internal register file behind CFGSEL is in devices/vc1.
 
 ### Register `togglectxt`
 
-Written with 0 in the middle of a window context swap, after the registers for the outgoing window have been saved and before the incoming ones are loaded. Role inferred: switches REX to the other of two register contexts (its ide-visible name is not printed). Whether a read is defined: unknown.
+Written with 0 in the middle of a window context swap. lightPcxSwap reads ten registers (XSTART, YSTART, COLORRED, COLORGREEN, COLORBLUE, LSPATTERN, LSMODE, ZPATTERN, XSAVE, RWAUX1), stores 0 here, then reads about twenty-four more (XSTART, YSTART, the colour and slope registers, XENDF, YENDF, AUX1, the pattern registers, XSAVE, MINORSLOPE, XYMOVE, COLORBACK, AWEIGHT, RWAUX1, RWAUX2, RWMASK, COMMAND, SMASK1X, SMASK1Y); the load side mirrors it. Inferred from the repeated registers (XSTART, COLORRED and others appear in both passes): the engine holds two copies of part of the drawing state and a write here switches which one the register offsets address. A flat model that keeps one copy and ignores the write returns the same values in both passes and restores consistently. Whether a read is defined: unknown.
 
 ### Register `configmode`
 
-Configuration and status. Bit 0 is the engine busy flag: all software spins until it is clear before touching a drawing register (the kernel and the PROM do it in every drawing routine). Bits 28:24 (mask 0x1f000000) must also be zero before a VC1 access in lightPositionCursor and the retrace handler: inferred to be a count of commands still queued in the FIFO, which the busy bit alone does not cover. Bits 7:4 are read by lightInitInfo (value 0 triggers the pixel-memory probe described under rwaux1, any other value plus one is stored as a board option byte). initRex and the pixel DMA path store 0x807fe000. lightPcxSwap saves the word xor 0x80000000 and restores it unchanged, so bit 31 is read inverted of what was written. Bit 31 and bits 22:13 role: unknown. A qtest can discriminate: bit 0 reads 1 while a command is executing and 0 after; the PROM's 300000 microsecond polling loop in lightProbe (done when bit 0 clears) must not time out.
+Configuration and status. Bit 0 is the engine busy flag: all software spins until it is clear before touching a drawing register (the kernel and the PROM do it in every drawing routine). Bits 28:24 (mask 0x1f000000) must also be zero before a VC1 access in lightPositionCursor and the retrace handler: inferred to be a count of commands still queued in the FIFO, which the busy bit alone does not cover. The X server polls a second count, bits 12:8 (five bits): before a burst of register stores it waits until that field is at most 21 minus its gfifo level setting, 14 at the default level 7 (rexLineSS, rexPolyPoint, rexZeroPolyArc, rexImageGlyphBltTE8; fixed limits of 5 and 8 appear in rexSolidFillSpans), so the 5-bit field is inferred to be the graphics FIFO fill level, with the level setting the number of stores the X server allows per primitive. Bits 7:4 are read by lightInitInfo (value 0 triggers the pixel-memory probe described under rwaux1, any other value plus one is stored as a board option byte). initRex and the pixel DMA path store 0x807fe000. The X server (driver function rexInitHW) stores 0x80000000 | 0x40000000 | 0x00180000 | (level << 13) with level 7 by default (9 or 11 on some CPU boards, or the number in the environment variable REX_GFIFO_LEVEL), raises the level field to 31 for glyph and arc runs (0xc01be000) and writes 0x80000000 | 0x00180000 | (level << 13) without bit 30 for host-data pixel writes; so bits 17:13 are inferred to be a FIFO-level threshold (the interrupt on GIO line 0 or the stall point), bits 20:19 are constant 11 in every X server store, and bit 30 is set for register-driven drawing and clear for host-data writes. lightPcxSwap saves the word xor 0x80000000 and restores it unchanged, so bit 31 is read inverted of what was written. Role of bit 31 and of bits 22:21: unknown. A qtest can discriminate: bit 0 reads 1 while a command is executing and 0 after; the PROM 300000 microsecond polling loop in lightProbe (done when bit 0 clears) must not time out; a model with synchronous drawing may return 0 in bits 28:24 and 12:8 and satisfy every shipped reader.
 
 ### Register `xywin`
 
-Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (the window offset of 2048 that centres a 12-bit coordinate space; the centring is inferred). NetBSD's match accepts a board whose XYWIN reads 0x08000800. The ide test keeps 12 bits per half.
+Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (the window offset of 2048 that centres a 12-bit coordinate space; the centring is inferred). NetBSD match accepts a board whose XYWIN reads 0x08000800. The X server stores 0x08000800 in rexInitHW and, for a right-to-left copy or a PutImage that starts below x = 4, temporarily stores 0x07fc0800 (x origin 4 lower) and loads XSTARTI and XENDI 4 higher, then restores 0x08000800 (X server driver functions rexCopyRect, rexDrawImage, rexValidateWindowPriv). Inferred from that pairing: drawing coordinate = loaded coordinate plus (x origin minus 0x800), so the pair puts the screen x of the run unchanged while keeping the engine coordinate at 4 or more; a model that applies the origin offset to the coordinates gets the right pixels, one that ignores XYWIN draws four pixels to the right. The ide test keeps 12 bits per half.
 
 ## Constants
 
@@ -280,12 +286,16 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CFGSEL_SYSCTL` | 0x6 | established |  | CFGSEL 6: VC1 SYS_CTL register; colour map command register. |
 | `CMD_BLOCK` | 0x8 | established |  | Command flag: fill or copy a rectangle rather than a line or point. Present in every rectangle and glyph command the PROM and kernel issue. |
 | `CMD_COPY_RECT` | 0x30080329 | established |  | Screen copy: fill-rectangle with LOGICSRC. The PROM's scroll routine loads the four coordinates, writes XYMOVE (offset 0x34) at its GO alias, and uses this command word; NetBSD issues the same command. |
+| `CMD_COPY_RECT_STATE` | 0x80329 | established |  | Screen copy with an empty logic-operation nibble (X server rexCopyRect, rexValidateWindowPriv): CMD_COPY_RECT without bits 31:28; XYMOVE at its GO alias executes it. |
 | `CMD_DRAW` | 0x1 | established |  | Command opcode bit: draw. Value 0 is a no-op that only latches the coordinates (NetBSD and the PROM glyph code both write it through the GO alias before a glyph). |
 | `CMD_ENZPATTERN` | 0x400 | established |  | Command flag: pixels are drawn where the ZPATTERN bit is one, taken from bit 31 downward. Used for every font glyph. |
 | `CMD_FILL_RECT` | 0x30000329 | established |  | Solid rectangle: logic op 3, STOPONX, STOPONY, QUAD, BLOCK, DRAW. light_sboxfi writes it at the GO alias after loading XSTARTI, YSTARTI, XENDI and YENDI; the PROM does the same. |
+| `CMD_FILL_RECT_STATE` | 0x329 | established |  | Rectangle fill with an empty logic-operation nibble: the X server (rexDrawSolidRects, rexDrawCID, rexInitHW, rexClearOverlays) and the kernel clear (rexClear) store this at SET and take the operation, mask and colour from XSTATE; the executing store is the YENDI GO alias. The word is established; taking the operation from XSTATE is inferred. |
 | `CMD_GLYPH16` | 0x300005b9 | established |  | Glyph up to 16 pixels wide: ENZPATTERN, STOPONX, XYCONTINUE, QUAD, LENGTH32, BLOCK, DRAW. light_drawbitmap issues it, then writes the ZPATTERN GO alias (0x860) once per row with the row's bits in the high 16. |
 | `CMD_GLYPH_PIECE` | 0x300005a1 | established |  | Glyph wider than 16: every 16-pixel piece except the last uses this command (no BLOCK, no LENGTH32), with XSTART advanced by the 0x10 per piece through XENDI loads. The last piece of each row uses 0x300005a9 (adds BLOCK, which is where y advances). |
 | `CMD_HOSTDATA` | 0x200000 | inferred |  | Command flag set only in the three pixel-memory probe commands (never in a fill, copy, point or glyph command). Inferred to make the draw take its pixel word from RWAUX1 (the probe writes RWAUX1 at its GO alias to run it) instead of from the colour register, and the read form to return pixels through RWAUX1; inferred from that use and from the compare constants alone. |
+| `CMD_HOSTDATA_READ` | 0x2000ab | established |  | Host pixel read block (X server GetImage, rexReadImage): CMD_HOSTDATA_WRITE plus opcode bit 1, AUX1 0x30; the X server reads RWAUX1 GO once per four pixels. Effect inferred. |
+| `CMD_HOSTDATA_WRITE` | 0x2000a9 | established |  | Host pixel write block (X server PutImage, rexDrawImage and rexRevADrawImage): HOSTDATA, XYCONTINUE, QUAD, BLOCK, DRAW with the X raster operation in bits 31:28. The X server then stores one 32-bit word per four pixels, first pixel in the high byte, at the RWAUX1 GO alias (0x870); the run ends at XENDI without a STOPONX flag. AUX1 is 0x28 or 0 around it. Effect inferred. |
 | `CMD_LENGTH32` | 0x10 | inferred |  | Command flag named LENGTH32 by NetBSD. Set with the 16-pixel glyph command 0x300005b9, clear with the other two glyph commands. Meaning (32-pixel run, or a pattern width) inferred from the pairing only. |
 | `CMD_LOGICOP_SHIFT` | 0x1c | established |  | Bits 31:28 hold the logic operation. 3 is source-replace: every command the PROM, kernel and NetBSD draw with has it (0x30000000). No other value is issued by the objects read, so the table of operations is unknown. |
 | `CMD_LOGICSRC` | 0x80000 | inferred |  | Command flag: source is the frame buffer at the XYMOVE offset (a screen copy). Used with value 0x30080329 in the PROM's scroll and NetBSD's copy. Role inferred from use. |
@@ -296,8 +306,11 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CMD_PIXMEM_WRITE_B` | 0x30210021 | established |  | Probe write 2: as probe write 1 plus bit 16. Run by writing 0x09090909 at the RWAUX1 GO alias with AUX1 set to 0x100 just before. The word is established; its effect is inferred (one pixel pair replaced). |
 | `CMD_POINT` | 0x30000001 | established |  | Single point: logic op 3, DRAW. light_pnt2i (kernel) and the PROM both store it at SET (0x0) and then read the GO alias (0x800), which runs it, after XSTARTI and YSTARTI. |
 | `CMD_QUAD` | 0x20 | inferred |  | Command flag named QUADMODE by NetBSD. Set in every rectangle command. Role inferred from use only. |
+| `CMD_SPAN` | 0x121 | established |  | Draw, QUAD, STOPONX with no BLOCK: one horizontal run from XSTARTI to XENDI. Used by the X server for solid spans, polygon and triangle fill, lines (rexSolidSpans, rexSolidFillSpans, rexFillTriangle, rexFillPolygon, rexLineSS, rexSolidZeroSeg). Whether the run is one row and how the line variants use MINORSLOPE: unknown (not read in full). |
+| `CMD_SPAN_LSPATTERN` | 0x921 | inferred |  | CMD_SPAN plus bit 11 (0x800), used by rexStippledFS and the stippled line code together with LSPATTERN and LSMODE. Bit 11 is inferred to enable the line stipple; no other source names it. |
 | `CMD_STOPONX` | 0x100 | established |  | Command flag: the draw's x run ends at XENDI (inclusive; NetBSD notes the end is inclusive). |
 | `CMD_STOPONY` | 0x200 | established |  | Command flag: the draw's y run ends at YENDI. Set for rectangle fill and copy, clear for the glyph rows (the glyph's y advances once per pattern write). |
+| `CMD_TILE_HOSTDATA` | 0x200121 | established |  | CMD_SPAN plus HOSTDATA: tile fill, rexTileRects, with AUX1 set to 0x28, 0x2c or 0x38 and the tile words written through RWAUX1 GO. Effect inferred. |
 | `CMD_XYCONTINUE` | 0x80 | established |  | Command flag: start the draw from the current XSTART/YSTART position the previous command left, not from XSTARTI/YSTARTI. Set in the glyph commands (0x300005a1, 0x300005a9, 0x300005b9) that the kernel and PROM follow with one pattern write per row. |
 | `CMD_ZCONTINUE` | 0x1000000 | unknown |  | Defined by NetBSD, never set by the shipped software read. |
 | `CMD_ZOPAQUE` | 0x800000 | inferred |  | Command flag named ZOPAQUE by NetBSD: with a pattern, pattern zeros paint COLORBACK instead of leaving the pixel alone. The kernel's and the PROM's glyph commands omit it (transparent background); NetBSD sets it. Inferred from NetBSD's use against the shipped commands. |

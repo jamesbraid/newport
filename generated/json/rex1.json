@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "f106ffd4ce6216cbcb15142d0f93d5a5d571bf5121dd2e782db212231ef32133",
+ "input_sha256": "a9b540b053951113d377ad91413b60051cbda1f71e313a0edcdf1331ed03f96a",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -43,6 +43,30 @@
    "space": null,
    "reset": "unknown",
    "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "xstate.logicop",
+   "hi": 31,
+   "lo": 24,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "xstate.planemask",
+   "hi": 23,
+   "lo": 16,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "xstate.colour",
+   "hi": 7,
+   "lo": 0,
+   "grade": "inferred"
   },
   {
    "unit": "rex1",
@@ -746,6 +770,14 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_COPY_RECT_STATE",
+   "value": 525097,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_DRAW",
    "value": 1,
    "count": 1,
@@ -764,6 +796,14 @@
    "kind": "constant",
    "name": "CMD_FILL_RECT",
    "value": 805307177,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_FILL_RECT_STATE",
+   "value": 809,
    "count": 1,
    "grade": "established"
   },
@@ -790,6 +830,22 @@
    "value": 2097152,
    "count": 1,
    "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_HOSTDATA_READ",
+   "value": 2097323,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_HOSTDATA_WRITE",
+   "value": 2097321,
+   "count": 1,
+   "grade": "established"
   },
   {
    "unit": "rex1",
@@ -874,6 +930,22 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_SPAN",
+   "value": 289,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_SPAN_LSPATTERN",
+   "value": 2337,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_STOPONX",
    "value": 256,
    "count": 1,
@@ -884,6 +956,14 @@
    "kind": "constant",
    "name": "CMD_STOPONY",
    "value": 512,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_TILE_HOSTDATA",
+   "value": 2097441,
    "count": 1,
    "grade": "established"
   },

@@ -43,8 +43,8 @@ of the command GO address. For the off-chip ports the GO alias is the "do it" st
 GO starts a read cycle (see below). A qtest can discriminate: a drawing register written at SET draws nothing, the same
 register written at GO draws; reading GO draws too.
 
-**Byte lanes.** Every access is a 32-bit load or store; shipped code never uses narrower accesses to this board (not read in
-full for every driver path: the X server was not examined). Values are big-endian words as the CPU sees them.
+**Byte lanes.** Every access is a 32-bit load or store; the kernel and the X server driver issue only 32-bit loads and stores at the configuration
+offsets 0x4790 to 0x4ff0, and the PROM and kernel use only 32-bit accesses everywhere. Values are big-endian words as the CPU sees them.
 
 ## Busy handling
 
@@ -74,7 +74,7 @@ All established from what the shipped code issues; the chip's behaviour for comm
   destination group (`lightSetDestinationPlanes`); how a model should honour them: **unknown**.
 - **Logic op.** Bits 31:28 of the command. Only value 3 (replace) is ever issued.
 
-### Commands the software issues (full list)
+### Commands the software issues (kernel, PROM and NetBSD)
 
 | Word | Meaning | Issuer |
 |---|---|---|
@@ -86,6 +86,8 @@ All established from what the shipped code issues; the chip's behaviour for comm
 | `0x300005a1` / `0x300005a9` | wide glyph: pieces of up to 16 pixels, last piece (`a9`) ends the row | kernel `light_drawbitmap` |
 | `0x30200021`, `0x30210021`, `0x30200023` | pixel-memory write, write and read through `RWAUX1`, decoded [below](#the-pixel-memory-probe-commands) | kernel `lightInitInfo`, PROM board info (0xbfc0fa00), ide board info |
 
+The X server issues more command words (0x329 and 0x80329 with the operation and colour in `XSTATE`, 0x1, 0x121, 0x921, 0x200121, 0x2000a9, 0x2000ab, 0x5a1 to 0x5b9 and others) and reads back more state; they are tabulated with their callers on the [board page](../../platforms/lg1/README.md#x-server-the-drawing-commands-it-issues) and the words are CMD_ constants in the [register list](registers.md).
+
 Pixel result, where the code makes it clear: the rectangle commands set every pixel in the closed range [XSTARTI, XENDI] x
 [YSTARTI, YENDI] to the colour (NetBSD's comment says the end coordinates are inclusive; the PROM clear writes XENDI = 1023 and
 YENDI = 767 through the stored 767 - y form). A pattern draw with ENZPATTERN and XYCONTINUE writes one row per `ZPATTERN` GO
@@ -94,7 +96,7 @@ foreground colour; zero-bits leave the pixel unchanged (no ZOPAQUE) in the shipp
 ZOPAQUE (NetBSD only). After each `ZPATTERN` write y moves one row toward `YENDI` (see [Y origin](#y-origin)) and x returns to the start (the `XYCONTINUE` state). Established for the shipped use; the exact y-step rule
 at the screen edge is unknown.
 
-The copy: source x and y are the destination's plus the `XYMOVE` halves; the copy direction is chosen by software so
+The copy: source x and y are the destination's plus the `XYMOVE` halves (source minus destination, settled by the X server's copy routine, which also runs the engine from `YSTARTI` to a smaller `YENDI` when the source is above the destination); the copy direction is chosen by software so
 overlapping scrolls work (the PROM and NetBSD arrange start and end y so that the engine runs the right way), so the model needs
 overlap-safe copying only for those.
 
