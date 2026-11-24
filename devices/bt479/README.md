@@ -57,6 +57,8 @@ bank n by writing (n << 6) | monitor flag | 2 to selector 6, then selector 3 = 0
 So in this variant selector 6 bits 7:6 pick the bank and bit 1 is always set when reading; the roles of bit 0 and bit 1
 beyond that: **unknown**.
 
+The four banks, which program loads which, and the bank-select rule the model needs are on [Colour-map banks](banks.md).
+
 ## qtest hooks
 
 A register-contract test for a model can check: after `CONFIGSEL` 0 <- n, three writes to selector 1 and `CONFIGSEL` 3 <- n
