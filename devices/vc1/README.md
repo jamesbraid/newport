@@ -128,6 +128,16 @@ second byte of the entry that a pending swap-buffer request names, once the requ
 Bit 1 of that byte selects between the two image buffers of a double-buffered window, **inferred** from its use only for
 `lightSchedSwapBuf` requests.
 
+## Readback and the retrace handler
+
+Added from the kernel retrace and cursor code and the X server (IRIX 5.3 and 6.5). Tags and addresses are on the [LG1 board page](../../platforms/lg1/README.md#kernel-and-x-server-irix-53-and-65-what-the-model-needs-beyond-the-prom).
+
+- **Every window is read, not only written (established).** `light_read_displaymodes` reads 0x40 two-byte entries from window 1, `light_read_scan` reads the frame and line tables from window 2 after loading their pointers from register 0x40 and 0x41 of window 0, `light_read_auxmapindex` reads register 0x62, and `lightReadDisplay` copies all of them to user space (request 20006). A model must return what was stored.
+- **Read cycle (established for the sequences, inferred for the cause).** A single byte is read with `CONFIGSEL`, a GO read of `RWVC1` whose value is ignored, a delay and a read of `RWVC1`. A run of bytes is read with one ignored GO read and then only GO reads, one per byte. Both are consistent with a GO read that returns the byte fetched by the previous GO read and starts the next fetch (advancing the address counter), and a plain read that returns the byte of the last fetch. A model where a GO read returns and advances at once would make every bulk reader lose its first byte.
+- **The address counter is readable (established).** The retrace handler and `lightPositionCursor` select `CONFIGSEL` 4, read, and select 5, read, to learn the low and high bytes of the counter, then write the same bytes back (the low byte is stored again unchanged right after the read). `CONFIGSEL` itself is read first and restored last. A flat counter that reads back what the last write or auto-increment left satisfies this.
+- **The odd-address workaround (established as a sequence, inferred as a mechanism).** If the saved low byte is odd and the saved selector is 1 or 2, the handler first sets the address to 0x0080 and reads window 0 once, and when it has finished steps the counter back by one and writes that byte through the saved window. The byte it writes was read from register 0x80, so for the restore to be harmless register 0x80 must read as the last byte transferred through any data window (a data latch). **Unknown:** whether register 0x80 exists in the file otherwise; no shipped code writes it.
+- **The X server initialises the VC1 itself.** After the kernel it rewrites registers 0x40 to 0x45 and 0x60 to 0x63 and loads the SRAM at other addresses; the values are on the board page. The register meanings are unchanged ("unknown"); a model that stores and returns them is enough for software, and the display-id mechanism that turns the tables into a colour-map bank and buffer per pixel remains the open question below.
+
 ## What the PROM does with it
 
 Established that the PROM mirrors the kernel: it clears the cursor and mode window, loads the two timing tables from its own
