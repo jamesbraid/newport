@@ -75,7 +75,7 @@ consecutive bytes as one 16-bit big-endian value is inferred from the order they
 |---|---|---|---|
 | 0x00 (2 bytes) | `initVC1` | 0x88, 0x00 | pointer to the first video timing entry (in a form where the high byte's top bit is set) - **inferred** from its position before the 0x14 write and the 0x4000/0x3000 neighbours below |
 | 0x14 (2 bytes) | `initVC1` | 0x1d, 0x00 | video enable control - **unknown** role beyond the write |
-| 0x20 (2 bytes) | `initLg1Cursor` | 0x30, 0x00 | cursor glyph pointer: 0x3000 is the SRAM address `initLg1Cursor` clears, **inferred** |
+| 0x20 (2 bytes) | `initLg1Cursor` | 0x30, 0x00 | cursor glyph pointer: 0x3000 is the SRAM address `initLg1Cursor` clears, **inferred**; the X server sets 0x07, 0x00 (SRAM 0x0700), see [cursor](cursor.md) |
 | 0x22 (2 bytes) | `lightPositionCursor` | x + 0x8c - x hotspot, high byte then low | cursor x position (high, low); **established** as the location and the added constant 0x8c |
 | 0x24 (2 bytes) | `lightPositionCursor` | y + 0x27 - y hotspot, high then low | cursor y position; added constant 0x27 |
 | 0x26 | `initLg1Cursor` | 0x00 (after 0x02, 0x40, 0x02, 0x40 written to 0x22 to 0x25) | cursor mode - inferred |
@@ -84,6 +84,8 @@ consecutive bytes as one 16-bit big-endian value is inferred from the order they
 | 0x44, 0x45 | `initVC1` | 0xcc, 0x04 | horizontal divide and modulus for the display-id generator - unknown role |
 | 0x60, 0x61 | `initVC1` | 0x01, 0x01 | blank-out controls for even and odd lines - unknown role |
 | 0x62 | read by `light_read_auxmapindex` | | auxiliary map index (read-back only) |
+
+The X server's different values for registers 0x40 to 0x45 and 0x60 to 0x63, the mode-word layout and how DIDs pick a colour-map bank are on [display IDs and the mode table](did-xmap.md); the cursor glyph format and colours are on [the cursor page](cursor.md).
 
 After the registers, `initVC1` clears the first 0x40 bytes of the display-mode table through window 1 (address counter at 0;
 see below). `initLg1Cursor` does the cursor setup: clears 0x100 bytes of SRAM at 0x3000 (the cursor glyph
@@ -96,8 +98,7 @@ meaning of that guarded sequence (a workaround for a hazard while the display-mo
 
 ## SRAM layout
 
-Established from `initVC1`, `vc1LoadSRAM` and `initLg1Cursor`. The SRAM size is **inferred** only as at least 32K bytes: the
-highest address software uses is 0x4800 + 0x8a, and no shipped code states the part size.
+Established from `initVC1`, `vc1LoadSRAM` and `initLg1Cursor`. The SRAM size is **inferred** only as at least 32K bytes for the kernel (highest address 0x4800 + 0x8a); the X server also uses 0x0700, 0x0900 to 0x0eff and a line table at 0x2000 or 0x5000, so a model should allow 64 KiB. No shipped code states the part size.
 
 | SRAM address | Contents | Loaded from |
 |---|---|---|
