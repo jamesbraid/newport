@@ -30,3 +30,5 @@ The IP20 boot objects are in the 5.3 `eoe1.sw.unix` subsystem with the mach tag 
 | `usr/gfx/arch/GENERIC/Xsgi` | `c28eaabc80ab83dc7ea5d949ae3b1d5303abe6c0a867b91419c4e7cd0f786453` |
 
 The 6.5 objects are compiled for the n32 ABI. They were disassembled with a standard MIPS disassembler and read by hand; no decompiler was run on either release, so no reading here is graded above what a hand read of the whole routine supports.
+
+Review (2026-11-23): the four IRIX 5.3 archives and the four 5.3 objects above were re-extracted from the IRIX 5.3 install disc image (SGI disk label, EFS partition, sha256 `a194caea63d280109c37d50be929c34a0f80a23c3e951c3cfa2af1315a0d8cad`) and every hash reproduced. For 6.5, `lg1.a` and `kernel.o` were seen in other held copies with the hashes listed; the 6.5 `lg1mc.so` and `Xsgi` hashes were not reproduced, and the disc they came from is not named here. The 6.5 base tree of the archive.org IRIX 6.4 for Origin, Onyx2 and OCTANE image holds different copies (its `lg1.a` is `2267869bb682b891c7b2544bebde41af392da18b9df12f53333ef8e392df9eb6`), so the 6.5 rows should name their disc before they are cited as 6.5.

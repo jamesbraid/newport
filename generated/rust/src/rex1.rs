@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 a9b540b053951113d377ad91413b60051cbda1f71e313a0edcdf1331ed03f96a
+// input sha256 1b41b739ec15c390c5295f0eb76e27a67291e0131c3d12b75ef36b0d0765733c
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -20,9 +20,19 @@ pub mod aux1 {
 pub mod xstate {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x8;
-    pub mod logicop { // bits 31:24, inferred
+    pub mod copyflag { // bits 29:29, unknown
+        pub const SHIFT: u32 = 29;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod logicop { // bits 27:24, inferred
         pub const SHIFT: u32 = 24;
-        pub const MASK: u32 = 0xff;
+        pub const MASK: u32 = 0xf;
         pub const fn get(v: u32) -> u32 {
             (v >> SHIFT) & MASK
         }

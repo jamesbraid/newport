@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "a9b540b053951113d377ad91413b60051cbda1f71e313a0edcdf1331ed03f96a",
+ "input_sha256": "1b41b739ec15c390c5295f0eb76e27a67291e0131c3d12b75ef36b0d0765733c",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -47,8 +47,16 @@
   {
    "unit": "rex1",
    "kind": "field",
+   "name": "xstate.copyflag",
+   "hi": 29,
+   "lo": 29,
+   "grade": "unknown"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
    "name": "xstate.logicop",
-   "hi": 31,
+   "hi": 27,
    "lo": 24,
    "grade": "inferred"
   },

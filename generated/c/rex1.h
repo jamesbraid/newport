@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 a9b540b053951113d377ad91413b60051cbda1f71e313a0edcdf1331ed03f96a */
+/* input sha256 1b41b739ec15c390c5295f0eb76e27a67291e0131c3d12b75ef36b0d0765733c */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -52,21 +52,29 @@
  * rexDrawSolidRects, rexDrawPoints, rexDrawImage, rexCopyRect,
  * rexImageGlyphBltTE8) stores it before nearly every draw. The X server builds
  * it as colour index in bits 7:0, plane write mask in bits 23:16 and the X
- * raster-operation code in bits 31:24 (GXcopy is 3, so the clear value
+ * raster-operation code in bits 27:24 (GXcopy is 3, so the clear value
  * 0x03ff0000 is: replace, all eight planes, colour 0; the copy path ORs 0x20
  * into the top byte). Those field roles are inferred from what the writers
- * pack, not from a manual. Open and settled only as a model constraint: the X
- * server fills with command 0x329 and the colour from here, while the kernel
- * fills with 0x30000329 and the colour from COLORREDI and never writes XSTATE
- * (rexImageGlyphBltTE8 also fills its background with 0x30000329 using only the
- * colour it packed here). The one reading that satisfies every shipped writer
- * is that XSTATE bits 7:0 and COLORREDI are the same eight bits of state. The
- * ide test writes all 32 bits and expects them back unmasked.
+ * pack, not from a manual. The operation is a value from 0 to 15 shifted left
+ * by 24, so it occupies bits 27:24; bit 29 is a separate flag that only the
+ * copy words set (0x20000000 in rexCopyRect, 0x23ff0000 in
+ * rexValidateWindowPriv), role unknown. Open and settled only as a model
+ * constraint: the X server fills with command 0x329 and the colour from here,
+ * while the kernel's per-rectangle fill (light_sboxfi) uses 0x30000329 and the
+ * colour from COLORREDI (the kernel's rexClear does write XSTATE);
+ * rexImageGlyphBltTE8 fills its background with 0x30000329 after writing only
+ * XSTATE and loads COLORREDI afterwards, which is the discriminating case for
+ * the shared reading. The one reading that satisfies every shipped writer is
+ * that XSTATE bits 7:0 and COLORREDI are the same eight bits of state. The ide
+ * test writes all 32 bits and expects them back unmasked.
  */
 /* xstate: rw32, reset unknown */
 #define REX1_XSTATE_OFFSET                           0x8u /* established */
+#define REX1_XSTATE_COPYFLAG_SHIFT                   29 /* unknown */
+#define REX1_XSTATE_COPYFLAG_MASK                    0x1u
+#define REX1_XSTATE_COPYFLAG_INPLACE (REX1_XSTATE_COPYFLAG_MASK << REX1_XSTATE_COPYFLAG_SHIFT)
 #define REX1_XSTATE_LOGICOP_SHIFT                    24 /* inferred */
-#define REX1_XSTATE_LOGICOP_MASK                     0xffu
+#define REX1_XSTATE_LOGICOP_MASK                     0xfu
 #define REX1_XSTATE_LOGICOP_INPLACE (REX1_XSTATE_LOGICOP_MASK << REX1_XSTATE_LOGICOP_SHIFT)
 #define REX1_XSTATE_PLANEMASK_SHIFT                  16 /* inferred */
 #define REX1_XSTATE_PLANEMASK_MASK                   0xffu
@@ -428,7 +436,10 @@
  * engine to go idle and stores the result here, so the top three bits select
  * which plane group a draw reaches. The meaning of each of those three bits:
  * unknown (no shipped code names the groups). The ide mask 0x7fffffff shows 31
- * bits kept.
+ * bits kept. The X server's line, point and span batches (rexLineSS,
+ * rexSegmentSS, rexPolyPoint, rexSolidFillSpans) store (group << 29) | 0xf11 at
+ * the start and plain group << 29 at the end, so the low twelve bits are used
+ * and the value 0xf11 is not a command word; what they select is unknown.
  */
 /* aux2: rw32, reset unknown */
 #define REX1_AUX2_OFFSET                             0x47a8u /* established */
@@ -536,16 +547,20 @@
  * triggers the pixel-memory probe described under rwaux1, any other value plus
  * one is stored as a board option byte). initRex and the pixel DMA path store
  * 0x807fe000. The X server (driver function rexInitHW) stores 0x80000000 |
- * 0x40000000 | 0x00180000 | (level << 13) with level 7 by default (9 or 11 on
- * some CPU boards, or the number in the environment variable REX_GFIFO_LEVEL),
- * raises the level field to 31 for glyph and arc runs (0xc01be000) and writes
- * 0x80000000 | 0x00180000 | (level << 13) without bit 30 for host-data pixel
- * writes; so bits 17:13 are inferred to be a FIFO-level threshold (the
- * interrupt on GIO line 0 or the stall point), bits 20:19 are constant 11 in
- * every X server store, and bit 30 is set for register-driven drawing and clear
- * for host-data writes. lightPcxSwap saves the word xor 0x80000000 and restores
- * it unchanged, so bit 31 is read inverted of what was written. Role of bit 31
- * and of bits 22:21: unknown. A qtest can discriminate: bit 0 reads 1 while a
+ * 0x40000000 | 0x00180000 | (level << 13) with level 7 by default (see the
+ * CPU-board ranges below, or the number in the environment variable
+ * REX_GFIFO_LEVEL), raises the level field to 31 for glyph and arc runs
+ * (0xc01be000) and writes 0x80000000 | 0x00180000 | (level << 13), without bit
+ * 30, only around the pixel DMA of a large PutImage (the CPU-store PutImage
+ * path leaves bit 30 set); so bits 17:13 are inferred to be a FIFO-level
+ * threshold (the interrupt on GIO line 0 or the stall point), bits 20:19 are
+ * constant 11 in every X server store, and bit 30 is set except while the pixel
+ * DMA feeds RWAUX1 (role unknown). The default level of 7 becomes 9 or 11 only
+ * when an inventory value in the CPU-board range is read at start (0x400 to
+ * 0x43f: 9, or 11 with the board-info flags bit 6 set; 0x440 to 0x1fff: 7, or 9
+ * with bit 6 set). lightPcxSwap saves the word xor 0x80000000 and restores it
+ * unchanged, so bit 31 is read inverted of what was written. Role of bit 31 and
+ * of bits 22:21: unknown. A qtest can discriminate: bit 0 reads 1 while a
  * command is executing and 0 after; the PROM 300000 microsecond polling loop in
  * lightProbe (done when bit 0 clears) must not time out; a model with
  * synchronous drawing may return 0 in bits 28:24 and 12:8 and satisfy every
