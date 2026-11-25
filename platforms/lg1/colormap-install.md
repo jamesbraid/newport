@@ -126,6 +126,25 @@ tables (`bt479Init` also clears banks 0, 2, 3 and loads a grey ramp into bank 1,
 default colour map uses the first hardware map of its group's rotation, 1 (bank 1). Bank 2 is loaded only when a second distinct
 group-0 colour map is installed, or on a store into it while installed. Until then DID 5 shows zeros, not blue.
 
+### Who loads banks 0 to 2
+
+Only the X server's colour-map code, apart from the boot-time clears. The writers in the shipped objects are the PROM's palette
+routines, the kernel's `initBt479` (bank 0 default table, zeros in banks 1 to 3; run when `gfxinit` makes its initialize request,
+[gfxinit](gfxinit.md), and at early init when the PROM did not set the board up), the server's `bt479Init` (zeros in all four banks, a grey ramp in bank 1) and then `rexInstallNormalMap`, `rexStoreNormalColors`
+and `rexSetColor`. No other shipped writer was found (`gfxinit` itself only makes that request; clients reach the palette through X requests; no colour-map daemon
+was found writing the palette, but the shipped binaries were not searched for one exhaustively). The bulk loads in a guest run (model behaviour) fit this: two passes of zeros, then whole 256-entry loads per
+install, and single-entry loads as clients allocate colours. Three hardware maps are shared by every group-0 colour map, so a bank
+holds whichever map was installed in it last: an 8-plane PseudoColor map (the default map's reserved colours, then client entries),
+the StaticColor map the server fills from its module table (entry 0x0f = 0xaa, entry 0x20 = 0x0a), and the 8-plane TrueColor map.
+The 3-3-2 cube in bank 2 is that TrueColor visual's map: its masks are red 0xe0, blue 0x18, green 0x07 (the sixth-visual table at
+0x5e3c022c), loaded by the TrueColor loop of `rexInstallNormalMap` (0x5e30767c). Its gamma-curved twin in bank 0 is the same layout;
+which colour map carries the gamma values was not traced (`nfbCreateGammaRamp` 0x5e2fda38 builds a ramp at server start, but the
+install loops read only the colour map's own entries). A bank snapshot at the end of a boot therefore says nothing about what bank 2
+held while the icons were drawn: that is whichever map was last installed in hardware map 2 at that moment, and when the desktop's
+private map is evicted its windows fall back to the group's first hardware map (bank 0) until it is installed again. There is no
+contradiction with "the server writes bank 3 entries at 0x11 to 0x13, 0x21 to 0x23, 0x30 to 0x4f": those are its bank 3 loads; it writes
+banks 0 to 2 as well.
+
 ## 3. Choosing a window's display ID and mode word
 
 The display-ID layer (`FindFreeID`, `SetDIDMode`, `UpdateDIDMode`, `FreeID` and `compareModes`, 0x5e315840 to 0x5e3161a0) is in
