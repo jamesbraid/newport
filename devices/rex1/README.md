@@ -70,8 +70,7 @@ All established from what the shipped code issues; the chip's behaviour for comm
   NetBSD's match routine. `SMASK1X/1Y` clip to a rectangle of 10-bit fields; the other three screen masks are for window
   context switches.
 - **Colour.** Foreground is an 8-bit index in `COLORREDI`. Background in `COLORBACK` is used only by NetBSD with ZOPAQUE.
-- **Write mask.** `RWMASK` (set to 0xff by init) gates which planes a pixel read/write touches. `AUX2`'s top three bits select a
-  destination group (`lightSetDestinationPlanes`); how a model should honour them: **unknown**.
+- **Write mask.** `RWMASK` (set to 0xff by init) is the pixel write mask the ide graphics shell loads; the X server never writes it and keeps its mask in `XSTATE` bits 23:16 (see [tile fill](tile-fill.md)). `AUX2`'s top three bits are one plane-group code (`lightSetDestinationPlanes`): 0 none, 1 pixel planes, 2 overlay planes, 3 CID planes, names from the shipped header (**established** as names; effect **inferred**, see [overlay planes and bank 3](../../platforms/lg1/desktop-and-overlays.md)).
 - **Logic op.** Bits 31:28 of the command. Only value 3 (replace) is ever issued.
 
 ### Commands the software issues (kernel, PROM and NetBSD)
@@ -138,8 +137,8 @@ it stores those bits plus one); the PROM and `ide` run it unconditionally. All t
 | Bit | 0x30200021 | 0x30210021 | 0x30200023 | Meaning |
 |---|---|---|---|---|
 | 31:28 = 3 | yes | yes | yes | logic op source-replace (established) |
-| 21 | yes | yes | yes | set in no other command; **inferred** host data through `RWAUX1` |
-| 16 | no | yes | no | **unknown**; with `AUX1` = 0x100 exactly one pixel pair of four is replaced |
+| 21 | yes | yes | yes | COLORAUX in the shipped header (also set in PutImage, GetImage and the tile fill); **inferred** host data through `RWAUX1` |
+| 16 | no | yes | no | COLORCOMP in the shipped header; with `AUX1` = 0x100 (COLORCOMPGT) exactly one pixel pair of four is replaced, a colour compare (**inferred**) |
 | 5 | yes | yes | yes | QUAD (inferred, as for rectangles) |
 | 1 | no | no | yes | **inferred** read opcode (opcode 3, where 1 is draw) |
 | 0 | yes | yes | yes | DRAW |
@@ -228,7 +227,7 @@ glyphs. It never programs the colour map. All differences with this page are not
 
 ## Open
 
-Filed in [questions/README.md](../../questions/README.md): what command bit 16 and `AUX1` bit 8 select in the pixel-memory probe; what `CONFIGMODE` bits 31 and 22:13 are; the digits of the REX chip's part number; the
+Filed in [questions/README.md](../../questions/README.md): which compare sense the pixel-memory probe's two outcomes are (command bit 16 and `AUX1` bit 8 are the header's COLORCOMP and COLORCOMPGT); what `CONFIGMODE` bits 31 and 22:13 are; the digits of the REX chip's part number; the
 format of `RWAUX1`'s memory-probe outcome.
 
 ## Review (2026-11-23)

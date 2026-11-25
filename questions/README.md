@@ -7,10 +7,9 @@ Each entry gives the owning file, the routes already tried and the next route to
 
 ## LG1 (Entry graphics board)
 
-### REX1 command bit 16, AUX1 bit 8 and the pixel-memory probe outcomes
+### REX1 pixel-memory probe outcomes
 
-Bits 21 and 1 of the probe commands are decoded (inferred) on the [REX1 page](../devices/rex1/README.md#the-pixel-memory-probe-commands). Open: what bit 16 of 0x30210021 and `AUX1` bit 8
-select so that one pixel pair of four is replaced, and what outcomes 0 and 1 mean for the board. Routes tried: kernel, both PROMs and the `ide` board-info copy (same routine); no object reads info byte
+Bits 21, 16 and 1 of the probe commands and `AUX1` bit 8 are named and decoded (inferred) on the [REX1 page](../devices/rex1/README.md#the-pixel-memory-probe-commands): COLORAUX, COLORCOMP and COLORCOMPGT in the shipped header, so the second write is a one-sided colour compare. Open: which compare sense outcomes 0 (REX revision A) and 1 (revision B) are, and what they mean for the board. Routes tried: kernel, both PROMs and the `ide` board-info copy (same routine); no object reads info byte
 0x29 afterwards; the `ide` VRAM test uses only the fill, point and glyph commands; the X server module (IRIX 5.3 and 6.5) never issues bit 16 and reads only the other board-info fields. Next: `gfxinfo` output on a real machine, if a transcript exists in a public archive.
 
 ### CONFIGMODE bit 31, bits 22:21, and the FIFO interrupt condition
@@ -35,7 +34,7 @@ The X server's copy routine settles the sign for the X server (source minus dest
 
 ### X server and kernel: the colour source, the logic-operation nibble and what `AUX2` bits 11:0 do
 
-The X server fills with command 0x329 and takes colour, mask and operation from `XSTATE`; the kernel and PROM fill with 0x30000329 and take the colour from `COLORREDI`; the X server's glyph path fills a background with 0x30000329 using only `XSTATE`. The one consistent reading is that `XSTATE` bits 7:0 and `COLORREDI` are the same state, but the effect of a non-zero nibble in both places (the PutImage path sets both) and of `XSTATE` bit 29 in the copy words is not read. 0x328 and 0xf11 are settled as not being commands: the line code ORs 0x328 and 0x121 into a word holding the operation and DRAW, and ORs 0xf11 into `AUX2` ([board page review](../platforms/lg1/README.md#review-2026-11-23-of-this-section)); what `AUX2` bits 11:0 select, and the slope registers' arithmetic (`MINORSLOPE`, `XSAVE`), are not read. Routes tried: the X server's draw routines (5.3 and 6.5). Next: read the sloped-segment loops of `rexLineSS`, `rexSolidZeroSeg` and `rexFillTriangle` in full.
+The X server fills with command 0x329 and takes colour, mask and operation from `XSTATE`; the kernel and PROM fill with 0x30000329 and take the colour from `COLORREDI`; the X server's glyph path fills a background with 0x30000329 using only `XSTATE`. The one consistent reading is that `XSTATE` bits 7:0 and `COLORREDI` are the same state, but the effect of a non-zero nibble in both places (the PutImage path sets both) and of `XSTATE` bit 29 in the copy words is not read. 0x328 and 0xf11 are settled as not being commands: the line code ORs 0x328 and 0x121 into a word holding the operation and DRAW, and ORs 0xf11 into `AUX2` ([board page review](../platforms/lg1/README.md#review-2026-11-23-of-this-section)); whether `AUX2` bits 11:0 do what the shipped header's names for them say (screen mask enables and polarity, CID match nibbles), and the slope registers' arithmetic (`MINORSLOPE`, `XSAVE`), are not read. Routes tried: the X server's draw routines (5.3 and 6.5). Next: read the sloped-segment loops of `rexLineSS`, `rexSolidZeroSeg` and `rexFillTriangle` in full.
 
 ### Per-window colour map and buffer: how the VC1 turns its tables into pixels
 

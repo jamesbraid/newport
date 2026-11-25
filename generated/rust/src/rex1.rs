@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 1b41b739ec15c390c5295f0eb76e27a67291e0131c3d12b75ef36b0d0765733c
+// input sha256 bf4c35dc8bca6228fb043fb16ff86e9037fc616f442914bd1fe7540ae5317890
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -20,8 +20,38 @@ pub mod aux1 {
 pub mod xstate {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x8;
-    pub mod copyflag { // bits 29:29, unknown
+    pub mod zopaque { // bits 31:31, unknown
+        pub const SHIFT: u32 = 31;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod lsopaque { // bits 30:30, unknown
+        pub const SHIFT: u32 = 30;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod copyflag { // bits 29:29, inferred
         pub const SHIFT: u32 = 29;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod coloraux { // bits 28:28, inferred
+        pub const SHIFT: u32 = 28;
         pub const MASK: u32 = 0x1;
         pub const fn get(v: u32) -> u32 {
             (v >> SHIFT) & MASK
@@ -321,7 +351,7 @@ pub const CMD_LENGTH32: u32 = 0x10; // inferred
 pub const CMD_LOGICOP_SHIFT: u32 = 0x1c; // established
 pub const CMD_LOGICSRC: u32 = 0x80000; // inferred
 pub const CMD_OP_READ: u32 = 0x2; // inferred
-pub const CMD_PIXMEM_BIT16: u32 = 0x10000; // unknown
+pub const CMD_PIXMEM_BIT16: u32 = 0x10000; // inferred
 pub const CMD_PIXMEM_READ: u32 = 0x30200023; // established
 pub const CMD_PIXMEM_WRITE_A: u32 = 0x30200021; // established
 pub const CMD_PIXMEM_WRITE_B: u32 = 0x30210021; // established

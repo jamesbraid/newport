@@ -162,6 +162,6 @@ the sibling LG2 board's colour map. The X server cannot, since it only writes th
 
 ## Open
 
-- The mode word's bits 9:8, 14:12 and 0 and what the second (odd) half is used for.
+- The mode word's bits 9:8, 14:12 and 0 and what the second (odd) half is used for. The three bit-0 words are the overlay and pop-up IDs (6 to 8); which plane group they show is on [overlay planes and bank 3](../../platforms/lg1/desktop-and-overlays.md#dids-6-to-8-and-bank-3).
 - Whether the index offset is added to, or replaces the high bits of, the pixel value; the shipped table cannot tell them apart.
 - Why the line-table writer adds an entry for one VC1 read-back value, and the chip's use of `DID_HOR_DIV` and `DID_HOR_MOD`.

@@ -89,4 +89,4 @@ words.
 
 - The Bt479's own bank/window mechanism (data sheet needed): whether the part has four palettes natively, how many bank pins it has,
   and what control register bits 3:0 do.
-- How pop-up pixels reach bank 3 entries 0x10 and up (above).
+- How pop-up pixels reach bank 3 entries 0x10 and up (above). Which bank-3 entries the X server writes, and the plane group code, are on [overlay planes and bank 3](../../platforms/lg1/desktop-and-overlays.md#dids-6-to-8-and-bank-3).

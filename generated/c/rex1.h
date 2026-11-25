@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 1b41b739ec15c390c5295f0eb76e27a67291e0131c3d12b75ef36b0d0765733c */
+/* input sha256 bf4c35dc8bca6228fb043fb16ff86e9037fc616f442914bd1fe7540ae5317890 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -37,10 +37,15 @@
  * cleared, sets bit 4 when the request word's second field is 1, bit 2 when bit
  * 0 of its third field is set and bit 3 when bit 1 is set, then stores it here
  * (only for the window that owns the screen) or in the window's saved context.
- * Which pixel behaviour each of bits 2, 3 and 4 enables: unknown, no shipped
- * code names them. The pixel-memory probe also stores 0x100 (bit 8) here before
- * its second write; that bit's role is unknown. ide's register test reads it
- * back whole (test mask 0x3ff).
+ * The shipped header names the bits FRACTION0 and FRACTION1 (0, 1), DBLDST0 and
+ * DBLDST1 (2, 3), DBLSRC (4), DOUBLEBUF (5), COLORCOMPLT, COLORCOMPEQ and
+ * COLORCOMPGT (6, 7, 8) and DITHERRANGE (9); the roles are inferred from the
+ * names: bits 2 and 3 pick which buffer a draw writes, bit 4 which one it
+ * reads, bit 5 turns double buffering on. The X server's four-pixel tile fill
+ * and PutImage store 0x28 or 0x2c (DOUBLEBUF with DBLDST1, and DBLDST0 for
+ * 0x2c) and its GetImage 0x30 (DOUBLEBUF with DBLSRC). The pixel-memory probe
+ * stores 0x100 (COLORCOMPGT) here before its second write. ide's register test
+ * reads it back whole (test mask 0x3ff).
  */
 /* aux1: rw32, reset unknown */
 #define REX1_AUX1_OFFSET                             0x4u /* established */
@@ -65,14 +70,27 @@
  * rexImageGlyphBltTE8 fills its background with 0x30000329 after writing only
  * XSTATE and loads COLORREDI afterwards, which is the discriminating case for
  * the shared reading. The one reading that satisfies every shipped writer is
- * that XSTATE bits 7:0 and COLORREDI are the same eight bits of state. The ide
- * test writes all 32 bits and expects them back unmasked.
+ * that XSTATE bits 7:0 and COLORREDI are the same eight bits of state. The
+ * shipped header names bits 31:28 XSTATE_ZOPAQUE, XSTATE_LSOPAQUE,
+ * XSTATE_LOGICSRC and XSTATE_COLORAUX, the same names as command bits 23, 22,
+ * 19 and 21, so the upper nibble is the X server's way of keeping those command
+ * flags as state (inferred); the tile fill sets bit 28 and the copy words set
+ * bit 29. The ide test writes all 32 bits and expects them back unmasked.
  */
 /* xstate: rw32, reset unknown */
 #define REX1_XSTATE_OFFSET                           0x8u /* established */
-#define REX1_XSTATE_COPYFLAG_SHIFT                   29 /* unknown */
+#define REX1_XSTATE_ZOPAQUE_SHIFT                    31 /* unknown */
+#define REX1_XSTATE_ZOPAQUE_MASK                     0x1u
+#define REX1_XSTATE_ZOPAQUE_INPLACE (REX1_XSTATE_ZOPAQUE_MASK << REX1_XSTATE_ZOPAQUE_SHIFT)
+#define REX1_XSTATE_LSOPAQUE_SHIFT                   30 /* unknown */
+#define REX1_XSTATE_LSOPAQUE_MASK                    0x1u
+#define REX1_XSTATE_LSOPAQUE_INPLACE (REX1_XSTATE_LSOPAQUE_MASK << REX1_XSTATE_LSOPAQUE_SHIFT)
+#define REX1_XSTATE_COPYFLAG_SHIFT                   29 /* inferred */
 #define REX1_XSTATE_COPYFLAG_MASK                    0x1u
 #define REX1_XSTATE_COPYFLAG_INPLACE (REX1_XSTATE_COPYFLAG_MASK << REX1_XSTATE_COPYFLAG_SHIFT)
+#define REX1_XSTATE_COLORAUX_SHIFT                   28 /* inferred */
+#define REX1_XSTATE_COLORAUX_MASK                    0x1u
+#define REX1_XSTATE_COLORAUX_INPLACE (REX1_XSTATE_COLORAUX_MASK << REX1_XSTATE_COLORAUX_SHIFT)
 #define REX1_XSTATE_LOGICOP_SHIFT                    24 /* inferred */
 #define REX1_XSTATE_LOGICOP_MASK                     0xfu
 #define REX1_XSTATE_LOGICOP_INPLACE (REX1_XSTATE_LOGICOP_MASK << REX1_XSTATE_LOGICOP_SHIFT)
@@ -344,7 +362,12 @@
 /*
  * Plane write mask for read/write pixel access. lightInitInfo and the PROM
  * write 0xff (all eight planes) before the pixel-memory probe. The ide mask
- * 0xffff shows sixteen bits kept.
+ * 0xffff shows sixteen bits kept, and the ide graphics shell's write-mask
+ * command stores its argument here, so the low byte is the pixel write mask
+ * (the shipped header's comment calls the register readmask and writemask, in
+ * that order, without saying which half is which). The X server never writes
+ * RWMASK: it keeps the write mask in XSTATE bits 23:16, so on its paths RWMASK
+ * is the 0xff the board-info routine left.
  */
 /* rwmask: rw32, reset unknown */
 #define REX1_RWMASK_OFFSET                           0x78u /* established */
@@ -434,12 +457,20 @@
  * lightSetDestinationPlanes keeps bits 28:0 of the window's saved value, ORs in
  * the request's top three bits and, for the window on screen, waits for the
  * engine to go idle and stores the result here, so the top three bits select
- * which plane group a draw reaches. The meaning of each of those three bits:
- * unknown (no shipped code names the groups). The ide mask 0x7fffffff shows 31
+ * which plane group a draw reaches. The shipped header names them as one
+ * three-bit code, not as three flags: NOPLANES 0, PIXELPLANES 1, OVERLAYPLANES
+ * 2 and CIDPLANES 3 (shifted left 29). The X server's plane-group writes agree:
+ * 0x20000000 for the displayed pixel planes, 0x40000000 for the overlay clear
+ * and 0x60000000 for the window-id fill, whose value is limited to 0 to 3
+ * (rexDrawCID) like the ide CID memory test. The ide mask 0x7fffffff shows 31
  * bits kept. The X server's line, point and span batches (rexLineSS,
  * rexSegmentSS, rexPolyPoint, rexSolidFillSpans) store (group << 29) | 0xf11 at
  * the start and plain group << 29 at the end, so the low twelve bits are used
- * and the value 0xf11 is not a command word; what they select is unknown.
+ * and the value 0xf11 is not a command word. The header names bits 3:0 SMASK0
+ * to SMASK3 (screen mask enables), bits 7:4 their inside/outside polarity and
+ * bits 23:8 four CID match nibbles, so 0xf11 reads as screen mask 0 enabled,
+ * inside polarity and CID match nibble 1 set to 0xf (inferred from the names;
+ * no shipped code states the effect).
  */
 /* aux2: rw32, reset unknown */
 #define REX1_AUX2_OFFSET                             0x47a8u /* established */
@@ -618,7 +649,7 @@
 #define REX1_CMD_LOGICOP_SHIFT                       0x1cu /* established */
 #define REX1_CMD_LOGICSRC                            0x80000u /* inferred */
 #define REX1_CMD_OP_READ                             0x2u /* inferred */
-#define REX1_CMD_PIXMEM_BIT16                        0x10000u /* unknown */
+#define REX1_CMD_PIXMEM_BIT16                        0x10000u /* inferred */
 /* established */
 #define REX1_CMD_PIXMEM_READ                         0x30200023u
 /* established */

@@ -50,7 +50,7 @@ Setup, once per call (0x5e31209c to 0x5e312158):
    to 15, replace is 3) in bits 27:24, and **bit 28 set**, the header's XSTATE_COLORAUX (the state copy of command bit 21; **inferred**).
    The colour field (7:0) is 0 and unused.
 4. `AUX2` (0x47a8) = group << 29, group from the window's record (1, the pixel planes, for an ordinary window; see
-   plane groups).
+   [plane groups](../../platforms/lg1/desktop-and-overlays.md#plane-groups)).
 
 Per rectangle (the record is x1, y1, x2, y2 as halfwords, x2 and y2 exclusive; 0x5e31217c to 0x5e3122fc):
 

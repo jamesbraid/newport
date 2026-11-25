@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "1b41b739ec15c390c5295f0eb76e27a67291e0131c3d12b75ef36b0d0765733c",
+ "input_sha256": "bf4c35dc8bca6228fb043fb16ff86e9037fc616f442914bd1fe7540ae5317890",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -47,10 +47,34 @@
   {
    "unit": "rex1",
    "kind": "field",
+   "name": "xstate.zopaque",
+   "hi": 31,
+   "lo": 31,
+   "grade": "unknown"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "xstate.lsopaque",
+   "hi": 30,
+   "lo": 30,
+   "grade": "unknown"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
    "name": "xstate.copyflag",
    "hi": 29,
    "lo": 29,
-   "grade": "unknown"
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "xstate.coloraux",
+   "hi": 28,
+   "lo": 28,
+   "grade": "inferred"
   },
   {
    "unit": "rex1",
@@ -893,7 +917,7 @@
    "name": "CMD_PIXMEM_BIT16",
    "value": 65536,
    "count": 1,
-   "grade": "unknown"
+   "grade": "inferred"
   },
   {
    "unit": "rex1",
