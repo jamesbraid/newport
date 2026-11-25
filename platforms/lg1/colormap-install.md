@@ -22,7 +22,8 @@ were not compared.
 | Where does pixel 0x10 of a window on hardware map 2 land? | Bank 2, palette index 0x10, no offset. Written only if the colour map's entry 0x10 is allocated when the map is installed or stored into. | established |
 | Is bank 2 ever loaded? | Yes: by the second distinct 8-plane colour map installed after server start (the first goes to bank 1), and by stores to it while installed. Until then it holds the zeros `bt479Init` wrote. | established for the mechanism; the install order of a real session is not static |
 | Which colour map should be in bank 2 when a window shows DID 5 with mode bits 3:2 = 2? | The one the server installed into hardware map 2 and tied to DID 5. For the desktop icons that is the private map the desktop installs. | established for the rule; which client holds it is inferred |
-| Does anything write RWMASK to 0? | Nothing explicit. The kernel's rendering-node context load can: it copies the saved image word into RWMASK, and a freshly created node's image is zero. | established for the path; whether it is reached for the X server's node: unknown |
+| What writes RWMASK = 0, and is 0xff only the probe? | The kernel's rendering-node context load (`lightPcxSwap` restoring a zeroed image). The 0xff stores are the board-info probe only (the PROM always, the kernel when CONFIGMODE bits 7:4 read 0); the X server never writes it. | established for the code; a guest run shows the order |
+| Does the hardware gate PutImage, GetImage and the tile fill with RWMASK? | No: the guest draws with RWMASK = 0 and the pictures show; the mask these paths set is XSTATE's. | inferred from working software |
 
 ## 1. Installing a colour map
 
@@ -223,10 +224,18 @@ incoming node, and that copies every image word, RWMASK included, into the hardw
 read as a listing). When the previous holder is a node with a saved image, its registers (RWMASK too) are read
 back into it first, so a node that ran on a board initialised to 0xff keeps 0xff across switches.
 
-What is **not established**: whether the X server's node ever receives a nonzero RWMASK image before its first load. If the first
-load of a never-saved node writes 0 and the X server never writes the register, the tile fill (a `RWAUX1` data store) and the image
-copies still work on real boards, which means RWMASK would not gate those writes. If RWMASK does gate them, something sets the
-image or the register that this reading did not find. The PROM writing 0xff just before its COLORAUX probe is consistent with either.
+**What a guest run shows.** An emulator run of the 5.3 desktop (model behaviour, not hardware evidence) logged every RWMASK store:
+0xff three or four times around the probe, then RWMASK = 0 immediately followed by a store of 0 to SMASK1X (0x7c), and pairs of
+0xff with SMASK1X = 0xfffffffd; the tile and image commands came after a zero pair, and nothing stored 0xff after the last zero.
+That is the order of `lightPcxSwap`'s restore (RWMASK, COMMAND, SMASK1X, SMASK1Y; `light.o` 0x100013cc to 0x100013e8): a zero pair
+is a node with a never-saved image, a 0xff pair is a node whose image was saved from a board the init code had set up. So the node
+that draws the desktop was loaded from a zero image and ran with RWMASK = 0 (**established** for the kernel path; the node
+identification is from the run). Real boards run the same kernel and server, so they draw with RWMASK = 0 too. Since the
+desktop's pictures do show on real Indigos, the hardware does not gate the `RWAUX1` host-data writes (command 0x200121 tile fill, the
+0x302000a1 PutImage runs) by RWMASK, only by the plane mask in `XSTATE` bits 23:16 (**inferred**: it rests on the
+working product, not on a register description). The same argument covers GetImage (0x2000ab, LDPIXEL through `RWAUX1`): X would not
+read its own pixels back with a read mask of 0. What RWMASK does gate, if anything, is not shown by any desktop path; the PROM
+and kernel set it to 0xff before their pixel-memory probe, which uses the same command shapes, and the ide write-mask command loads it.
 
 ## What a model must do
 
@@ -240,14 +249,13 @@ All **inferred** from the software contract unless noted.
    not any colour a client chose.
 3. Treat the VC1 mode table as plain storage at `2 x DID` loaded through the private-request path, and do not assume the DID, mode
    word and bank load happen in one step: the palette load precedes the mode word.
-4. Do not apply RWMASK to the pixel stores driven by `RWAUX1` (tile fill, image copies) until a source says it gates them; if it is
-   applied, a reset to 0 or a context load that writes 0 blanks every X fill. Keep it readable and writable, and make `lightPcxSwap`'s
-   save and restore work from whatever the model holds.
+4. Do not apply RWMASK to the pixel writes or reads driven by `RWAUX1` (tile fill, PutImage, GetImage): the guest leaves it 0 while
+   it draws. Use `XSTATE` bits 23:16 as their mask. Keep RWMASK readable and writable so the context save and restore round-trip.
 
 ## Not established
 
 - Install order and hardware-map assignment in a live desktop session (default maps of other group-0 visuals, 4Dwm's own map).
-- What the server's rendering-node image holds before its first hardware load, and so whether RWMASK is 0 on real boards after the first swap.
+- What RWMASK gates in hardware, if anything (the probe commands set it; no desktop path depends on it).
 - The display ID 32 given to type-1 windows (outside the 32-entry table; the line-table writer was not read for it) and what a
   window of the pop-up visual shows.
 - Full traces of `FindBestID`, `StealID`, `rexInstallPupMap` and the 8-plane TrueColor load path.

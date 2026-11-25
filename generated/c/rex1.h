@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 428d4daaed87c7ad3f09af26d851a532bfa52ad0b8daaaf6629818fcaf9ce037 */
+/* input sha256 3c46ce0823aae0924a551932479d9b8c3e888b2eabd1a199972627b7e7e5eb5a */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -368,13 +368,13 @@
  * that order, without saying which half is which). The kernel's board-info
  * routine writes it only when CONFIGMODE bits 7:4 read 0; the PROM writes it
  * unconditionally. The X server never writes RWMASK: it keeps the write mask in
- * XSTATE bits 23:16, so on its paths RWMASK is the 0xff the board-info routine
- * left, unless a context load wrote something else: lightPcxSwap saves RWMASK
- * into, and restores it from, the rendering node's image, and a node made by
- * lightCreateDDRN has a zero image, so the first load of a never-saved node
- * writes 0 (platforms/lg1/colormap-install.md). Whether the X server's node is
- * loaded that way, and so whether RWMASK gates RWAUX1 writes at all, is
- * unknown.
+ * XSTATE bits 23:16, but it is not the 0xff the board-info routine left:
+ * lightPcxSwap saves RWMASK into, and restores it from, the rendering node's
+ * image, a node made by lightCreateDDRN has a zero image, and the first load of
+ * a never-saved node writes 0 (platforms/lg1/colormap-install.md). A guest run
+ * shows the desktop drawing with RWMASK 0, so hardware does not gate RWAUX1
+ * host-data writes or reads (tile fill, PutImage, GetImage) with it (inferred);
+ * what it does gate is unknown.
  */
 /* rwmask: rw32, reset unknown */
 #define REX1_RWMASK_OFFSET                           0x78u /* established */
