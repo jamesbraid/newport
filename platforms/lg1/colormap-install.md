@@ -16,7 +16,7 @@ were not compared.
 
 | Question | Answer | Grade |
 |---|---|---|
-| Which bank does an install write? | The bank in the low nibble of the hardware map's table byte: maps 0 to 6 write banks 0, 1, 2, 0, 3, 3, 3. | established |
+| Which bank does an install write? | The bank in the low nibble of the hardware map's table byte: maps 0, 1, 2, 4, 5, 6 write banks 0, 1, 2, 3, 3, 3. Map 3 (the pop-up map) has table byte 0 but its own routines write bank 3. | established |
 | How is it selected? | CONFIGSEL 0 and 0x82 to RWDAC, then CONFIGSEL 6 and `(bank << 4) \| 0x0f`; then per entry CONFIGSEL 0 and the address, CONFIGSEL 1 and red, again green, again blue. Every byte goes to RWDAC and again to its GO alias. | established |
 | Who adds the pixel-offset nibble? | Software adds it to the palette address of every write (nonzero only for hardware maps 5 and 6: 0x30, 0x40). The chip must add the mode word's bits 7:4 on lookup, or those maps could not work. | established for software; inferred for the chip |
 | Where does pixel 0x10 of a window on hardware map 2 land? | Bank 2, palette index 0x10, no offset. Written only if the colour map's entry 0x10 is allocated when the map is installed or stored into. | established |
@@ -98,12 +98,15 @@ StaticColor and 8-bit TrueColor loops. Both do the same register work:
    (`nfbSetColorBitmap` 0x5e2fdd08), which is what allocation and `XStoreColors` do. Static classes write all entries (0x5e3078bc to
    0x5e307bd4). An entry nobody allocated is not written, so the bank keeps whatever an earlier owner or `bt479Init` left.
 6. The bank is not restored: the access bank stays at the last bank written. Routines that need bank 0 (`rexSetColor` 0x5e31951c)
-   select it themselves, with the same 0x82 / 0x0f pair.
+   select it themselves, with the same 0x82 / 0x0f pair. The pop-up pair and the cursor colour routine do the opposite (below).
 
 `rexStoreNormalColors` returns without touching the board when the colour map is not in hardware (0x5e307008), so a store into an
 uninstalled map only changes the X colour map and is loaded at its next install. The pop-up pair (`rexInstallPupMap`, `rexStorePupColors`)
-does the same with bank 3 selected (0x3f; LUT1 `0xc0`) and address `0x10 + index`, starting at index 1 (**[binary]**, the whole
-install routine was not traced to its end).
+loads bank 3 (selected with 0x3f; LUT1 ORs 0xc0 into the nibble it read back) at address `0x10 + index`, starting at index 1, and
+then restores the access bank: 0x82 and 0x0f on the Bt479 board, the read-back nibble with bits 7:6 cleared on the LUT1
+(`rexStorePupColors` 0x5e30696c to 0x5e3069b0, `rexInstallPupMap` 0x5e306d90 to 0x5e306dd0; **[binary]**, established for the
+select and restore, the entry loop was read but not traced in full). The cursor colour routine (0x5e308640) selects bank 3 the same
+way and writes 0x0f back at its end.
 
 ### Pixel 0x10 on hardware map 2
 
@@ -130,14 +133,15 @@ group-0 colour map is installed, or on a store into it while installed. Until th
 
 Only the X server's colour-map code, apart from the boot-time clears. The writers in the shipped objects are the PROM's palette
 routines, the kernel's `initBt479` (bank 0 default table, zeros in banks 1 to 3; run when `gfxinit` makes its initialize request,
-[gfxinit](gfxinit.md), and at early init when the PROM did not set the board up), the server's `bt479Init` (zeros in all four banks, a grey ramp in bank 1) and then `rexInstallNormalMap`, `rexStoreNormalColors`
+[gfxinit](gfxinit.md), and at early init when the PROM did not set the board up), the server's `bt479Init` (zeros in banks 0, 2 and 3, a grey ramp in bank 1) and then `rexInstallNormalMap`, `rexStoreNormalColors`
 and `rexSetColor`. No other shipped writer was found (`gfxinit` itself only makes that request; clients reach the palette through X requests; no colour-map daemon
 was found writing the palette, but the shipped binaries were not searched for one exhaustively). The bulk loads in a guest run (model behaviour) fit this: two passes of zeros, then whole 256-entry loads per
 install, and single-entry loads as clients allocate colours. Three hardware maps are shared by every group-0 colour map, so a bank
 holds whichever map was installed in it last: an 8-plane PseudoColor map (the default map's reserved colours, then client entries),
 the StaticColor map the server fills from its module table (entry 0x0f = 0xaa, entry 0x20 = 0x0a), and the 8-plane TrueColor map.
-The 3-3-2 cube in bank 2 is that TrueColor visual's map: its masks are red 0xe0, blue 0x18, green 0x07 (the sixth-visual table at
-0x5e3c022c), loaded by the TrueColor loop of `rexInstallNormalMap` (0x5e30767c). Its gamma-curved twin in bank 0 is the same layout;
+The 3-3-2 cube in bank 2 is that TrueColor visual's map: its masks are red 0xe0, green 0x07, blue 0x18 with offsets 5, 0, 3 (the third of the six visuals at
+`rexVisuals` 0x5e3c022c, record at 0x5e3c0274), so red is pixel bits 7:5, blue 4:3 and green 2:0, which is not the red-high 3-3-2 packing of
+the StaticColor visual (0xe0, 0x1c, 0x03), loaded by the TrueColor loop of `rexInstallNormalMap` (0x5e30767c). Its gamma-curved twin in bank 0 is the same layout;
 which colour map carries the gamma values was not traced (`nfbCreateGammaRamp` 0x5e2fda38 builds a ramp at server start, but the
 install loops read only the colour map's own entries). A bank snapshot at the end of a boot therefore says nothing about what bank 2
 held while the icons were drawn: that is whichever map was last installed in hardware map 2 at that moment, and when the desktop's
@@ -175,9 +179,9 @@ word must not be edited in place, bit 3 mode loaded.
 - `FindFreeID` (0x5e315840, read in full): a type-1 window (`rexInitWindowType` 0x5e312c80 sets type 1 when the window's `nfb` record has a nonzero word at +24, otherwise 0) gets index 32,
   one past the table, and no entry, as long as bit 0 of the layer's board flags (`rexRRMPriv` +12 = 3) is set. Any other window keeps its current
   entry when that entry is not shared; otherwise the first entry of its type that is neither reserved nor in use is taken.
-- `FindBestID` (0x5e3249b0) and `StealID` (0x5e324568) were read as listings, not traced to the end (**inferred**): they look for a
-  shared entry of the same type whose words compare equal to the window's (`compareModes` 0x5e315960: flag word equal, and mode word
-  equal under the mask 0x60fc, that is bits 14:13 and 7:2) and use it; failing that a free entry; failing that the colour map's
+- `FindBestID` (0x5e3249a4) and `StealID` (0x5e32455c) were read as listings, not traced to the end (**inferred**): they look for a
+  shared entry of the same type whose words compare equal to the window's (`compareModes` 0x5e31596c: window type equal, flag word equal, and mode word
+  equal under the mask 0x60fc, that is bits 14:13 and 7:2; the mask is `rexRRMPriv` +20) and use it; failing that a free entry; failing that the colour map's
   own DID (`cmapDID` 0x5e315b8c: the DID of its hardware map, or the visual's default if not installed).
   A window with no special flags and a colour map in hardware map 1 or 2 therefore compares equal to the reserved DID 4 or 5 and
   shares it.
@@ -226,21 +230,22 @@ pointer in every object that touches the board:
 | Object | Store | Value | Grade |
 |---|---|---|---|
 | `lg1mc.so` (X server) | none | | established (the whole text was searched for stores at offsets 120 and 2168; the hits are all stack frames and unrelated records) |
-| `Xsgi` | none | | inferred (not searched; it does not map the board) |
-| `kernel.o` | none | | inferred (not searched; the board is reached only through `lg1.a`) |
+| `Xsgi` | none | | inferred (no access to the register-page offsets 0x47e8, 0x47ec or 0x47f8 anywhere in its text, so it does not reach the board) |
+| `kernel.o`, `gfx.o`, `rrm.o` | none | | inferred (no access to those offsets; the board is reached only through `lg1.a`) |
 | `lg1.a` `light_init.o` `lightInitInfo` +0xb4 (0x10000a9c) | 0xff | | established; runs only when CONFIGMODE bits 7:4 read 0 |
 | `lg1.a` `light.o` `lightPcxSwap` (+0x15c save, +0x344 restore) | copies the word between hardware and a saved image | image word | established |
 | the other `lg1.a` members (`light_dma.o`, `light_retrace.o`, `light_tp.o`) | none | | established (searched for the offsets and for the constants) |
-| PROM board library (`lg1_init.c`, **[source]**) | 0xff | | source; written just before its pixel-memory probe, unconditionally |
-| ide REX test and write-mask command (`rex.c`, `minigl.c`) | test patterns, user value | | source; diagnostics only |
+| PROM board library (`lg1_init.c`, **[source]**; 4.0.5D image 0xbfc0fa94, 4.0.5G image 0xbfc12944) | 0xff | | established in both images, source agrees; written just before its pixel-memory probe, unconditionally |
+| ide REX test, `rex_clear` and write-mask command (`rex.c`, `minigl.c`) | test patterns, 0x00ff, user value | | source; diagnostics only |
 
 So no desktop, tile, `XFillRectangle`, `GetImage`, cursor or private-request path (`lightPrivate`'s seven requests) writes RWMASK. The
 one routine that can write 0 is the context load. The graphics manager gives each client process a rendering node
 (`lightCreateDDRN`, `light.o` 0x10000770): a 172-byte image that is zeroed except two words (+164 = 0x20000000, the AUX2 plane group,
 and +168 = 0x80084000, CONFIGMODE as restored). When the node's process first touches the board register page, the page-fault
-path (`gfx_fault` in `gfx.o`, `rrmValidateMyPcx` in `rrm.o`, which calls slot 56 of the board table, `lightPcxSwap`) loads the
-incoming node, and that copies every image word, RWMASK included, into the hardware (**inferred** for the order: the fault path was
-read as a listing). When the previous holder is a node with a saved image, its registers (RWMASK too) are read
+path (`gfx_fault` in `gfx.o`, tied by its relocation records to `RRM_ValidFault`, then `rrmValidateMyPcx` in `rrm.o`, which calls
+slot 56 of the board table, `lightPcxSwap`) loads the incoming node while bit 0 of the node's valid-resource word is clear (the
+routine sets it), and that copies every image word, RWMASK included, into the hardware (**established** for the call chain;
+**inferred** that the X server's own node takes this path on its first access). When the previous holder is a node with a saved image, its registers (RWMASK too) are read
 back into it first, so a node that ran on a board initialised to 0xff keeps 0xff across switches.
 
 **What a guest run shows.** An emulator run of the 5.3 desktop (model behaviour, not hardware evidence) logged every RWMASK store:
@@ -250,7 +255,8 @@ That is the order of `lightPcxSwap`'s restore (RWMASK, COMMAND, SMASK1X, SMASK1Y
 is a node with a never-saved image, a 0xff pair is a node whose image was saved from a board the init code had set up. So the node
 that draws the desktop was loaded from a zero image and ran with RWMASK = 0 (**established** for the kernel path; the node
 identification is from the run). Real boards run the same kernel and server, so they draw with RWMASK = 0 too. Since the
-desktop's pictures do show on real Indigos, the hardware does not gate the `RWAUX1` host-data writes (command 0x200121 tile fill, the
+desktop is the shipped product for this board and would be blank if hardware gated its writes (no photograph or capture from a real
+Indigo is cited here, so this is an argument from the software, not an observation), the hardware does not gate the `RWAUX1` host-data writes (command 0x200121 tile fill, the
 0x302000a1 PutImage runs) by RWMASK, only by the plane mask in `XSTATE` bits 23:16 (**inferred**: it rests on the
 working product, not on a register description). The same argument covers GetImage (0x2000ab, LDPIXEL through `RWAUX1`): X would not
 read its own pixels back with a read mask of 0. What RWMASK does gate, if anything, is not shown by any desktop path; the PROM
@@ -261,7 +267,7 @@ and kernel set it to 0xff before their pixel-memory probe, which uses the same c
 All **inferred** from the software contract unless noted.
 
 1. Keep four palette banks and an access bank latched by selector 6 while the address register is 0x82; keep it until the next
-   such write (the installers do not restore bank 0). Every colour-map entry load is an address write then three data bytes in the
+   such write (the normal-map installers and stores do not restore bank 0; the pop-up pair and the cursor routine write 0x0f back). Every colour-map entry load is an address write then three data bytes in the
    order red, green, blue.
 2. Display lookup: bank = mode word bits 3:2, index = `pixel + (mode word & 0xf0)`. After the server's start, bank 1 holds a grey ramp
    and banks 0, 2, 3 hold the clear values `bt479Init` wrote (on top of the kernel's own writes), so an uninstalled bank is black or grey,

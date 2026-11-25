@@ -33,10 +33,10 @@ interface. So every statement about what the part does internally is **unknown**
   monitor-dependent byte at 0x83 alone. The model must therefore treat a selector-6 write as "control register at address register",
   not as "set bank" unconditionally.
 - **Inferred** that bits 5:4 of control register 0x82 pick the bank that selectors 0, 1 and 3 reach (the access bank): the readback
-  routine depends on it. `bt479Init` ends on bank 0; the install and store routines leave the bank they wrote selected and `rexSetColor` selects bank 0 itself
+  routine depends on it. `bt479Init` ends on bank 0; the normal-map install and store routines leave the bank they wrote selected, `rexSetColor` selects bank 0 itself, and the pop-up pair and the cursor colour routine write 0x0f back
   ([install page](../../platforms/lg1/colormap-install.md#the-palette-load-rexinstallnormalmap-and-rexstorenormalcolors-binary-established)). **Inferred** that it is not the bank
   being displayed: the server loads banks 1 to 3 while windows that use bank 0 are on screen, and no write order can keep both
-  correct if one global field chose both. The low nibble: every user but one writes 0xf (PROM, X server, kernel readback, and the ide palette test, which writes and reads
+  correct if one global field chose both. The low nibble: every user but one writes 0xf (PROM, X server, kernel `lg1_mapcolor` and readback, and the ide palette test, which writes and reads
   back the same `(bank << 4) | 0xf` value, **[source]** `btdac.c`); only the kernel's `initBt479` writes 0x0 (and 0x10, 0x20, 0x30
   for its bank clears); it runs at boot from `gfxinit`'s initialize request ([gfxinit](../../platforms/lg1/gfxinit.md)), before the X server's own 0xf loads. The LUT1 test path uses
   `(bank << 6) | sync | 2`, where the diagnostic's own variable `sync` is "monitor type is not 6", so the nibble there is a sync flag
