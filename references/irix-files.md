@@ -32,3 +32,31 @@ The IP20 boot objects are in the 5.3 `eoe1.sw.unix` subsystem with the mach tag 
 The 6.5 objects are compiled for the n32 ABI. They were disassembled with a standard MIPS disassembler and read by hand; no decompiler was run on either release, so no reading here is graded above what a hand read of the whole routine supports.
 
 Review (2026-11-23): the four IRIX 5.3 archives and the four 5.3 objects above were re-extracted from the IRIX 5.3 install disc image (SGI disk label, EFS partition, sha256 `a194caea63d280109c37d50be929c34a0f80a23c3e951c3cfa2af1315a0d8cad`) and every hash reproduced. For 6.5, `lg1.a` and `kernel.o` were seen in other held copies with the hashes listed; the 6.5 `lg1mc.so` and `Xsgi` hashes were not reproduced, and the disc they came from is not named here. The 6.5 base tree of the archive.org IRIX 6.4 for Origin, Onyx2 and OCTANE image holds different copies (its `lg1.a` is `2267869bb682b891c7b2544bebde41af392da18b9df12f53333ef8e392df9eb6`), so the 6.5 rows should name their disc before they are cited as 6.5.
+
+## Additional files read for gfxinit, the tile fill and the icons (2026-11-24)
+
+IRIX 5.3, from the same install disc image (`dist/eoe1.sw`, `dist/x_eoe.sw`, `dist/desktop_eoe.sw`, `dist/4Dwm.sw`), extracted by the record rule above (the repeated install paths were told apart by the next record's name).
+
+| Item | SHA-256 |
+|---|---|
+| `usr/gfx/gfxinit` | `524c75008943e9fb7d6db74ae65414573661561f78acc222ef2f78375de91e54` |
+| `usr/cpu/sysgen/IP20boot/gfx.o` (generic graphics ioctl layer) | `b2ac8c4dc9c7518241df067d34ddddb9b8ac937b62400fd96aa946feeca25467` |
+| `usr/bin/X11/X` (shell script that runs `gfxinit` and then `Xsgi`) | `26360a4ce1703fd6149f3007bf720dcce9d0e4e59be7390c86cd5da7c105225f` |
+| `var/X11/xdm/Xservers` | `8864f49a1b252a67c5e7e35ec528d50197bf9ed0370d86adcbacf83b45909034` |
+| `usr/lib/libdesktopFileicon.so` | `4cbc7519fc4db5b478445aadb6aab4c9845850b8872b74cefb6539a000d30c90` |
+| `usr/lib/filetype/system/iconlib/Xlogo.fti` | `8b20f6e90de86248c2d238c42f92ae7c32693ad6467d293b867acf1895ff0fb2` |
+| `usr/lib/X11/app-defaults/4DWm` | `d7f6ff3e37bca714f0a692e9bb9f9a286f19a6d923b7c83f03fc3096d5c6412b` |
+
+IRIX 6.5 base media (the held 6.5 `lg1.a`, `kernel.o`, `lg1mc.so` and `Xsgi` above, plus):
+
+| Item | SHA-256 |
+|---|---|
+| `usr/gfx/gfxinit` | `844c396b357a8207f3483f2a3cf7f4068b5701e8b931e703dfa20b6a2856a13b` |
+| `usr/cpu/sysgen/IP20boot/gfx.o` | `4295be87a76062f37fd32b04348e1b9667c2629da48308ccb0ad80bab72ee3e2` |
+
+Public header `usr/include/sys/lg1hw.h` and `lg1.h` from the public IRIX 4.0.5F root archive (`405Froot.tar.gz`, SHA-256
+`040ca0a91b02c5bfc3d1a9df8b5cd7eee6ac689792770264c4356eaf1895a901`; `lg1hw.h` `5bede59fb3a17c7acf8ff12837ee959f49adba3b2e9fa2dd6260fceca1b5dc9c`): names and values only, as the other pages use it.
+
+The IRIX source tree files cited by path are `irix/kern/ml/IP20.c`, `irix/kern/sys/IP20.h`, `stand/arcs/lib/libsk/graphics/LIGHT/lg1_init.c`, `lg1_tp.c`,
+`stand/arcs/lib/libsk/graphics/htport.c`, `stand/arcs/lib/libsc/gui/background.c`, `stand/arcs/include/style.h`, `stand/arcs/ide/fforward/graphics/LIGHT/` (`cid.c`, `maps.h`, `minigl.c`, `rex.c`)
+and `stand/arcs/ide/fforward/int2/int2_mask.c`, from the 6.5.7 tree, plus `6.5.5/f/root/usr/include/sys/gfx.h` from the 6.5.5 tree.
