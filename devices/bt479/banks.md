@@ -13,17 +13,21 @@ interface. So every statement about what the part does internally is **unknown**
 
 ## The access bank
 
-- **Established.** To address bank n the program writes selector 0 with 0x82, then selector 6 with `(n << 4) | 0x0f`, then selector
+- **Established (the sequence programs use).** To address bank n the program writes selector 0 with 0x82, then selector 6 with `(n << 4) | 0x0f`, then selector
   0 with the first palette index and streams red, green, blue bytes through selector 1 (the index advances after every third byte).
   Banks 0 to 3 give selector-6 bytes 0x0f, 0x1f, 0x2f, 0x3f. Read from `rexSetColor` (0x5e31951c, bank 0 only), `rexStoreNormalColors`
   (0x5e306eb8, `(bank << 4) | 0x0f` with the bank taken from the hardware-map table), `rexStorePupColors` (0x5e306588, bank 3), the
   cursor colour routine at 0x5e308640 (bank 3), X `bt479Init` (0x5e31b308, all four banks in turn and a final 0x0f), and the kernel's
-  `light_read_bt_colormaps` (`light.o` +0x16bc, reads bank n by `(n << 4) | 0x0f`, then selector 0 = 0x82 again, then selector 3 = 0
-  and 768 bytes from selector 1, for n = 0 to 3). The kernel's own `initBt479` (`light_init.o` +0x25c) uses 0x00, 0x10, 0x20, 0x30
+  `light_read_bt_colormaps` (`light.o` +0x16bc, reads bank n by `(n << 4) | 0x0f`, then selector 0 = 0x82 again, then selector 3 = 0,
+  selects selector 1, makes one read of the GO alias whose value it discards (+0x68), and then reads 768 bytes through the GO alias, for
+  n = 0 to 3; **established** for the sequence. The discarded read matches the VC1 and REX1 read protocols (read, discard, read); whether the
+  palette's read pointer moves on it is **unknown**, and a model that advances it on every read hands the kernel's readback a
+  byte stream shifted by one). The kernel's own `initBt479` (`light_init.o` +0x25c) uses 0x00, 0x10, 0x20, 0x30
   (no low nibble) and clears banks 1 to 3 to zero.
 - **Established** (X `bt479Init`, whole store sequence traced): after the 128-address clear loop the X server writes address 0x82 with
   selector-6 byte 0x0f, address 0x84 with two selector-6 bytes 0x00, 0x00, the pixel mask 0xff through selector 2, then the four banks
-  in turn, ending with 0x82 / 0x0f. The kernel's `initBt479` writes 0x82 followed by four consecutive selector-6 bytes (0x00,
+  in turn, ending with 0x82 / 0x0f. Contents the server leaves: banks 0, 2 and 3 all zero, bank 1 a grey ramp (entry i is i, i, i; 256 entries;
+  0x5e31b424 to 0x5e31b454), each written after its own 0x82 / `(bank << 4) | 0x0f` pair (0x5e31b39c to 0x5e31b4dc). The kernel's `initBt479` writes 0x82 followed by four consecutive selector-6 bytes (0x00,
   `(monitor argument << 3) | 2`, 0x00, 0x00). **Inferred**: addresses 0x82 to 0x85 are four control registers, each selector-6 write
   stores into the one the address register names and then advances the address, so the server's second write (0x84) leaves the
   monitor-dependent byte at 0x83 alone. The model must therefore treat a selector-6 write as "control register at address register",
@@ -44,7 +48,7 @@ All **established** from the X server functions named, except where marked.
 
 | Bank | Index range written | Written by | What it is |
 |---|---|---|---|
-| 0 | 0 to 255 (8-bit visual: the loop count is 1 shifted left by the visual's plane count, 256) | `rexInstallNormalMap`, `rexStoreNormalColors`, `rexSetColor`, `bt479Init` | default coloured map; hardware maps 0 and 3 |
+| 0 | 0 to 255 (8-bit visual: the loop count is 1 shifted left by the visual's plane count, 256; **inferred**, the shift is at 0x5e307688 and was not followed to the loop bound) | `rexInstallNormalMap`, `rexStoreNormalColors`, `rexSetColor`, `bt479Init` | default coloured map; hardware maps 0 and 3 |
 | 1 | 0 to 255 | `rexStoreNormalColors` | hardware map 1 |
 | 2 | 0 to 255 | `rexStoreNormalColors` | hardware map 2 |
 | 3 | 0x10 up: 16 pop-up colours (pixel + 0x10) | `rexStorePupColors` (0x5e306588, address `pixel + 16`, bank 3) | pop-up and overlay colours, hardware map 4 |
@@ -76,7 +80,8 @@ words.
 ## qtest hooks
 
 - Write 0x82 to selector 0, 0x1f to selector 6, index 5 to selector 0 and bytes 1, 2, 3 to selector 1; then 0x82, 0x0f, and
-  index 5 with three bytes 9, 9, 9. Read back bank 1 (0x82, 0x1f, selector 3 = 5, three reads) and bank 0: 1, 2, 3 and 9, 9, 9.
+  index 5 with three bytes 9, 9, 9. Read back bank 1 (0x82, 0x1f, selector 3 = 5, three reads) and bank 0: 1, 2, 3 and 9, 9, 9. The
+  kernel's readback adds one discarded read before the data (see above), so a test of that exact sequence is a test of the model's choice, not of the part.
 - A selector-6 write with the address register at 0x84 must not change the access bank.
 - After reset the access bank is 0 and the pixel read mask (selector 2) is whatever the program writes; no shipped code reads it.
 

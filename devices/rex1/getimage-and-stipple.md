@@ -19,11 +19,12 @@ same engine function, not a new one. Sequence, per GetImage of rectangle (x0, y0
    `XENDI` = x1 - 1, `YENDI` = y1 - 1; `AUX2` = plane group << 29, the group taken from the window record (1 is `PIXELPLANES` [hdr], 2 `OVERLAYPLANES`, 3 `CIDPLANES`).
 3. `COMMAND` (GO alias, 0x800) = 0, then `COMMAND` = 0x002000ab at the SET address.
 4. Wait for idle again.
-5. One read of `RWAUX1` GO (0x870) whose value is discarded.
+5. One read of `RWAUX1` GO (0x870) whose value is discarded (the delay slot of the first branch after the idle wait, 0x5e30e7bc, and of the
+   unaligned path's entry, 0x5e30e8a4).
 6. Then reads of `RWAUX1` GO, ceil(width / 4) per row for a destination aligned to four bytes (the common path, 0x5e30e7a4 to 0x5e30e898,
    with a 16-pixel unrolled loop for the bulk and a masked merge for the last 1 to 3 pixels), for every row of the rectangle, one
    command for the whole rectangle (no per-row restart).
-7. `AUX1` = 0 afterwards if it set it.
+7. `AUX1` = 0 afterwards, in every path that issued the command (0x5e30eb10), whether or not it was set to 0x30.
 
 Each word carries four pixels, **leftmost pixel in the high byte**; the server stores the words as read for an aligned destination and shifts
 them for an unaligned one. The start is XSTARTI itself: the server never aligns it to a multiple of four, so the first word holds pixels

@@ -24,9 +24,10 @@ instruction.
 
 1. Every call stores `mc_rev_level | 0x80`: the kernel's MC revision level in the low bits (read from a kernel global) with bit 7 always
    set. This is not the part that prints the warning.
-2. Only on the first call of the boot (a static word, `vdma_rev`, is zero) it runs an MC graphics-DMA self-test, and if the test
-   passes it ORs 0x40 into byte 0x30 and into that static word. On every later call the static word is copied back, so the answer
-   from the first call is permanent.
+2. Only on the first call of the boot (a private small-data word is still zero) it sets that word to 1, copies the MC revision level
+   into the separate common variable `vdma_rev`, runs an MC graphics-DMA self-test, and if the test passes it ORs 0x40 into byte 0x30
+   and into the private word (0x10000b68 to 0x10000bb8 and 0x10000c14 to 0x10000c24). On every later call bit 6 of that word is
+   copied back into byte 0x30 (0x10000b84 to 0x10000b98), so the answer from the first call is permanent.
 
 The self-test (`lightInitInfo` +0xba0 to +0xc70 and `tst_vdma_intr`, +0xdd4) is already described, step by step, on the
 [board page](README.md#kernel-probe-and-initialisation). What decides it, from the code:
@@ -38,8 +39,10 @@ The self-test (`lightInitInfo` +0xba0 to +0xc70 and `tst_vdma_intr`, +0xdd4) is 
    0x10000, `dma_size` (0x1fa02014) 0x10004, and `dma_gio_adrs` (0x1fa0202c) 0x89abcdef, which starts the fill (per the chips
    repository's MC page the 0x5a mode is a memory fill and the GIO address register carries the fill constant, so no GIO device is involved).
    Then poll `dma_run` (0x1fa0204c) bit 6 for up to 1000 one-microsecond waits, stopping as soon as it reads 0.
-3. Back in `lightInitInfo`: **call `getcause` and test bit 10 (0x400)**. If set, byte 0x30 and the static word get bit 6. Then restore
-   `cpuctrl0` and the INT2 mask, clear the `dma_cause` register (+0x164), and run `VdmaInit`, `splx`.
+3. Back in `lightInitInfo`: **call `getcause` and test bit 10 (0x400)**. If set, byte 0x30 and the private word get bit 6. Then restore
+   `cpuctrl0` and the INT2 mask, read the INT2 local 0 status byte (0x1fb801c3) and write it back with bit 4 cleared
+   (`lightInitInfo` +0x258 to +0x270, **established**), clear the `dma_cause` register (+0x164), and run `VdmaInit`, `splx`. The INT2 page of the chips
+   repository (`devices/int2`) says no shipped code writes a status register; this 5.3 kernel code does, and what the write does is **unknown**.
 
 So the decision is exactly: **is the CPU's Cause register bit 10 (the interrupt pin driven by INT2 local 0) set when the code reads it,
 right after the DMA has stopped running?** It is not a register read of the graphics board, not the board-information word at +0x2c
@@ -49,8 +52,9 @@ touched by the test.
 
 ## What the model must supply
 
-All of this is on the MC and INT2 side; the graphics board model has nothing to add. The chain (with the chips repository's pages
-`devices/mc` and `devices/int2` as the owners, checked at their reviewed revisions 0c53829c and 3ea29a9c):
+All of this is on the MC and INT2 side; the graphics board model has nothing to add. What follows is **inferred**: the code establishes
+what it tests, and the chain is the chips repository's pages `devices/mc` and `devices/int2` (the owners, at their reviewed revisions
+0c53829c and 3ea29a9c) read against it:
 
 1. The MC fill DMA started by the write to `dma_gio_adrs` runs (in the model it can complete instantly), `dma_run` bit 6 reads 0 after
    it, and it sets the MC's DMA-complete cause bit.
@@ -68,7 +72,8 @@ set, run a fill DMA and read Cause with interrupts masked; bit 10 must read 1 un
 ## What else depends on the flag
 
 The board page records that the X server's `rexInitHW` (0x5e2d2720, `lg1mc.so`) chooses its FIFO level (default 7, or 9 or 11 on some CPU boards) from
-bit 6 of this byte. The board page already records that a PutImage of 16384 pixels or more uses the kernel's pixel DMA only when the flags byte is 2 or
+bit 6 of this byte (**established**: `rexGetRevs` copies info byte 0x30 to byte +13 of the board record at 0x5e2d2074, and `rexInitHW` tests bit 6 of
+that byte at 0x5e2d2854 and 0x5e2d289c). The board page already records that a PutImage of 16384 pixels or more uses the kernel's pixel DMA only when the flags byte is 2 or
 more and that a failed DMA request prints "lg1DrawImage: LG1_PIXELDMA failed". With bit 6 clear the server is told "prototype hardware"
 and takes the conservative path, so a model that cannot raise the interrupt gets both the console warning and a different FIFO level.
 **Inferred**: the DMA-use decision tests the same byte, but only its bit 7 and low bits were read.

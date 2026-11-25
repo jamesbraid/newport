@@ -20,7 +20,8 @@ New here:
   the same address is named `VC1_CURSOR_GLYPH_ADDR` in `sys/lg1.h` [hdr]).
 - The glyph is two 128-byte bit planes, 32 rows of 32 pixels (inferred from the builder, established as the byte layout in the
   server's buffer).
-- The three cursor colours are palette entries **0x21, 0x22 and 0x23 of bank 3**, not Bt479 overlay-register values (established).
+- The server writes the three cursor colours into palette entries **0x21, 0x22 and 0x23 of bank 3**, not into the Bt479 overlay registers
+  (established as the stores; that the cursor is drawn from them is inferred, below).
 - [hdr] names for all cursor registers, the position offsets and the SYS_CTL bits.
 
 ## Registers [hdr]

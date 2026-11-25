@@ -13,11 +13,12 @@ server addresses are `lg1mc.so` virtual addresses. No VC1 data sheet is held (se
 
 ## Summary
 
-- **Established.** The four colour-map banks are chosen per window, not per board. The X server gives every window a small display ID
-  (DID, 5 bits). The VC1 holds, in its external SRAM, a per-scanline list of "from this x onward use DID n" spans. A second table,
-  window 1 of the VC1 (the "display-mode" or XMAP table), maps each DID to a 16-bit mode word, and bits 3:2 of that word are the bank
-  number the X server loaded that window's colour map into. The X server fills in both tables; the kernel only initialises them to
-  "everything is DID 0".
+- **Established (what software writes).** The X server gives every window a small display ID (DID, 5 bits) and writes two tables
+  into the VC1: a per-scanline list of "from this x onward DID n" spans in the external SRAM, and, through window 1 of the VC1 (the
+  "display-mode" or XMAP table), a 16-bit mode word per DID, whose bits 3:2 are the number of the bank the X server loaded that
+  window's colour map into. The kernel only initialises both to "every row is DID 0, every mode word is 0".
+- **Inferred (what the chip does).** The four colour-map banks are chosen per window, not per board, by the VC1 reading these tables
+  while it scans out. Nothing shipped reads the result back, so this rests on what the tables hold and on the X server needing it.
 - **Inferred.** The VC1 hands the mode word's bank bits and index-offset bits to the colour map beside the pixel value, so one
   1024-entry palette serves up to seven installed X colour maps at once. A model that displays bank 0 only shows every window whose colour
   map the server put in banks 1, 2 or 3 through bank 0's entries, which matches grey windows coming out blue/cyan.
@@ -54,6 +55,13 @@ read from the module's data at 0x5e3c0ea0). The alternation between 0x2000 and 0
 `vc1LoadDIDTable` (a flag toggled in the board record, 0x2000 or 0x5000 added to every pointer); that it is double buffering so the
 chip never scans a half-written table is **inferred**.
 
+The kernel's frame table is not uniform: 767 pairs are 0x48 0x00 (record 0, DID 0) and the last is 0x48 0x40, which is record 16 (records
+are four bytes) and so DID 16, not DID 0. The 0x8a bytes the kernel loads are 32 four-byte records and a 10-byte tail (count 4,
+four zero entries) at 0x4880 that no frame entry points at (`light_init.o` data at `did_linetable`, `initVC1` +0x594). The server's last
+frame entry is 0x2004, the second record of its 16-byte first load, which has count 5 and five zero entries (all **established**
+from the stores and the data). In the kernel DID 16 and DID 0 both have mode word 0 and in the server the
+last row's entries are all DID 0, so the display is the same; whether the odd last row means anything to the chip is **unknown**.
+
 ## The two tables
 
 ### Frame table: one pointer per scanline
@@ -75,9 +83,13 @@ The X server's entries are `(x << 5) | did`: `vc1LoadDIDTable` ORs a window's DI
 (0x5e318f94 to 0x5e318fa8, where each rectangle of a window's clip list becomes one entry), emits the rectangles of a row from left to
 right, and writes the count first. **Established** for the packing (the emit loop was read); **inferred** for the direction of use:
 pixel x of the row takes the DID of the last entry whose x is at or below it, and the first entry of every row starts at x = 0 (the
-default records do, and the server's clip lists cover the screen). When a flag byte in the board record (byte +10, which the
-server copies from the kernel's board info) is zero the routine bumps the last entry's x by one (+32) after the loop and counts one
-extra entry; what the flag is, and what that does, is **unknown**: no data sheet, and no shipped code reads the flag for anything else.
+default records do, and the server's clip lists cover the screen). When a flag byte in the board record (byte +10) is
+zero the routine appends one more entry to each row's record, a copy of the last entry with x one higher (+32 in the packed form,
+0x5e319010 to 0x5e31901c), and counts it (the count store at 0x5e318f44); **established** for the sequence. The flag is the
+kernel's board-info byte 0x2a, which `rexGetRevs` copies into the board record (0x5e2d2034 to 0x5e2d2040) and which `lightInitInfo`
+(`light_init.o` +0x184 to +0x194) sets to the VC1's register 5 read-back masked with 7, minus one: so the extra entry is emitted when
+the VC1 reads back 1 in those bits (**inferred** that this is a chip revision; the data-sheet meaning is **unknown**). What the extra
+entry is for is **unknown**.
 
 ## The mode table (window 1)
 
@@ -95,7 +107,7 @@ clears everything except bits 14:12 and 1:0 of the window's saved word (mask 0x7
 
 | Bits | Meaning | Grade |
 |---|---|---|
-| 1 | which of the two image buffers a double-buffered window shows (the retrace handler sets or clears it) | inferred ([VC1 page](README.md#display-mode-xmap-table)); `rexChangeDIDCmap` sets or clears it from the window's double-buffer flags |
+| 1 | which of the two image buffers a double-buffered window shows (the retrace handler sets or clears it) | inferred ([VC1 page](README.md#display-mode-xmap-table)); established that `rexChangeDIDCmap` (0x5e312bd0 to 0x5e312c00) follows bit 2 of the window's flags word (+0x20) when its bit 1 is set, and leaves the saved bit alone otherwise |
 | 0 | set in the three pop-up and overlay entries the server initialises (DID 6 to 8); otherwise preserved by the server | role unknown |
 | 3:2 | colour-map bank (0 to 3) | established as the server's field; that the chip passes it to the colour map is inferred |
 | 7:4 | high nibble of a colour-index offset (0x00, 0x30 or 0x40 in the shipped table) | established as the field; addition to the pixel is inferred (see [banks](../bt479/banks.md#where-each-bank-is-used)) |
@@ -110,9 +122,9 @@ The server writes the word to the kernel with private request 1017 (`rexChangeDI
 
 The X server's `vc1Init` first writes 0x0300 to all 32 even entries (a loop of eight passes of four entries, 0x5e2d2f9c to 0x5e2d301c),
 then overwrites entries 4 to 8 in both halves (even entry at 2n, odd copy at 0x40 + 2n) before any window exists. The odd half is
-otherwise left as the kernel set it (zero). **Established** (store sequence traced in `vc1Init`):
+otherwise left as the kernel set it (zero). **Established** for the words (store sequence traced in `vc1Init`, 0x5e2d3024 to 0x5e2d33f4):
 
-| Entry (DID) | Word | Reading |
+| Entry (DID) | Word | Reading (**inferred** from the field layout above) |
 |---|---|---|
 | 0 to 3, 9 to 31 | 0x0300 | bank 0, even half only |
 | 4 | 0x0304 | bank 1 |
@@ -127,6 +139,8 @@ the data section). The low nibble is the bank and the high nibble the index offs
 and 8 exactly (bank 3 with offsets 0x00, 0x30, 0x40), which supports "DID is the index the server assigns to a hardware colour map" for
 those three. How maps 0 to 2 map to DIDs 0 to 5 (map 1 to DID 4 and map 2 to DID 5 fit; map 3 and map 0 both mean bank 0) is
 **inferred**: the DID allocator (`FindFreeID`, `SetDIDMode`, `UpdateDIDMode` at 0x5e315840, 0x5e315674, 0x5e315760) was only sampled.
+The word at +0x10 of the same seven records reads 0, 4, 5, 0x20, 6, 7, 8 (**established** as data), which would be the DID of each
+map: 4, 5, 6, 7 and 8 are the DIDs of the initial mode words above for maps 1, 2, 4, 5 and 6. That it is a DID is **inferred**, since no reader of the field was traced.
 
 ## What a model must do
 
@@ -150,4 +164,4 @@ the sibling LG2 board's colour map. The X server cannot, since it only writes th
 
 - The mode word's bits 9:8, 14:12 and 0 and what the second (odd) half is used for.
 - Whether the index offset is added to, or replaces the high bits of, the pixel value; the shipped table cannot tell them apart.
-- The meaning of the flag byte the line-table writer tests, and the chip's use of `DID_HOR_DIV` and `DID_HOR_MOD`.
+- Why the line-table writer adds an entry for one VC1 read-back value, and the chip's use of `DID_HOR_DIV` and `DID_HOR_MOD`.
