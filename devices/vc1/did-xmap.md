@@ -97,7 +97,7 @@ entry is for is **unknown**.
 `MODE_REG_0_O` to `MODE_REG_1F_O` ("even" and "odd" are the header's names; why there are two copies, whether the chip uses
 the half chosen by pixel parity, scan line parity or something else is **unknown**; the header also heads the two tables "Even XMAP" and "Odd XMAP" and has `BLKOUT_EVEN` and `BLKOUT_ODD` registers, which points at a split of the display by parity, **inferred** from the names only). `light_read_displaymodes` (`light.o` +0x1864) reads
 all 64 and `lightSetDisplayMode` (+0x1540) writes only the even half (address 2n, high byte then low byte, GO alias only); the
-retrace handler touches only entries below 32. The X server writes both halves for the entries it initialises (below). At run time every mode word goes through request 1017 and `lightSetDisplayMode`, so the odd half is written once, by `vc1Init`, for DIDs 4 to 8 (byte addresses 0x48 to 0x50, which is the second copy a model's write log shows) and stays 0 for every other DID; no shipped path refreshes it (**established**). Since a changed DID's even word would then disagree with its odd word, whichever condition selects the odd half is not met in an ordinary desktop (**inferred**): reading the even half only matches every software path.
+retrace handler touches only entries below 32. The X server writes both halves for the entries it initialises (below). At run time every mode word goes through request 1017 and `lightSetDisplayMode`, so the odd half is written once, by `vc1Init`, for DIDs 4 to 8 (byte addresses 0x48 to 0x50, which is the second copy a model's write log shows); no shipped path refreshes it, and none writes the odd half of any other DID, so what they hold is the chip's power-up state, which is **unknown** (**established** that no shipped code writes them). Since a changed DID's even word would then disagree with its odd word, whichever condition selects the odd half is not met in an ordinary desktop (**inferred**): reading the even half only matches every software path.
 
 ### Mode word layout
 
@@ -121,8 +121,8 @@ The server writes the word to the kernel with private request 1017 (`rexChangeDI
 ### Initial entries
 
 The X server's `vc1Init` first writes 0x0300 to all 32 even entries (a loop of eight passes of four entries, 0x5e2d2f9c to 0x5e2d301c),
-then overwrites entries 4 to 8 in both halves (even entry at 2n, odd copy at 0x40 + 2n) before any window exists. The odd half is
-otherwise left as the kernel set it (zero). **Established** for the words (store sequence traced in `vc1Init`, 0x5e2d3024 to 0x5e2d33f4):
+then overwrites entries 4 to 8 in both halves (even entry at 2n, odd copy at 0x40 + 2n) before any window exists. The kernel's `initVC1` zeroes only the even half (64 bytes from address 0, `light_init.o` 0x10000764 to 0x100007b4), so the odd half is
+otherwise never written. **Established** for the words (store sequence traced in `vc1Init`, 0x5e2d3024 to 0x5e2d33f4):
 
 | Entry (DID) | Word | Reading (**inferred** from the field layout above) |
 |---|---|---|
