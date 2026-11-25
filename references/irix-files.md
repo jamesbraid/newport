@@ -41,6 +41,7 @@ IRIX 5.3, from the same install disc image (`dist/eoe1.sw`, `dist/x_eoe.sw`, `di
 |---|---|
 | `usr/gfx/gfxinit` | `524c75008943e9fb7d6db74ae65414573661561f78acc222ef2f78375de91e54` |
 | `usr/cpu/sysgen/IP20boot/gfx.o` (generic graphics ioctl layer) | `b2ac8c4dc9c7518241df067d34ddddb9b8ac937b62400fd96aa946feeca25467` |
+| `usr/cpu/sysgen/IP20boot/rrm.o` (rendering resource manager: node switching, display-mode requests) | `00767fd570450ad22845d1f456decd4fe9efe1f1846ab6ed5442bd419b720a32` |
 | `usr/bin/X11/X` (shell script that runs `gfxinit` and then `Xsgi`) | `26360a4ce1703fd6149f3007bf720dcce9d0e4e59be7390c86cd5da7c105225f` |
 | `var/X11/xdm/Xservers` | `8864f49a1b252a67c5e7e35ec528d50197bf9ed0370d86adcbacf83b45909034` |
 | `usr/lib/libdesktopFileicon.so` | `4cbc7519fc4db5b478445aadb6aab4c9845850b8872b74cefb6539a000d30c90` |
