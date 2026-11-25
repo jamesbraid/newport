@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 bf4c35dc8bca6228fb043fb16ff86e9037fc616f442914bd1fe7540ae5317890 -->
+<!-- input sha256 428d4daaed87c7ad3f09af26d851a532bfa52ad0b8daaaf6629818fcaf9ce037 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -197,7 +197,7 @@ Second read/write auxiliary word. Not written by shipped light code. Offset esta
 
 ### Register `rwmask`
 
-Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept, and the ide graphics shell's write-mask command stores its argument here, so the low byte is the pixel write mask (the shipped header's comment calls the register readmask and writemask, in that order, without saying which half is which). The X server never writes RWMASK: it keeps the write mask in XSTATE bits 23:16, so on its paths RWMASK is the 0xff the board-info routine left.
+Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept, and the ide graphics shell's write-mask command stores its argument here, so the low byte is the pixel write mask (the shipped header's comment calls the register readmask and writemask, in that order, without saying which half is which). The kernel's board-info routine writes it only when CONFIGMODE bits 7:4 read 0; the PROM writes it unconditionally. The X server never writes RWMASK: it keeps the write mask in XSTATE bits 23:16, so on its paths RWMASK is the 0xff the board-info routine left, unless a context load wrote something else: lightPcxSwap saves RWMASK into, and restores it from, the rendering node's image, and a node made by lightCreateDDRN has a zero image, so the first load of a never-saved node writes 0 (platforms/lg1/colormap-install.md). Whether the X server's node is loaded that way, and so whether RWMASK gates RWAUX1 writes at all, is unknown.
 
 ### Register `smask1x`
 

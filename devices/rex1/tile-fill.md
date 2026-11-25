@@ -77,9 +77,11 @@ is read as a big-endian 32-bit word (an unaligned read is assembled from two wor
   must reload it from `XSTARTI` when the next command is not XYCONTINUE. **Inferred** from the store pattern.
 - **Plane mask.** The mask is `XSTATE` bits 23:16 (**inferred** from what the server packs) (replace 0xff shifted down by 4 on a double-buffered board). `RWMASK` is not
   written on this path, nor anywhere else by the X server; it is the 0xff left by the board-info routine in the PROM and the kernel,
-  so it neither blanks the fill nor masks any plane. The ide graphics shell's write-mask command loads `RWMASK`
+  so it neither blanks the fill nor masks any plane, unless a rendering-node context load wrote another value into it (the first load of a
+  node that was never saved writes 0; [colour-map install](../../platforms/lg1/colormap-install.md#4-rwmask)). The ide graphics shell's write-mask command loads `RWMASK`
   (`stand/arcs/ide/fforward/graphics/LIGHT/minigl.c`, **[source]**), which is why the low byte is read as the pixel write mask.
-  Applying it as a write mask is harmless for every shipped sequence; resetting it to 0 and applying it is not.
+  Applying it as a write mask is harmless for every shipped sequence while it holds 0xff; if a model resets it to 0, or a context load
+  writes 0, applying it blanks every tile fill, so until a source says the hardware gates `RWAUX1` writes with it, a model should store it and not apply it.
 - **Logic operation.** The command's own nibble is 0, which is clear (`REX_LO_ZERO`) if it were used. The operation therefore has
   to come from `XSTATE` 27:24 whenever the command nibble is 0 (as for 0x329, 0x80329 and the other X commands); a non-zero command nibble (PutImage,
   the kernel's 0x30000329) is used as it stands. **Inferred.**
