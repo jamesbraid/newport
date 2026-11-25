@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 3c46ce0823aae0924a551932479d9b8c3e888b2eabd1a199972627b7e7e5eb5a */
+/* input sha256 0ce86fe79ca1668bc446ec7b53e0b69df3f37f888c97fbe3e643b82342ffaa41 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -371,10 +371,10 @@
  * XSTATE bits 23:16, but it is not the 0xff the board-info routine left:
  * lightPcxSwap saves RWMASK into, and restores it from, the rendering node's
  * image, a node made by lightCreateDDRN has a zero image, and the first load of
- * a never-saved node writes 0 (platforms/lg1/colormap-install.md). A guest run
- * shows the desktop drawing with RWMASK 0, so hardware does not gate RWAUX1
- * host-data writes or reads (tile fill, PutImage, GetImage) with it (inferred);
- * what it does gate is unknown.
+ * a never-saved node writes 0 (platforms/lg1/colormap-install.md). The shipped
+ * desktop draws with RWMASK 0 and would be blank if hardware gated RWAUX1
+ * host-data writes or reads (tile fill, PutImage, GetImage) with it, so it is
+ * inferred not to; what it does gate is unknown.
  */
 /* rwmask: rw32, reset unknown */
 #define REX1_RWMASK_OFFSET                           0x78u /* established */

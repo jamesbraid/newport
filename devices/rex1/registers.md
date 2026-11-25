@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 3c46ce0823aae0924a551932479d9b8c3e888b2eabd1a199972627b7e7e5eb5a -->
+<!-- input sha256 0ce86fe79ca1668bc446ec7b53e0b69df3f37f888c97fbe3e643b82342ffaa41 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -197,7 +197,7 @@ Second read/write auxiliary word. Not written by shipped light code. Offset esta
 
 ### Register `rwmask`
 
-Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept, and the ide graphics shell's write-mask command stores its argument here, so the low byte is the pixel write mask (the shipped header's comment calls the register readmask and writemask, in that order, without saying which half is which). The kernel's board-info routine writes it only when CONFIGMODE bits 7:4 read 0; the PROM writes it unconditionally. The X server never writes RWMASK: it keeps the write mask in XSTATE bits 23:16, but it is not the 0xff the board-info routine left: lightPcxSwap saves RWMASK into, and restores it from, the rendering node's image, a node made by lightCreateDDRN has a zero image, and the first load of a never-saved node writes 0 (platforms/lg1/colormap-install.md). A guest run shows the desktop drawing with RWMASK 0, so hardware does not gate RWAUX1 host-data writes or reads (tile fill, PutImage, GetImage) with it (inferred); what it does gate is unknown.
+Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept, and the ide graphics shell's write-mask command stores its argument here, so the low byte is the pixel write mask (the shipped header's comment calls the register readmask and writemask, in that order, without saying which half is which). The kernel's board-info routine writes it only when CONFIGMODE bits 7:4 read 0; the PROM writes it unconditionally. The X server never writes RWMASK: it keeps the write mask in XSTATE bits 23:16, but it is not the 0xff the board-info routine left: lightPcxSwap saves RWMASK into, and restores it from, the rendering node's image, a node made by lightCreateDDRN has a zero image, and the first load of a never-saved node writes 0 (platforms/lg1/colormap-install.md). The shipped desktop draws with RWMASK 0 and would be blank if hardware gated RWAUX1 host-data writes or reads (tile fill, PutImage, GetImage) with it, so it is inferred not to; what it does gate is unknown.
 
 ### Register `smask1x`
 
