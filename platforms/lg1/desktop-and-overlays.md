@@ -26,7 +26,7 @@ set by clients); those arrive as bitmap copies and image puts (**inferred**).
 
 | X request | Server function (`lg1mc.so`) | Command and data |
 |---|---|---|
-| `XFillPolygon`, `XFillArc`, solid (the `.fti` shapes) | `rexFillPolygon`, `rexFillTriangle`, `rexSolidSpans`, `rexSolidFillSpans` | `(op << 28) \| 0x121` per horizontal span (`XSTARTI`, `XENDI`, then `YSTARTI` or a GO store); colour and operation from `XSTATE`; no BLOCK |
+| `XFillPolygon`, `XFillArc`, solid (the `.fti` shapes) | `rexFillPolygon`, `rexFillTriangle`, `rexSolidSpans`, `rexSolidFillSpans` | plain 0x121 per horizontal span (empty logic-operation nibble; `XSTARTI`, `XENDI`, then `YSTARTI` or a GO store); colour, mask and operation (bits 27:24) from `XSTATE`; no BLOCK |
 | `XFillRectangle`, background and window fills | `rexDrawSolidRects` (0x5e30ed40) | 0x329 at SET, `XSTATE` = colour, mask << 16, operation << 24; the GO store on `YENDI` draws |
 | `XDrawLine`, `XDrawLines`, `XDrawArc`, `XDrawPoints` | `rexLineSS`, `rexSegmentSS`, `rexPolyPoint`, `rexDrawPoints` | horizontal runs `(op << 28) \| 0x121`, vertical runs `(op << 28) \| 0x329`, sloped segments command `(op << 28) \| 1` stepped by GO stores to `XSTARTI`/`YSTARTI`; `AUX2` = group << 29 \| 0xf11 around the batch |
 | `XSetFillStyle(FillStippled)` with `XSetStipple` | `rexStippledFS`, `rexStippledFillRects` | 0x921 spans with `LSMODE` and `LSPATTERN` |

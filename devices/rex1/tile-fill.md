@@ -25,8 +25,8 @@ four-pixel path; the later paths were read as far as their register stores. Noth
 Not set: BLOCK (3, so no second row), XYCONTINUE (7, so the run starts at `XSTARTI`/`YSTARTI` and not where the last command
 stopped), STOPONY (9), ENZPATTERN (10) and every line, shade, dither and opaque flag. It is the solid-span command 0x121 (`CMD_SPAN`)
 plus COLORAUX: **one horizontal run on one row per execution**. The kernel never issues it: a pair scan of the five `lg1.a` members
-for a `lui 0x20` / `ori 0x121` pair found none (**inferred**; not a full read of those objects). In 6.5's `lg1mc.so` the same
-constant is built at two places (0x5f0eff60 and 0x5f18f3a8).
+for a `lui 0x20` / `ori 0x121` pair found none (**inferred**; not a full read of those objects). In 6.5's `lg1mc.so` the constant is built
+once, at 0x5f0eff60; the `ori 0x121` at 0x5f18f3a8 ORs onto the logic operation shifted into bits 31:28, so it is a plain span.
 
 ## The register sequence
 
@@ -75,7 +75,7 @@ is read as a big-endian 32-bit word (an unaligned read is assembled from two wor
 - **Row step.** None in hardware. The engine does not advance y after a run and does not consume `XSTARTI` or `XENDI`: the next row
   is `YSTARTI` plus another word store, with the x registers as they were. A model that moves `XSTART` to `XENDI` + 1 after a run
   must reload it from `XSTARTI` when the next command is not XYCONTINUE. **Inferred** from the store pattern.
-- **Plane mask.** The mask is `XSTATE` bits 23:16 (replace 0xff shifted down by 4 on a double-buffered board). `RWMASK` is not
+- **Plane mask.** The mask is `XSTATE` bits 23:16 (**inferred** from what the server packs) (replace 0xff shifted down by 4 on a double-buffered board). `RWMASK` is not
   written on this path, nor anywhere else by the X server; it is the 0xff left by the board-info routine in the PROM and the kernel,
   so it neither blanks the fill nor masks any plane. The ide graphics shell's write-mask command loads `RWMASK`
   (`stand/arcs/ide/fforward/graphics/LIGHT/minigl.c`, **[source]**), which is why the low byte is read as the pixel write mask.
