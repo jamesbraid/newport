@@ -95,9 +95,9 @@ entry is for is **unknown**.
 
 32 entries in the even half (byte address 2n) and 32 in the odd half (0x40 + 2n); [hdr] names them `MODE_REG_0_E` to `MODE_REG_1F_E` and
 `MODE_REG_0_O` to `MODE_REG_1F_O` ("even" and "odd" are the header's names; why there are two copies, whether the chip uses
-the half chosen by pixel parity, scan line parity or something else is **unknown**). `light_read_displaymodes` (`light.o` +0x1864) reads
+the half chosen by pixel parity, scan line parity or something else is **unknown**; the header also heads the two tables "Even XMAP" and "Odd XMAP" and has `BLKOUT_EVEN` and `BLKOUT_ODD` registers, which points at a split of the display by parity, **inferred** from the names only). `light_read_displaymodes` (`light.o` +0x1864) reads
 all 64 and `lightSetDisplayMode` (+0x1540) writes only the even half (address 2n, high byte then low byte, GO alias only); the
-retrace handler touches only entries below 32. The X server writes both halves for the entries it initialises (below).
+retrace handler touches only entries below 32. The X server writes both halves for the entries it initialises (below). At run time every mode word goes through request 1017 and `lightSetDisplayMode`, so the odd half is written once, by `vc1Init`, for DIDs 4 to 8 (byte addresses 0x48 to 0x50, which is the second copy a model's write log shows) and stays 0 for every other DID; no shipped path refreshes it (**established**). Since a changed DID's even word would then disagree with its odd word, whichever condition selects the odd half is not met in an ordinary desktop (**inferred**): reading the even half only matches every software path.
 
 ### Mode word layout
 
