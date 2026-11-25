@@ -137,10 +137,11 @@ The server's per-hardware-colour-map byte `hw` (word at +0x14 of each 24-byte re
 records, `rexNumHWCmaps` = 7 at 0x5e3c01e0) is, for maps 0 to 6: 0x00, 0x01, 0x02, 0x00, 0x03, 0x33, 0x43. **Established** (read from
 the data section). The low nibble is the bank and the high nibble the index offset; maps 4, 5 and 6 reproduce the mode words of DIDs 6, 7
 and 8 exactly (bank 3 with offsets 0x00, 0x30, 0x40), which supports "DID is the index the server assigns to a hardware colour map" for
-those three. How maps 0 to 2 map to DIDs 0 to 5 (map 1 to DID 4 and map 2 to DID 5 fit; map 3 and map 0 both mean bank 0) is
-**inferred**: the DID allocator (`FindFreeID`, `SetDIDMode`, `UpdateDIDMode` at 0x5e315840, 0x5e315674, 0x5e315760) was only sampled.
-The word at +0x10 of the same seven records reads 0, 4, 5, 0x20, 6, 7, 8 (**established** as data), which would be the DID of each
-map: 4, 5, 6, 7 and 8 are the DIDs of the initial mode words above for maps 1, 2, 4, 5 and 6. That it is a DID is **inferred**, since no reader of the field was traced.
+those three. The word at +0x10 of the same seven records reads 0, 4, 5, 0x20, 6, 7, 8: it is the display ID of the map, because `cmapDID`
+(0x5e315b8c) returns it for a window whose colour map is installed, and 0x20 (32, one past the mode table) is the pop-up map's.
+The allocator functions (`FindFreeID`, `SetDIDMode`, `UpdateDIDMode`) were read for the install page: map 3 is the pop-up map
+and is not tied to bank 0 as this page first said ([how DIDs and mode words are chosen](../../platforms/lg1/colormap-install.md#3-choosing-a-windows-display-id-and-mode-word),
+**established** for the DID field, **inferred** for the pop-up reading).
 
 ## What a model must do
 

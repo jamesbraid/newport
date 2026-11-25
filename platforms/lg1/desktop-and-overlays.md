@@ -78,7 +78,7 @@ choice). Whether overlay pixel 0 is transparent, and how the planes are combined
 
 | Entries | Writer | Content |
 |---|---|---|
-| 0x10 to 0x1f | `rexStorePupColors` (0x5e306588), at index + 0x10, 16-bit components shifted down to 8 bits | the pop-up colour map (hardware map 4, DID 6): whatever clients store into it |
+| 0x10 to 0x1f | `rexStorePupColors` (0x5e306588), at index + 0x10, 16-bit components shifted down to 8 bits | the pop-up colour map (hardware map 3, display ID index 32; hardware map 4 is the 4-plane maps' bank 3 at offset 0, DID 6): whatever clients store into it |
 | pixel + 0x30, pixel + 0x40 | `rexStoreNormalColors` for hardware maps 5 and 6 | overlay-visual colour maps (DIDs 7 and 8) |
 | 0x21, 0x22, 0x23 | the cursor colour routine (0x5e308640) | cursor colours; VC1 register 0x26 (cursor mode) selects the map |
 | 1, 2 | the PROM's board library (`Lg1SetCursorColor`, `stand/arcs/lib/libsk/graphics/LIGHT/lg1_init.c`, **[source]**) | red and white; it sets cursor mode 0xc000 |

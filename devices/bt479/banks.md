@@ -48,12 +48,12 @@ All **established** from the X server functions named, except where marked.
 
 | Bank | Index range written | Written by | What it is |
 |---|---|---|---|
-| 0 | 0 to 255 (8-bit visual: the loop count is 1 shifted left by the visual's plane count, 256; **inferred**, the shift is at 0x5e307688 and was not followed to the loop bound) | `rexInstallNormalMap`, `rexStoreNormalColors`, `rexSetColor`, `bt479Init` | default coloured map; hardware maps 0 and 3 |
-| 1 | 0 to 255 | `rexStoreNormalColors` | hardware map 1 |
-| 2 | 0 to 255 | `rexStoreNormalColors` | hardware map 2 |
-| 3 | 0x10 up: 16 pop-up colours (pixel + 0x10) | `rexStorePupColors` (0x5e306588, address `pixel + 16`, bank 3) | pop-up and overlay colours, hardware map 4 |
+| 0 | 0 to 255 (8-bit visual: the loop count is 1 shifted left by the visual's plane count, 256; **inferred**, the shift is at 0x5e307688 and was not followed to the loop bound) | `rexInstallNormalMap`, `rexStoreNormalColors`, `rexSetColor`, `bt479Init` | hardware map 0 (the third distinct 8-plane colour map installed, [install order](../../platforms/lg1/colormap-install.md#which-hardware-map-a-colour-map-gets-nfbinstallhwcolormap-binary-established)) |
+| 1 | 0 to 255 | `rexInstallNormalMap`, `rexStoreNormalColors` | hardware map 1 (the default colour map on a fresh server) |
+| 2 | 0 to 255 | `rexInstallNormalMap`, `rexStoreNormalColors` | hardware map 2 (the second distinct colour map) |
+| 3 | 0x10 up: 16 pop-up colours (pixel + 0x10) | `rexStorePupColors` (0x5e306588, address `pixel + 16`, bank 3) | the 2-plane pop-up visual's map, hardware map 3 |
 | 3 | 0x21, 0x22, 0x23 | cursor colour routine (0x5e308640) | hardware cursor colours, see [cursor](../vc1/cursor.md) |
-| 3 | pixel + 0x30 and pixel + 0x40 | `rexStoreNormalColors`, hardware maps 5 and 6 (table byte 0x33 and 0x43) | two further bank 3 maps |
+| 3 | pixel + 0x30 and pixel + 0x40 | `rexStoreNormalColors`, hardware maps 5 and 6 (table byte 0x33 and 0x43) | two further bank 3 maps; hardware map 4 (byte 0x03) is the same with offset 0, 4-plane visuals |
 
 The hardware-map byte table is on the [display ID page](../vc1/did-xmap.md#initial-entries). A count of 34 entries in bank 3 and of 255 in banks
 0 to 2, seen in an emulator trace, is not what the loops read here give: the 8-bit install loop runs 1 << nplanes = 256 times, and the bank-3
@@ -61,17 +61,18 @@ writers address 0x10 to 0x1f, 0x21 to 0x23 and, for hardware maps 5 and 6, 0x30 
 skipped or the trace drops the last write; logging the address register at the start of each run of selector-1 writes would show it.
 
 Index: the store routines write `pixel + offset`, with `offset` the high nibble of the hardware-map byte (0 for hardware maps 0 to 4,
-0x30 or 0x40 for maps 5 and 6), and the pop-up routine adds a fixed 0x10 (hardware map 4, whose initial mode word 0x030d carries
-offset 0). So a model that indexes the palette by pixel alone is wrong for those windows. Applying the mode word's bits 7:4 (display
+0x30 or 0x40 for maps 5 and 6), and the pop-up routine adds a fixed 0x10 (hardware map 3, which the tables give the display ID index 32, one past the 32-entry mode table, so
+it has no mode word of its own; [install page](../../platforms/lg1/colormap-install.md#3-choosing-a-windows-display-id-and-mode-word)). So a model that indexes the palette by pixel alone is wrong for those windows. Applying the mode word's bits 7:4 (display
 ID page) fixes maps 5 and 6. For the pop-up map it is **unknown** whether the pixel is 4 bits wide with the 0x10 supplied by the chip
 or by a plane group (`AUX2` bits 31:29 = 2 is the overlay plane group [hdr]), or whether the hardware adds a fixed 0x10 for bit-0 mode
 words.
 
 ## Why a bank-0-only model looks wrong
 
-- The default X colour map is hardware map 0, bank 0; the 4Sight reserved colours and the grey ramp are loaded into hardware maps 1
-  and 2 (banks 1 and 2). A model that shows bank 0 for every window shows the grey ramp's pixel values through bank 0's coloured entries:
-  blue and cyan tones. **Inferred** (no run was read; this is the consequence of the tables above).
+- The server gives 8-plane colour maps hardware maps 1, 2, 0 in turn, so the default X colour map (4Sight reserved colours) is in bank 1,
+  the next private map in bank 2 and a third in bank 0 ([install page](../../platforms/lg1/colormap-install.md)); bank 0 is not the
+  default map's. A model that shows bank 0 for every window shows the pixel values of bank 1 and 2 windows through whatever bank 0
+  holds (the kernel's palette), so colours are wrong. **Inferred** (no run was read; this is the consequence of the tables above).
 - Black root and blank icons are the same cause: pixels in a window whose map is in bank 1, 2 or 3 index entries that bank 0 either
   does not hold or holds as black (the kernel writes zeros to banks 1 to 3 before the server loads them). **Inferred.**
 - Writing the banks correctly (the access-bank rule above) and displaying them through the per-window mode word are two fixes; the
