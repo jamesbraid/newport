@@ -28,13 +28,25 @@ name, the kernel and PROM tables, the shipped diagnostics' strings. Next: the Ex
 Only photographs exist (Library `photos/`): the REX part number is not legible. Next: a higher-resolution photograph of an LG1
 board, or the board's parts list if SGI published one.
 
+### Shaded drawing: the chip's dither, colour range and unexplained flags
+
+Owning files: [shaded drawing](../devices/rex1/shaded-drawing.md), [GL context state](../devices/rex1/gl-context-state.md) and [true lines](../devices/rex1/true-lines.md). What is open, each of it a hardware behaviour the IRIX 6.2 GL expects but whose arithmetic no shipped software contains:
+
+- The dither: matrix, size and amplitude (the library's rounding offset of 15.0 and its colour scales of 226, 226 and 255 are the only hints), and whether dither adds, compares or saturates.
+- What a colour accumulator does outside 0 to 255 (the library stores values from below zero to above 511 and never clamps).
+- The effect of command bit 25 (`LRQPOLY`, set on every triangle row), of `SHADECONTINUE` (the reading "continue the colour between 32-pixel pieces" is a name-based inference) and of `INITFRAC`.
+- The roles of `AUX1` bits 1:0 (`FRACTION`) and 9 (`DITHERRANGE`), which every GL context sets and the X server never does, and of `AWEIGHT`, which the GL writes once and nothing reads.
+- Which nibble is buffer 0 (the software fixes only the pairing with mode-word bit 1), how the `CIDMATCH` nibbles of `AUX2` act, and the stipple bit order of the GL's line stipple.
+
+Routes tried: every `__glRex*` routine for the span, triangle-row, point, line, clear and copy paths in the 6.2 `libGLcore.so` of the IP20LG1MC arch, the constants of the 6.2 `libgl.so`, the ide diagnostics' REX, VRAM and pattern tests and `minigl.c` (source tree), the 6.2 `lg1.a` context code, `lg1mc.so` for the command words, and the public Linux Newport header by name (the file body was not retrievable). Next: the IRIS GL (`libgl.so`) polygon and line code for the same board, which was not read beyond its constants; the 5.3 and 6.5 builds of the same library if the media hold one for this board; published Newport (REX3) documentation, used only for names unless the register layouts are shown to match.
+
 ### XYMOVE in the PROM copy routine
 
 The X server's copy routine settles the sign for the X server (source minus destination, in stored coordinates; [REX1](../devices/rex1/registers.md)). The PROM routine at 0xbfc2d9f8 stores the differences of its two coordinate pairs in an order that matches only if its second pair is the source, and no caller was found in the 4.0.5D console code. Routes tried: table-entry callers in 0xbfc2f000-0xbfc41000. Next: other firmware callers of the draw table, the 4.0.5G console.
 
 ### X server and kernel: the colour source, the logic-operation nibble and what `AUX2` bits 11:0 do
 
-The X server fills with command 0x329 and takes colour, mask and operation from `XSTATE`; the kernel and PROM fill with 0x30000329 and take the colour from `COLORREDI`; the X server's glyph path fills a background with 0x30000329 using only `XSTATE`. The one consistent reading is that `XSTATE` bits 7:0 and `COLORREDI` are the same state, but the effect of a non-zero nibble in both places (the PutImage path sets both) and of `XSTATE` bit 29 in the copy words is not read. 0x328 and 0xf11 are settled as not being commands: the line code ORs 0x328 and 0x121 into a word holding the operation and DRAW, and ORs 0xf11 into `AUX2` ([board page review](../platforms/lg1/README.md#review-2026-11-23-of-this-section)); whether `AUX2` bits 11:0 do what the shipped header's names for them say (screen mask enables and polarity, CID match nibbles), and the slope registers' arithmetic (`MINORSLOPE`, `XSAVE`), are not read. Routes tried: the X server's draw routines (5.3 and 6.5). Next: read the sloped-segment loops of `rexLineSS`, `rexSolidZeroSeg` and `rexFillTriangle` in full.
+The X server fills with command 0x329 and takes colour, mask and operation from `XSTATE`; the kernel and PROM fill with 0x30000329 and take the colour from `COLORREDI`; the X server's glyph path fills a background with 0x30000329 using only `XSTATE`. The one consistent reading is that `XSTATE` bits 7:0 and `COLORREDI` are the same state, but the effect of a non-zero nibble in both places (the PutImage path sets both) and of `XSTATE` bit 29 in the copy words is not read. 0x328 and 0xf11 are settled as not being commands: the line code ORs 0x328 and 0x121 into a word holding the operation and DRAW, and ORs 0xf11 into `AUX2` ([board page review](../platforms/lg1/README.md#review-2026-11-23-of-this-section)); whether `AUX2` bits 11:0 do what the shipped header's names for them say (screen mask enables and polarity, CID match nibbles), are not read. The slope registers' arithmetic (`MINORSLOPE`, the colour slopes, `XSAVE`, `XYMOVE`) is now read for the IRIX 6.2 GL on [true lines](../devices/rex1/true-lines.md) and [shaded drawing](../devices/rex1/shaded-drawing.md); the X server's own sloped loops are not. Routes tried: the X server's draw routines (5.3 and 6.5). Next: read the sloped-segment loops of `rexLineSS`, `rexSolidZeroSeg` and `rexFillTriangle` in full.
 
 ### Per-window colour map and buffer: how the VC1 turns its tables into pixels
 
