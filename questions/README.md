@@ -32,7 +32,6 @@ board, or the board's parts list if SGI published one.
 
 Owning files: [shaded drawing](../devices/rex1/shaded-drawing.md), [GL context state](../devices/rex1/gl-context-state.md) and [true lines](../devices/rex1/true-lines.md). What is open, each of it a hardware behaviour the IRIX 6.2 GL expects but whose arithmetic no shipped software contains:
 
-- The dither: matrix, size and amplitude (the library's rounding offset of 15.0 and its colour scales of 226, 226 and 255 are the only hints), and whether dither adds, compares or saturates.
 - What a colour accumulator does outside 0 to 255 (the library stores values from below zero to above 511 and never clamps).
 - The effect of command bit 25 (`LRQPOLY`, set on every triangle row), of `SHADECONTINUE` (the reading "continue the colour between 32-pixel pieces" is a name-based inference) and of `INITFRAC`.
 - The roles of `AUX1` bits 1:0 (`FRACTION`) and 9 (`DITHERRANGE`), which every GL context sets and the X server never does, and of `AWEIGHT`, which the GL writes once and nothing reads.
