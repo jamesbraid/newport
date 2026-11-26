@@ -15,8 +15,9 @@ in the screen record, as on the display-ID page.
 **What it computes [binary, established].** Arguments are the window, its old origin and the old visible region. dx and dy are the old
 origin minus the new one. The old region is translated by (-dx, -dy) (to the new position) and intersected with the window's
 `borderClip`, which gives the destination rectangles; each rectangle's source point is its own top-left corner plus (dx, dy), that is,
-the same rectangle at the old position. A window with sub-layers (a rendering child with its own plane group) repeats this once
-per layer region and per ancestor of a different layer, with `AUX2` set to that layer's plane group each time. The copy itself is an
+the same rectangle at the old position. A window with sub-layers (a descendant window in another plane group, such as a rendering child) repeats this once
+for each other plane group among its descendants, which are walked depth first; each group gets one region built from those descendants' `borderClip`s
+inside the translated old region, and `AUX2` takes that group's value each time. The copy itself is an
 unnamed helper at 0x5e4ad4ec, called with the window, the destination region and the source points.
 
 **Box order [binary, established].** The helper looks at the first box only, then reorders the whole list:
@@ -30,7 +31,7 @@ A down-right drag therefore runs the bottom band first and its rightmost box fir
 issued. A pure move up or left reverses nothing.
 
 **Register sequence [binary, established].** Once per call: `COMMAND` (0x000, SET) = 0x00080329, `AUX2` (0x47a8) = plane group << 29,
-`XSTATE` (0x008) = 0x23ff0000 (operation 3, all eight planes, bit 29 set). Then per box, in this order: `XSTARTI` (0x00c),
+`XSTATE` (0x008) = 0x23ff0000 (the store is established; the field roles, operation 3, all eight planes and bit 29, are inferred on the [register page](../../devices/rex1/registers.md)). Then per box, in this order: `XSTARTI` (0x00c),
 `XENDI` (0x084), `YSTARTI` (0x01c), `YENDI` (0x088), and last `XYMOVE` at its GO alias 0x834, which runs the command. After the last box the server
 spins on `CONFIGMODE` (0x47f8) bit 0 until it clears. Values, decided per box from the signs of dx and dy (source minus destination):
 
@@ -47,7 +48,7 @@ display row with no 767 flip. Window moves down and to the right therefore send 
 
 **Left-edge workaround [binary, established; the reason is inferred].** When dx < 0 and a box starts at x1 < 4, the server waits for
 `CONFIGMODE` bit 0 to clear, stores `XYWIN` (0x47fc) = 0x07fc0800 (the window x offset 4 lower than the usual 0x08000800), and
-sends `XSTARTI` = x2 + 3 and `XENDI` = x1 + 4 for that box. After the last box it restores `XYWIN` = 0x08000800. The two shifts cancel, so the pixels land where the plain
+sends `XSTARTI` = x2 + 3 and `XENDI` = x1 + 4 for that box. It restores `XYWIN` = 0x08000800, again after a `CONFIGMODE` wait, before the first later box that starts at x1 >= 4 and after the last box. The two shifts cancel, so the pixels land where the plain
 sequence would put them; the likely reason (inferred) is that a right-to-left quad copy at the screen's left edge would otherwise run to
 negative x. A model that ignores the `XYWIN` x offset moves only the boxes at x < 4 four pixels to the right.
 
@@ -60,7 +61,7 @@ top rows and left columns of the window over the rest for every move down or rig
 ## What repaints the area the window left
 
 Standard X structure, with the nfb routines of the 6.2 server **[binary]**. After the copy, `nfbMoveWindow` calls slot 492,
-`miHandleValidateExposures` (0x5e486360) for the parent. For every window below it that has validation data it calls, in this order:
+`miHandleValidateExposures` (0x5e486360) for the parent. For the window it is given and every window below it (depth first) that has validation data it calls, in this order:
 
 1. slot 220, `nfbPaintWindowBorder`, for the part of the border that became visible;
 2. slot 212, `miWindowExposures` (0x5e48c694), for the region that became visible (**established** for the call; what each window's region
@@ -68,15 +69,16 @@ Standard X structure, with the nfb routines of the 6.2 server **[binary]**. Afte
 
 `miWindowExposures` **always** paints the background first, when the region is not empty: slot 216, `nfbPaintWindowBackground` (0x5e490fcc), with the
 region's rectangles passed straight to the REX fill or tile routine, in the window's plane group. Only then, and only if some client selected
-`ExposureMask` on the window, does it call `miSendExposures`, which sends Expose events for the region (a region of 26 or more rectangles is
-replaced by its extents). The background step by state of the window's background (bits 31:30 of the word at +124):
+`ExposureMask` on the window, does it call `miSendExposures`, which sends Expose events for the region. That same condition adds one step before the fill: when the
+exposed region has 26 or more rectangles it is replaced by its extents, for the Expose events and for the fill alike (the fill covers the extents clipped to the window's `clipList`, so it can paint pixels outside the exposed region). The background step by state of the window's background (bits 31:30 of the word at +124):
 
 - none: nothing is painted (a GL canvas window has this state);
 - parent-relative: the nearest ancestor that is not parent-relative supplies the fill;
 - pixel: a solid rectangle fill in the window's colour;
 - pixmap: a tile fill with the tile origin taken modulo the tile size.
 
-So the server paints the vacated area itself, once, window by window with each window's own background colour, and sends Expose events; **nothing in the server redraws window contents**. A
+So the server paints the vacated area itself, once, window by window with each window's own background colour, and sends Expose events; **the paths read here redraw no window contents**. (For a window whose backing-store field (+0x74 in the window record, as in the standard X structure) is set, `miWindowExposures` first calls screen slot 248
+before the fill, and by the standard structure that slot restores saved pixels; it was not traced, so such a window may need no Expose.) A
 client repaints its icons, text and widgets only in answer to its Expose events. The moved window's own newly visible part gets its own background fill and Expose events
 in the same way.
 
