@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 57836e0c059122b8849b37b2a9accbf0ae6ca1229cbb91349afaf92d030f6661 -->
+<!-- input sha256 213c5db29b5e447386ff8f3bb4be0d2c13b7d43e8763e3e39bc1b7eba23abcb8 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -189,7 +189,7 @@ Pixel pattern for the pattern-enabled commands. Software writes it at the GO ali
 
 ### Register `lspattern`
 
-Line stipple pattern. Not written by shipped light code. Offset established by the ide test. Fully read/write.
+Line stipple pattern. Not written by shipped light code. Offset established by the ide test. Fully read/write. The IRIX 6.2 GL stores the 16-bit GL stipple bit-reversed into both halves; the X server stores a pattern word rotated left by the distance already covered, then a no-op GO store of COMMAND. The first pixel drawn takes bit 31 (inferred from the GL reversal of OpenGL bit-0-first, the X server rotation and the ZPATTERN order). devices/rex1/true-lines.md.
 
 ### Register `lsmode`
 
@@ -332,8 +332,8 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CMD_LOGICOP_SHIFT` | 0x1c | established |  | Bits 31:28 hold the logic operation. 3 is source-replace: every command the PROM, kernel and NetBSD draw with has it (0x30000000). No other value is issued by the objects read, so the table of operations is unknown. |
 | `CMD_LOGICSRC` | 0x80000 | inferred |  | Command flag: source is the frame buffer at the XYMOVE offset (a screen copy). Used with value 0x30080329 in the PROM's scroll and NetBSD's copy. Role inferred from use. |
 | `CMD_LRQPOLY` | 0x2000000 | unknown |  | Command flag named LRQPOLY in the shipped header. Set by every triangle row command of the IRIX 6.2 OpenGL library (flat and shaded, index and RGB, masked or not) and, in the IRIS GL library, by the plain polygon span word 0x32040121 only. Effect unknown and no shipped software depends on it: the ide _span draws the same span shape without it. A model draws the row as if it were clear. devices/rex1/shaded-drawing.md. |
-| `CMD_LSADVLAST` | 0x1000 | inferred |  | Command flag named LSADVLAST in the shipped header. The GL ORs it with ENLSPATTERN into every stippled line. Effect unknown. |
-| `CMD_LSCONTINUE` | 0x2000 | inferred |  | Command flag named LSCONTINUE in the shipped header. The GL adds it to the later segments of a stippled line strip or loop so that the pattern carries across the joint. devices/rex1/true-lines.md. |
+| `CMD_LSADVLAST` | 0x1000 | inferred |  | Command flag named LSADVLAST in the shipped header. The GL ORs it with ENLSPATTERN into every stippled line. Effect unknown; both the GL and the X server always set it together with ENLSPATTERN. |
+| `CMD_LSCONTINUE` | 0x2000 | inferred |  | Command flag named LSCONTINUE in the shipped header. The GL adds it to the later segments of a stippled line strip or loop so that the pattern carries across the joint; the X server sets it on every dashed draw and reloads the pattern with LSPATTERN and a no-op GO store before each piece. Read as: start from the working stipple position the previous draw left instead of loading it from LSPATTERN. devices/rex1/true-lines.md. |
 | `CMD_OP_READ` | 0x2 | inferred |  | Opcode bit 1: set only in 0x30200023, the command whose execution (a read of RWAUX1's GO alias) returns pixel data in that read. Inferred to make opcode 3 a pixel read where opcode 1 (CMD_DRAW) is a write; opcode 2 is never issued. |
 | `CMD_PIXMEM_BIT16` | 0x10000 | inferred |  | Command bit 16, named COLORCOMP in the shipped header (as are AUX1 bit 6 COLORCOMPLT, bit 7 COLORCOMPEQ and bit 8 COLORCOMPGT). Set only in 0x30210021, the second probe write, which the PROM library source issues with AUX1 = 0x100 (COLORCOMPGT). Read as a colour compare: the second write (0x09090909) goes over pixels 01 08 10 20 and replaces only those whose old value compares on the selected side, so one pixel pair of the four changes. Which side a given REX revision implements is the probe: outcome 0x09091020 (data replaces the smaller old values) is what the software calls REX revision B and 0x01080909 (data replaces the larger) revision A; which sense is the intended one is unknown. |
 | `CMD_PIXMEM_READ` | 0x30200023 | established |  | Probe read: logic op 3, bit 21, QUAD, opcode bits 1 and 0. Run by reading the RWAUX1 GO alias (the PROM reads it twice and compares the second value; the kernel compares a fresh read each time). The result 0x01080909 gives outcome 0, 0x09091020 gives outcome 1, anything else 0xff. The word is established; its effect is inferred. |

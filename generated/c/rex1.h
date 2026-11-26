@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 57836e0c059122b8849b37b2a9accbf0ae6ca1229cbb91349afaf92d030f6661 */
+/* input sha256 213c5db29b5e447386ff8f3bb4be0d2c13b7d43e8763e3e39bc1b7eba23abcb8 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -370,7 +370,12 @@
 
 /*
  * Line stipple pattern. Not written by shipped light code. Offset established
- * by the ide test. Fully read/write.
+ * by the ide test. Fully read/write. The IRIX 6.2 GL stores the 16-bit GL
+ * stipple bit-reversed into both halves; the X server stores a pattern word
+ * rotated left by the distance already covered, then a no-op GO store of
+ * COMMAND. The first pixel drawn takes bit 31 (inferred from the GL reversal of
+ * OpenGL bit-0-first, the X server rotation and the ZPATTERN order).
+ * devices/rex1/true-lines.md.
  */
 /* lspattern: rw32, reset unknown */
 #define REX1_LSPATTERN_OFFSET                        0x64u /* established */
