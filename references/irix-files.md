@@ -59,7 +59,7 @@ Public header `usr/include/sys/lg1hw.h` and `lg1.h` from the public IRIX 4.0.5F 
 `040ca0a91b02c5bfc3d1a9df8b5cd7eee6ac689792770264c4356eaf1895a901`; `lg1hw.h` `5bede59fb3a17c7acf8ff12837ee959f49adba3b2e9fa2dd6260fceca1b5dc9c`): names and values only, as the other pages use it.
 
 The IRIX source tree files cited by path are `irix/kern/ml/IP20.c`, `irix/kern/sys/IP20.h`, `stand/arcs/lib/libsk/graphics/LIGHT/lg1_init.c`, `lg1_tp.c`,
-`stand/arcs/lib/libsk/graphics/htport.c`, `stand/arcs/lib/libsc/gui/background.c`, `stand/arcs/include/style.h`, `stand/arcs/ide/fforward/graphics/LIGHT/` (`cid.c`, `maps.h`, `minigl.c`, `rex.c`)
+`stand/arcs/lib/libsk/graphics/htport.c`, `stand/arcs/lib/libsc/gui/background.c`, `stand/arcs/include/style.h`, `stand/arcs/ide/fforward/graphics/LIGHT/` (`cid.c`, `maps.h`, `minigl.c`, `rex.c`, `vram.c`, `vdma/lg1_stride.c` and the other `vdma` tests that issue the read command)
 and `stand/arcs/ide/fforward/int2/int2_mask.c`, from the 6.5.7 tree, plus `6.5.5/f/root/usr/include/sys/gfx.h` from the 6.5.5 tree.
 
 ## IRIX 6.2 install media (shaded-drawing pages, 2026-11-25)

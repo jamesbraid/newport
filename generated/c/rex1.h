@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 e15885f06afd30bde7804061b7a3c27c7aa8a84bbf11526ff8b3c47b0e47276c */
+/* input sha256 df580cb94604e9baed1617837b3b3dcd62d1254658ec09703906903b68c13365 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -10,23 +10,24 @@
 
 
 /*
- * Drawing command. Bits 31:28 hold the logic operation, the low bits the opcode
- * and flags listed as CMD_ constants. A write at 0x000 stores it; a write at
- * 0x800 (or a read of 0x800) executes the command that is now latched, using
- * the coordinate and colour registers as they stand. The PROM's probe writes 0
- * here and reads 0x800 (a no-op); the kernel's glyph path writes the command,
- * then writes ZPATTERN at its GO alias once per row. A qtest can discriminate:
- * a command written at 0x000 draws nothing, the same word at 0x800 draws, and a
+ * Drawing command. Bits 31:28 hold the logic operation, the low three bits the
+ * opcode (CMD_DRAW, CMD_OP_LDPIXEL, CMD_LSPATSAVE) and the other bits flags,
+ * all listed as CMD_ constants. A write at 0x000 stores it; a write at 0x800
+ * (or a read of 0x800) executes the command that is now latched, using the
+ * coordinate and colour registers as they stand. The PROM's probe writes 0 here
+ * and reads 0x800 (a no-op); the kernel's glyph path writes the command, then
+ * writes ZPATTERN at its GO alias once per row. A qtest can discriminate: a
+ * command written at 0x000 draws nothing, the same word at 0x800 draws, and a
  * read of 0x800 draws what the latched command says. Bits 27:20 of values the
  * kernel and PROM write are zero except bit 23 and bit 24 (ZOPAQUE, ZCONTINUE:
  * not set by shipped code) and bit 21 (all three) and bit 16 (second only) in
  * the pixel-memory probe commands 0x30200021, 0x30210021 and 0x30200023 that
  * lightInitInfo and the PROM board-info routine use (see the CMD_PIXMEM
- * constants and rwaux1). Bit 21 is inferred to be host data through RWAUX1, bit
- * 1 of the last to be a read opcode, and bit 16 is unknown. The direction a
- * pattern or block draw steps y is toward YENDI (inferred from the PROM glyphs,
- * which end at YENDI 0, and NetBSD glyphs, which end below YSTARTI), not a
- * fixed down.
+ * constants and rwaux1). Bit 21 is inferred to be host data through RWAUX1, the
+ * last carries opcode 3, a read of pixels to the host (CMD_OP_LDPIXEL), and bit
+ * 16 is unknown. The direction a pattern or block draw steps y is toward YENDI
+ * (inferred from the PROM glyphs, which end at YENDI 0, and NetBSD glyphs,
+ * which end below YSTARTI), not a fixed down.
  */
 /* command: rw32, reset unknown */
 #define REX1_COMMAND_OFFSET                          0x0u /* established */
@@ -814,7 +815,7 @@
 #define REX1_CMD_LSADVLAST                           0x1000u /* inferred */
 #define REX1_CMD_LSCONTINUE                          0x2000u /* inferred */
 #define REX1_CMD_LSPATSAVE                           0x2002u /* inferred */
-#define REX1_CMD_OP_READ                             0x2u /* inferred */
+#define REX1_CMD_OP_LDPIXEL                          0x3u /* established */
 #define REX1_CMD_PIXMEM_BIT16                        0x10000u /* inferred */
 /* established */
 #define REX1_CMD_PIXMEM_READ                         0x30200023u

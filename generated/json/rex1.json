@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "e15885f06afd30bde7804061b7a3c27c7aa8a84bbf11526ff8b3c47b0e47276c",
+ "input_sha256": "df580cb94604e9baed1617837b3b3dcd62d1254658ec09703906903b68c13365",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -1138,10 +1138,10 @@
   {
    "unit": "rex1",
    "kind": "constant",
-   "name": "CMD_OP_READ",
-   "value": 2,
+   "name": "CMD_OP_LDPIXEL",
+   "value": 3,
    "count": 1,
-   "grade": "inferred"
+   "grade": "established"
   },
   {
    "unit": "rex1",

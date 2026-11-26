@@ -1,12 +1,12 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 e15885f06afd30bde7804061b7a3c27c7aa8a84bbf11526ff8b3c47b0e47276c
+// input sha256 df580cb94604e9baed1617837b3b3dcd62d1254658ec09703906903b68c13365
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
-/// Drawing command. Bits 31:28 hold the logic operation, the low bits the opcode and flags listed as CMD_ constants. A write at 0x000 stores it; a write  (established)
+/// Drawing command. Bits 31:28 hold the logic operation, the low three bits the opcode (CMD_DRAW, CMD_OP_LDPIXEL, CMD_LSPATSAVE) and the other bits flags (established)
 pub mod command {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x0;
@@ -550,7 +550,7 @@ pub const CMD_LRQPOLY: u32 = 0x2000000; // unknown
 pub const CMD_LSADVLAST: u32 = 0x1000; // inferred
 pub const CMD_LSCONTINUE: u32 = 0x2000; // inferred
 pub const CMD_LSPATSAVE: u32 = 0x2002; // inferred
-pub const CMD_OP_READ: u32 = 0x2; // inferred
+pub const CMD_OP_LDPIXEL: u32 = 0x3; // established
 pub const CMD_PIXMEM_BIT16: u32 = 0x10000; // inferred
 pub const CMD_PIXMEM_READ: u32 = 0x30200023; // established
 pub const CMD_PIXMEM_WRITE_A: u32 = 0x30200021; // established

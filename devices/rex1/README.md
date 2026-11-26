@@ -141,8 +141,7 @@ it stores those bits plus one); the PROM and `ide` run it unconditionally. All t
 | 21 | yes | yes | yes | COLORAUX in the shipped header (also set in PutImage, GetImage and the tile fill); **inferred** host data through `RWAUX1` |
 | 16 | no | yes | no | COLORCOMP in the shipped header; with `AUX1` = 0x100 (COLORCOMPGT) exactly one pixel pair of four is replaced, a colour compare (**inferred**) |
 | 5 | yes | yes | yes | QUAD (inferred, as for rectangles) |
-| 1 | no | no | yes | **inferred** read opcode (opcode 3, where 1 is draw) |
-| 0 | yes | yes | yes | DRAW |
+| 2:0 | 1 | 1 | 3 | opcode: DRAW (1), then LDPIXEL (3), a read of pixels to the host (established, [getimage-and-stipple.md](getimage-and-stipple.md#opcode-3-in-the-other-software)) |
 | 3, 7, 8, 9, 10, 19, 23 | no | no | no | no BLOCK, XYCONTINUE, STOPONX/Y, ENZPATTERN, LOGICSRC or ZOPAQUE |
 
 The sequence, identical in all three programs (established; the effects are inferred from the compare constants):
