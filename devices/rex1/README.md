@@ -212,6 +212,40 @@ probe with 0x033c0000 at XSTART, (b) present busy = 0, (c) return a sensible boa
 (d) accept the colour map and VC1 writes without error. The kernel additionally requires the VC1 revision to be nonzero or it
 skips the VC1 initialisation.
 
+## The 4.0.5G power-on test (established [binary]; 4.0.5D has none)
+
+PROM 4.0.5G (070-8116-005) runs a register test on the Entry board before the System Maintenance Menu; 4.0.5D does not (its image has no "REX power on test failed" text and its Entry
+boot has no graphics diagnostic failure). The dispatch is at `0xbfc036c0`: `0xbfc037ac` resets the graphics slot and probes for an Express (`0xbfc124b0`) then an Entry (`0xbfc131d0`); an Entry runs the routine at
+`0xbfc05f88`, which returns -1 on any mismatch, and a negative result makes the caller report "Graphics diagnostic *FAILED*, Check or replace: Graphics board". The detailed message ("REX power on test failed",
+"VC1 power on test failed") is printed only at a verbose level.
+
+The REX part (`0xbfc05f88` to `0xbfc06264`) runs twice, with the pattern 0x55555555 and then 0xaaaaaaaa. For each register it stores the whole pattern at the write offset, stores 0 at the GO alias
+(`+0x800`, or `+0x814` for XSTATE) three times to flush the write, reads the read offset and compares with `(pattern & mask) << shift`:
+
+| Name the PROM prints | Write | Read | Mask | Shift |
+|---|---|---|---|---|
+| RWVC1 | 0x47f0 | 0x47f0 | 0xff | 0 |
+| CONFIGSEL | 0x47ec | 0x47ec | 0x7 | 0 |
+| RWDAC | 0x47e8 | 0x47e8 | 0xff | 0 |
+| WCLOCK | 0x47e4 | 0x47e4 | 0xff | 0 |
+| XYWIN | 0x47fc | 0x47fc | 0x0fff0fff | 0 |
+| RWAUX2 | 0x074 | 0x074 | 0xffffffff | 0 |
+| **AUX1** | 0x004 | 0x004 | **0x3ff** | 0 |
+| XSTATE (whole word, compared at `0xbfc05f04`) | 0x008 | 0x008 | 0xffffffff | 0 |
+| XSTARTI | 0x00c | 0x014 (XSTART) | 0xfff | 15 |
+| YSTARTI | 0x01c | 0x024 (YSTART) | 0xfff | 15 |
+| XENDI | 0x084 | 0x018 (XENDF) | 0xfff | 11 |
+| YENDI | 0x088 | 0x028 (YENDF) | 0xfff | 11 |
+| COLORREDI | 0x038 | 0x03c | 0xff | 11 |
+| ZPATTERN | 0x060 | 0x060 | 0xffffffff | 0 |
+
+**What the model does wrong, and the one gap (observed).** A model run of 4.0.5G with the Entry board fitted read back every row correctly except AUX1, which the model stores as a full 32-bit word (read
+0x55555555 and 0xaaaaaaaa, expected 0x155 and 0x2aa), so the REX part fails and the PROM prints "Graphics diagnostic *FAILED*". The cure is a ten-bit AUX1. **The failure is not expected hardware behaviour:** a working board
+passes this test; the model is missing the register width. The run stopped there, so the routine's second and third parts did not run. They are read, not observed, and **Unverified**: a VC1 read-back test
+(helper `0xbfc07400`, internal registers 0x00, 0x20, 0x22, 0x24, 0x26, 0x27, 0x28, 0x40, 0x42, 0x44, 0x45, 0x60, 0x61, 0x62 and window 1, with the pattern masked to a width the helper `0xbfc072b0` looks up: 16 bits
+for 0x00, 0x20, 0x40, 0x42 and window 1; 11 for 0x22 and 0x28; 12 for 0x24; 8 for 0x26, 0x27, 0x44 and 0x60 to 0x62; 3 for 0x45), then a DAC test (`0xbfc07660`). If the model keeps the VC1 registers as plain bytes
+the 11, 12 and 3-bit rows will fail it next; a trial run with AUX1 fixed settles it.
+
 ## What IRIX does after init
 
 Established from `lightPositionCursor`, `lightSetDisplayMode`, `lightSetDestinationPlanes`, `lightPcxSwap`, `lightRetrace*`,

@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 518434fbdca28fa78298dce29af8a1fc620a5fc32905179e862a91eb5aff6684 */
+/* input sha256 4e3e162a19b5ad359dfb2c06fe288722bbf3739fa204bc9378317f657b0d78a0 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -44,11 +44,16 @@
  * reads, bit 5 turns double buffering on. The X server's four-pixel tile fill
  * and PutImage store 0x28 or 0x2c (DOUBLEBUF with DBLDST1, and DBLDST0 for
  * 0x2c) and its GetImage 0x30 (DOUBLEBUF with DBLSRC). The pixel-memory probe
- * stores 0x100 (COLORCOMPGT) here before its second write. ide's register test
- * reads it back whole (test mask 0x3ff). GL contexts use 0x202
- * (single-buffered, FRACTION1 and DITHERRANGE) or 0x222 plus buffer bits:
- * GL_FRONT is DBLDST0 (0x226), GL_BACK DBLDST1 and DBLSRC (0x23a), both 0x22e,
- * the pair exchanged after each swap. devices/rex1/gl-context-state.md.
+ * stores 0x100 (COLORCOMPGT) here before its second write. Only bits 9:0 exist:
+ * both the ide register test and the 4.0.5G PROM power-on test write a 32-bit
+ * pattern and require the read-back to equal the pattern masked to 0x3ff (0x155
+ * for 0x55555555, 0x2aa for 0xaaaaaaaa), so a store must keep ten bits and a
+ * read return them. A model that returns the whole word fails the PROM test
+ * ('Graphics diagnostic FAILED' on the Entry). A qtest can write 0x55555555 at
+ * 0x004 and read 0x155. GL contexts use 0x202 (single-buffered, FRACTION1 and
+ * DITHERRANGE) or 0x222 plus buffer bits: GL_FRONT is DBLDST0 (0x226), GL_BACK
+ * DBLDST1 and DBLSRC (0x23a), both 0x22e, the pair exchanged after each swap.
+ * devices/rex1/gl-context-state.md.
  */
 /* aux1: rw32, reset unknown */
 #define REX1_AUX1_OFFSET                             0x4u /* established */
