@@ -108,7 +108,7 @@ clears everything except bits 14:12 and 1:0 of the window's saved word (mask 0x7
 | Bits | Meaning | Grade |
 |---|---|---|
 | 1 | which of the two image buffers a double-buffered window shows (the retrace handler sets or clears it) | inferred ([VC1 page](README.md#display-mode-xmap-table)); established that `rexChangeDIDCmap` (0x5e312bd0 to 0x5e312c00) follows bit 2 of the window's flags word (+0x20) when its bit 1 is set, and leaves the saved bit alone otherwise |
-| 0 | set in the three pop-up and overlay entries the server initialises (DID 6 to 8); otherwise preserved by the server | role unknown |
+| 0 | set in the three pop-up and overlay entries the server initialises (DID 6 to 8); otherwise preserved by the server; the emulated trace shows it set on a double-buffered window's ID, and no shipped code tests it | role unknown; **inferred** to mark a narrow (four-bit) pixel whose nibble bit 1 picks, from that fit alone ([GL context state](../rex1/gl-context-state.md#which-nibble)) |
 | 3:2 | colour-map bank (0 to 3) | established as the server's field; that the chip passes it to the colour map is inferred |
 | 7:4 | high nibble of a colour-index offset (0x00, 0x30 or 0x40 in the shipped table) | established as the field; addition to the pixel is inferred (see [banks](../bt479/banks.md#where-each-bank-is-used)) |
 | 9:8 | always 11 once the server has written the entry; the kernel leaves 00 | role unknown |
