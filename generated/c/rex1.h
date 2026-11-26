@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 d44625f7853915445d34b6f941bc7509151e86b1e64297b34b92a416a3b77abb */
+/* input sha256 215500cb7a789af02feb2e9126ba34c2493fb9517b9ac2556b00db0e14f03150 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -566,8 +566,11 @@
  * more screen mask per visible rectangle, up to three (table in
  * devices/rex1/gl-context-state.md; inside polarity everywhere, one 0xf CID
  * nibble per enabled mask); the kernel's lightValidateClip builds 0xf1 | (1 <<
- * cid) << 8 for CID-clipped windows; no shipped word enables a mask with
- * outside polarity. GL and kernel window contexts use 0xff1 in the low twelve
+ * cid) << 8 for CID-clipped windows; for four to ten visible rectangles
+ * rexValidateClip sends the table entry for the obscured-rectangle count ANDed
+ * with 0x00ffff1f, clearing polarity bits 7:5, so the enabled masks 1 to 3 have
+ * the clear polarity (read as outside, a software expectation from that use and
+ * the header names). GL and kernel window contexts use 0xff1 in the low twelve
  * bits (the X server's batches 0xf11): by the header's names screen mask enable
  * bit 0 (the first pair, SMASK1X and SMASK1Y) with inside polarity bit 4,
  * polarity bits 7:5 set on disabled masks, CID match nibble 1 = 0xf.

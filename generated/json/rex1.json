@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "d44625f7853915445d34b6f941bc7509151e86b1e64297b34b92a416a3b77abb",
+ "input_sha256": "215500cb7a789af02feb2e9126ba34c2493fb9517b9ac2556b00db0e14f03150",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",

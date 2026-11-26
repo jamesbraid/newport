@@ -30,7 +30,7 @@ board, or the board's parts list if SGI published one.
 
 ### Shaded drawing: SHADECONTINUE and INITFRAC
 
-Owning files: [shaded drawing](../devices/rex1/shaded-drawing.md), [GL context state](../devices/rex1/gl-context-state.md) and [true lines](../devices/rex1/true-lines.md). What is open is a hardware behaviour the IRIX 6.2 GL expects but whose arithmetic no shipped software contains (the dither, out-of-range colours, command bit 25, the `AUX1` fraction and range bits, `AWEIGHT`, outside polarity and the physical buffer nibbles are settled as unknown on the owning pages):
+Owning files: [shaded drawing](../devices/rex1/shaded-drawing.md), [GL context state](../devices/rex1/gl-context-state.md) and [true lines](../devices/rex1/true-lines.md). What is open is a hardware behaviour the IRIX 6.2 GL expects but whose arithmetic no shipped software contains (the dither, out-of-range colours, command bit 25, the `AUX1` fraction and range bits, `AWEIGHT`, the physical buffer nibbles and how the screen masks combine are settled as unknown on the owning pages; the outside polarity is a software expectation there):
 
 - The effect of `SHADECONTINUE` (the reading "continue the colour between 32-pixel pieces" is a name-based inference) and of `INITFRAC`.
 
