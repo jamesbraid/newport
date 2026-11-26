@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 df580cb94604e9baed1617837b3b3dcd62d1254658ec09703906903b68c13365
+// input sha256 c587e1ddbf4df01b89d5a6e5451b3a0f4832d35a6c7184199c0e9cbeff4c1670
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]

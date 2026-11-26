@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 df580cb94604e9baed1617837b3b3dcd62d1254658ec09703906903b68c13365 -->
+<!-- input sha256 c587e1ddbf4df01b89d5a6e5451b3a0f4832d35a6c7184199c0e9cbeff4c1670 -->
 <genxml unit="rex1" prefix="REX1" title="REX1 raster engine on the Indigo Entry graphics board (LG1)">
   <doc>Register file of the REX1 chip as the Indigo's Entry graphics board presents it on the GIO graphics slot. Offsets are bytes from the board base (0x1f3f0000 for the first head, 0x1f3f8000 for a second). Every register is 32 bits wide. A register written at its offset is only stored (the SET alias). The same register at offset + 0x800 (the GO alias) is stored and then the latched command is executed. Names are the ones the shipped diagnostics (ide) print for the REX register test, where it prints one; the rest use the names of the NetBSD sgimips light driver. The three off-chip ports (WCLOCK, RWDAC, RWVC1) are covered here as REX registers; the chips behind them are in devices/vc1 and devices/bt479. Grades follow AGENTS.md: established means the whole routine was read in the shipped Indigo kernel graphics driver or the Indigo PROM; inferred is a reading with the reasoning given; unknown means no shipped software settles it. Nothing was measured on a board.</doc>
   <struct name="COMMAND" size="4" grade="established" register="yes" offset="0x0" access="rw" reset="unknown">
