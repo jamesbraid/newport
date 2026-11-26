@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 0ce86fe79ca1668bc446ec7b53e0b69df3f37f888c97fbe3e643b82342ffaa41
+// input sha256 518434fbdca28fa78298dce29af8a1fc620a5fc32905179e862a91eb5aff6684
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -15,6 +15,96 @@ pub mod command {
 pub mod aux1 {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x4;
+    pub mod ditherrange { // bits 9:9, unknown
+        pub const SHIFT: u32 = 9;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod colorcompgt { // bits 8:8, inferred
+        pub const SHIFT: u32 = 8;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod colorcompeq { // bits 7:7, inferred
+        pub const SHIFT: u32 = 7;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod colorcomplt { // bits 6:6, inferred
+        pub const SHIFT: u32 = 6;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod doublebuf { // bits 5:5, inferred
+        pub const SHIFT: u32 = 5;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod dblsrc { // bits 4:4, inferred
+        pub const SHIFT: u32 = 4;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod dbldst1 { // bits 3:3, inferred
+        pub const SHIFT: u32 = 3;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod dbldst0 { // bits 2:2, inferred
+        pub const SHIFT: u32 = 2;
+        pub const MASK: u32 = 0x1;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod fraction { // bits 1:0, unknown
+        pub const SHIFT: u32 = 0;
+        pub const MASK: u32 = 0x3;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
 }
 /// Packed draw state word. The kernel stores 0x03ff0000 here before each full-screen clear (rexClear, the command word 0x329 with no logic-operation nibb (established)
 pub mod xstate {
@@ -116,7 +206,7 @@ pub mod ystarti {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x1c;
 }
-/// Draw start y, fraction. Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4. (established)
+/// Draw start y, fraction. Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4. For lines the IRIX 6.2 GL wr (established)
 pub mod ystartf {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x20;
@@ -161,7 +251,7 @@ pub mod colorgreeni {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x40;
 }
-/// Green channel with fraction. Offset established by the ide test. 20 bits kept. (established)
+/// Green channel with fraction. Offset established by the ide test. 20 bits kept. Same format as COLORRED. (established)
 pub mod colorgreen {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x44;
@@ -171,7 +261,7 @@ pub mod colorbluei {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x48;
 }
-/// Blue channel with fraction. Offset established by the ide test. 20 bits kept. (established)
+/// Blue channel with fraction. Offset established by the ide test. 20 bits kept. Same format as COLORRED. A store at the GO alias (0x84c) runs the latche (established)
 pub mod colorblue {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x4c;
@@ -186,7 +276,7 @@ pub mod slopegreen {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x54;
 }
-/// Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED. (established)
+/// Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED. Same rule as SLOPERED. A store at the GO alias (0x858) (established)
 pub mod slopeblue {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x58;
@@ -211,7 +301,7 @@ pub mod lsmode {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x68;
 }
-/// Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write. (established)
+/// Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write. The IRIX 6.2 GL writes 0xdb987642 once at c (established)
 pub mod aweight {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x6c;
@@ -285,6 +375,76 @@ pub mod smask4y {
 pub mod aux2 {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x47a8;
+    pub mod planegroup { // bits 31:29, inferred
+        pub const SHIFT: u32 = 29;
+        pub const MASK: u32 = 0x7;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod cidmatch4 { // bits 23:20, inferred
+        pub const SHIFT: u32 = 20;
+        pub const MASK: u32 = 0xf;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod cidmatch3 { // bits 19:16, inferred
+        pub const SHIFT: u32 = 16;
+        pub const MASK: u32 = 0xf;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod cidmatch2 { // bits 15:12, inferred
+        pub const SHIFT: u32 = 12;
+        pub const MASK: u32 = 0xf;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod cidmatch1 { // bits 11:8, inferred
+        pub const SHIFT: u32 = 8;
+        pub const MASK: u32 = 0xf;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod smask_inside { // bits 7:4, inferred
+        pub const SHIFT: u32 = 4;
+        pub const MASK: u32 = 0xf;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod smask_enable { // bits 3:0, inferred
+        pub const SHIFT: u32 = 0;
+        pub const MASK: u32 = 0xf;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
 }
 /// VRAM diagnostic access. No shipped kernel or PROM runtime path touches it; the ide VRAM test is the only candidate user and was not read. Offset and r (inferred)
 pub mod diagvram {
@@ -336,20 +496,29 @@ pub const CFGSEL_PIXMASK: u32 = 0x2; // established
 pub const CFGSEL_RDADDR: u32 = 0x3; // established
 pub const CFGSEL_SYSCTL: u32 = 0x6; // established
 pub const CMD_BLOCK: u32 = 0x8; // established
+pub const CMD_CLEAR_RGB_DITHER: u32 = 0x3000c329; // established
 pub const CMD_COPY_RECT: u32 = 0x30080329; // established
+pub const CMD_COPY_RECT_GL: u32 = 0x30280329; // established
 pub const CMD_COPY_RECT_STATE: u32 = 0x80329; // established
+pub const CMD_DITHER: u32 = 0x8000; // inferred
 pub const CMD_DRAW: u32 = 0x1; // established
+pub const CMD_ENLSPATTERN: u32 = 0x800; // inferred
 pub const CMD_ENZPATTERN: u32 = 0x400; // established
 pub const CMD_FILL_RECT: u32 = 0x30000329; // established
 pub const CMD_FILL_RECT_STATE: u32 = 0x329; // established
 pub const CMD_GLYPH16: u32 = 0x300005b9; // established
 pub const CMD_GLYPH_PIECE: u32 = 0x300005a1; // established
+pub const CMD_GL_TRIANGLE_ROW_SHADED_MASKED: u32 = 0x3212c5b1; // established
 pub const CMD_HOSTDATA: u32 = 0x200000; // inferred
 pub const CMD_HOSTDATA_READ: u32 = 0x2000ab; // established
 pub const CMD_HOSTDATA_WRITE: u32 = 0x2000a9; // established
+pub const CMD_INITFRAC: u32 = 0x40000; // unknown
 pub const CMD_LENGTH32: u32 = 0x10; // inferred
 pub const CMD_LOGICOP_SHIFT: u32 = 0x1c; // established
 pub const CMD_LOGICSRC: u32 = 0x80000; // inferred
+pub const CMD_LRQPOLY: u32 = 0x2000000; // unknown
+pub const CMD_LSADVLAST: u32 = 0x1000; // inferred
+pub const CMD_LSCONTINUE: u32 = 0x2000; // inferred
 pub const CMD_OP_READ: u32 = 0x2; // inferred
 pub const CMD_PIXMEM_BIT16: u32 = 0x10000; // inferred
 pub const CMD_PIXMEM_READ: u32 = 0x30200023; // established
@@ -357,11 +526,15 @@ pub const CMD_PIXMEM_WRITE_A: u32 = 0x30200021; // established
 pub const CMD_PIXMEM_WRITE_B: u32 = 0x30210021; // established
 pub const CMD_POINT: u32 = 0x30000001; // established
 pub const CMD_QUAD: u32 = 0x20; // inferred
+pub const CMD_RGBMODE: u32 = 0x4000; // inferred
+pub const CMD_SHADE: u32 = 0x20000; // inferred
+pub const CMD_SHADECONTINUE: u32 = 0x100000; // inferred
 pub const CMD_SPAN: u32 = 0x121; // established
 pub const CMD_SPAN_LSPATTERN: u32 = 0x921; // inferred
 pub const CMD_STOPONX: u32 = 0x100; // established
 pub const CMD_STOPONY: u32 = 0x200; // established
 pub const CMD_TILE_HOSTDATA: u32 = 0x200121; // established
+pub const CMD_XMAJOR: u32 = 0x40; // inferred
 pub const CMD_XYCONTINUE: u32 = 0x80; // established
 pub const CMD_ZCONTINUE: u32 = 0x1000000; // unknown
 pub const CMD_ZOPAQUE: u32 = 0x800000; // inferred

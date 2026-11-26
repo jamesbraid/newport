@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "0ce86fe79ca1668bc446ec7b53e0b69df3f37f888c97fbe3e643b82342ffaa41",
+ "input_sha256": "518434fbdca28fa78298dce29af8a1fc620a5fc32905179e862a91eb5aff6684",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -30,6 +30,78 @@
    "space": null,
    "reset": "unknown",
    "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.ditherrange",
+   "hi": 9,
+   "lo": 9,
+   "grade": "unknown"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.colorcompgt",
+   "hi": 8,
+   "lo": 8,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.colorcompeq",
+   "hi": 7,
+   "lo": 7,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.colorcomplt",
+   "hi": 6,
+   "lo": 6,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.doublebuf",
+   "hi": 5,
+   "lo": 5,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.dblsrc",
+   "hi": 4,
+   "lo": 4,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.dbldst1",
+   "hi": 3,
+   "lo": 3,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.dbldst0",
+   "hi": 2,
+   "lo": 2,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux1.fraction",
+   "hi": 1,
+   "lo": 0,
+   "grade": "unknown"
   },
   {
    "unit": "rex1",
@@ -609,6 +681,62 @@
   },
   {
    "unit": "rex1",
+   "kind": "field",
+   "name": "aux2.planegroup",
+   "hi": 31,
+   "lo": 29,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux2.cidmatch4",
+   "hi": 23,
+   "lo": 20,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux2.cidmatch3",
+   "hi": 19,
+   "lo": 16,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux2.cidmatch2",
+   "hi": 15,
+   "lo": 12,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux2.cidmatch1",
+   "hi": 11,
+   "lo": 8,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux2.smask_inside",
+   "hi": 7,
+   "lo": 4,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "field",
+   "name": "aux2.smask_enable",
+   "hi": 3,
+   "lo": 0,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
    "kind": "register",
    "name": "diagvram",
    "offset": 18392,
@@ -794,8 +922,24 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_CLEAR_RGB_DITHER",
+   "value": 805356329,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_COPY_RECT",
    "value": 805831465,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_COPY_RECT_GL",
+   "value": 807928617,
    "count": 1,
    "grade": "established"
   },
@@ -810,10 +954,26 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_DITHER",
+   "value": 32768,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_DRAW",
    "value": 1,
    "count": 1,
    "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_ENLSPATTERN",
+   "value": 2048,
+   "count": 1,
+   "grade": "inferred"
   },
   {
    "unit": "rex1",
@@ -858,6 +1018,14 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_GL_TRIANGLE_ROW_SHADED_MASKED",
+   "value": 840091057,
+   "count": 1,
+   "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_HOSTDATA",
    "value": 2097152,
    "count": 1,
@@ -882,6 +1050,14 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_INITFRAC",
+   "value": 262144,
+   "count": 1,
+   "grade": "unknown"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_LENGTH32",
    "value": 16,
    "count": 1,
@@ -900,6 +1076,30 @@
    "kind": "constant",
    "name": "CMD_LOGICSRC",
    "value": 524288,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_LRQPOLY",
+   "value": 33554432,
+   "count": 1,
+   "grade": "unknown"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_LSADVLAST",
+   "value": 4096,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_LSCONTINUE",
+   "value": 8192,
    "count": 1,
    "grade": "inferred"
   },
@@ -962,6 +1162,30 @@
   {
    "unit": "rex1",
    "kind": "constant",
+   "name": "CMD_RGBMODE",
+   "value": 16384,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_SHADE",
+   "value": 131072,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_SHADECONTINUE",
+   "value": 1048576,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
    "name": "CMD_SPAN",
    "value": 289,
    "count": 1,
@@ -998,6 +1222,14 @@
    "value": 2097441,
    "count": 1,
    "grade": "established"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_XMAJOR",
+   "value": 64,
+   "count": 1,
+   "grade": "inferred"
   },
   {
    "unit": "rex1",

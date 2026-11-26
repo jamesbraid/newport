@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 0ce86fe79ca1668bc446ec7b53e0b69df3f37f888c97fbe3e643b82342ffaa41 -->
+<!-- input sha256 518434fbdca28fa78298dce29af8a1fc620a5fc32905179e862a91eb5aff6684 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -71,7 +71,19 @@ Drawing command. Bits 31:28 hold the logic operation, the low bits the opcode an
 
 ### Register `aux1`
 
-Auxiliary control word, one per window context. initRex zeroes it. lightAux1Register builds a value from a window's saved value with bits 4:2 cleared, sets bit 4 when the request word's second field is 1, bit 2 when bit 0 of its third field is set and bit 3 when bit 1 is set, then stores it here (only for the window that owns the screen) or in the window's saved context. The shipped header names the bits FRACTION0 and FRACTION1 (0, 1), DBLDST0 and DBLDST1 (2, 3), DBLSRC (4), DOUBLEBUF (5), COLORCOMPLT, COLORCOMPEQ and COLORCOMPGT (6, 7, 8) and DITHERRANGE (9); the roles are inferred from the names: bits 2 and 3 pick which buffer a draw writes, bit 4 which one it reads, bit 5 turns double buffering on. The X server's four-pixel tile fill and PutImage store 0x28 or 0x2c (DOUBLEBUF with DBLDST1, and DBLDST0 for 0x2c) and its GetImage 0x30 (DOUBLEBUF with DBLSRC). The pixel-memory probe stores 0x100 (COLORCOMPGT) here before its second write. ide's register test reads it back whole (test mask 0x3ff).
+Auxiliary control word, one per window context. initRex zeroes it. lightAux1Register builds a value from a window's saved value with bits 4:2 cleared, sets bit 4 when the request word's second field is 1, bit 2 when bit 0 of its third field is set and bit 3 when bit 1 is set, then stores it here (only for the window that owns the screen) or in the window's saved context. The shipped header names the bits FRACTION0 and FRACTION1 (0, 1), DBLDST0 and DBLDST1 (2, 3), DBLSRC (4), DOUBLEBUF (5), COLORCOMPLT, COLORCOMPEQ and COLORCOMPGT (6, 7, 8) and DITHERRANGE (9); the roles are inferred from the names: bits 2 and 3 pick which buffer a draw writes, bit 4 which one it reads, bit 5 turns double buffering on. The X server's four-pixel tile fill and PutImage store 0x28 or 0x2c (DOUBLEBUF with DBLDST1, and DBLDST0 for 0x2c) and its GetImage 0x30 (DOUBLEBUF with DBLSRC). The pixel-memory probe stores 0x100 (COLORCOMPGT) here before its second write. ide's register test reads it back whole (test mask 0x3ff). GL contexts use 0x202 (single-buffered, FRACTION1 and DITHERRANGE) or 0x222 plus buffer bits: GL_FRONT is DBLDST0 (0x226), GL_BACK DBLDST1 and DBLSRC (0x23a), both 0x22e, the pair exchanged after each swap. devices/rex1/gl-context-state.md.
+
+| Bits | Field | Grade | Values | Source | Description |
+|---|---|---|---|---|---|
+| 9 | `ditherrange` | unknown |  |  |  |
+| 8 | `colorcompgt` | inferred |  |  |  |
+| 7 | `colorcompeq` | inferred |  |  |  |
+| 6 | `colorcomplt` | inferred |  |  |  |
+| 5 | `doublebuf` | inferred |  |  |  |
+| 4 | `dblsrc` | inferred |  |  |  |
+| 3 | `dbldst1` | inferred |  |  |  |
+| 2 | `dbldst0` | inferred |  |  |  |
+| 1:0 | `fraction` | unknown |  |  |  |
 
 ### Register `xstate`
 
@@ -109,7 +121,7 @@ Draw start y as an integer, 12 bits kept; the ide test writes it and reads YSTAR
 
 ### Register `ystartf`
 
-Draw start y, fraction.  Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4.
+Draw start y, fraction.  Offset established by the ide test. Mirror of XSTARTF for y; a write appears in YSTART bits 26:4. For lines the IRIX 6.2 GL writes the float 4096.0 + y at the centre of the first pixel, so the mantissa is the 12.11 start; the ide read-back shows YSTART = mantissa << 4 (12.15). devices/rex1/true-lines.md.
 
 ### Register `ystart`
 
@@ -121,15 +133,15 @@ Draw end y, fraction.  Offset established by the ide test. Holds the end y with 
 
 ### Register `xsave`
 
-Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers. Offset established by the ide test. Twelve bits kept.
+Saved x start (the x that a block-draw returns to at the start of each row, inferred from its name and the context save). lightPcxSwap saves it with the other window registers. Offset established by the ide test. Twelve bits kept. No routine of the IRIX 6.2 GL that draws lines, triangle rows, spans, points, clears or copies stores it. devices/rex1/true-lines.md.
 
 ### Register `minorslope`
 
-Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it. Offset established by the ide test. Written and read back unmasked.
+Line-draw minor-axis slope. Never written by the shipped light code for rectangles, text or points. Only the name (ide) and the slot between XSAVE and XYMOVE support it. Offset established by the ide test. Written and read back unmasked. Sign rule, from the ide REX test: 17 bits are kept, bit 31 is the sign, bit 16 of a negative magnitude is ignored and the result is the 17-bit two's complement. The GL writes 256.0 + m or -256.0 + m (0x43800000 plus the fraction), which gives 15 fraction bits; each step along the major axis adds it to the minor coordinate. devices/rex1/true-lines.md.
 
 ### Register `xymove`
 
-Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination, in stored coordinates (display row = stored y). The X server (X server driver function rexCopyRect) computes dx as source x minus destination x0 and dy as source y minus destination y0, masks dy to 16 bits and stores (dx << 16) | dy at the GO alias (0x834) after the rectangle and the copy command 0x80329 are set up; it chooses XSTARTI..XENDI ascending when dx is not negative and descending when it is, and YSTARTI..YENDI ascending when dy is not negative and descending when it is, so the engine must honour either order of the two registers. That fixes the sign for the X server and agrees with NetBSD. The only remaining doubt is the PROM copy routine, whose callers were not found. For a destination x0 below 4 and dx negative the X server also stores XYWIN 0x07fc0800 around the copy (see XYWIN). The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x80329 or 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched, and a rectangle with YSTARTI greater than YENDI copies bottom row first.
+Copy source offset: x delta in the high 16 bits and y delta in the low 16, each source minus destination, in stored coordinates (display row = stored y). The X server (X server driver function rexCopyRect) computes dx as source x minus destination x0 and dy as source y minus destination y0, masks dy to 16 bits and stores (dx << 16) | dy at the GO alias (0x834) after the rectangle and the copy command 0x80329 are set up; it chooses XSTARTI..XENDI ascending when dx is not negative and descending when it is, and YSTARTI..YENDI ascending when dy is not negative and descending when it is, so the engine must honour either order of the two registers. That fixes the sign for the X server and agrees with NetBSD. The only remaining doubt is the PROM copy routine, whose callers were not found. For a destination x0 below 4 and dx negative the X server also stores XYWIN 0x07fc0800 around the copy (see XYWIN). The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest can discriminate: write 0x00100005 at 0x34 and 0x80329 or 0x30080329 at 0, then a copy from (x+16, y+5) happens when 0x800 is touched, and a rectangle with YSTARTI greater than YENDI copies bottom row first. The IRIX 6.2 GL's rectangle copy stores the same layout with the word 0x30280329.
 
 ### Register `colorredi`
 
@@ -137,7 +149,7 @@ Foreground pixel colour (the ide test reads a write back through COLORRED at 0x3
 
 ### Register `colorred`
 
-Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red channel with its integer part (COLORREDI, 8 bits) in bits 18:11.
+Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red channel with its integer part (COLORREDI, 8 bits) in bits 18:11. Shaded draws: the IRIX 6.2 GL stores the float c + 6144.0, so the word is 0x45c00000 + c * 2048 (bits above 19 are ignored by the chip, 9 integer and 11 fraction bits are kept) and a negative c wraps modulo 512. Whether the chip clamps or wraps out-of-range colours is unknown. devices/rex1/shaded-drawing.md.
 
 ### Register `colorgreeni`
 
@@ -145,7 +157,7 @@ Green channel integer (shaded draws). Never written by shipped light code. Offse
 
 ### Register `colorgreen`
 
-Green channel with fraction. Offset established by the ide test. 20 bits kept.
+Green channel with fraction. Offset established by the ide test. 20 bits kept. Same format as COLORRED.
 
 ### Register `colorbluei`
 
@@ -153,19 +165,19 @@ Blue channel integer. Offset established by the ide test. A write here appears i
 
 ### Register `colorblue`
 
-Blue channel with fraction. Offset established by the ide test. 20 bits kept.
+Blue channel with fraction. Offset established by the ide test. 20 bits kept. Same format as COLORRED. A store at the GO alias (0x84c) runs the latched command: the GL's flat RGB lines and clears end that way.
 
 ### Register `slopered`
 
-Red slope for shaded lines and spans. Not written by shipped light code. Offset established by the ide test. Slope registers are signed: the ide test expects bit 19 of the stored value to read back also in bit 20.
+Red slope for shaded lines and spans. Not written by shipped light code. Offset established by the ide test. Slope registers are signed: the ide test expects bit 19 of the stored value to read back also in bit 20. Sign rule, from the ide REX register test: bit 31 is the sign and bits 19:0 the magnitude; with bit 31 set the stored value is the 21-bit two's complement of the magnitude (bit 20 of the written value is cleared first), read back with bit 20 ORed with bit 19; bits 30:21 of a write are ignored. The GL writes m + 6144.0 for a positive slope and m - 6144.0 for a negative one. devices/rex1/shaded-drawing.md.
 
 ### Register `slopegreen`
 
-Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. Offset established by the ide test. As SLOPERED.
+Green slope. Not written by shipped light code. NetBSD names offset 0x54 of the configuration page WCLOCKREV, which is a different page. Offset established by the ide test. As SLOPERED. Same rule as SLOPERED.
 
 ### Register `slopeblue`
 
-Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED.
+Blue slope. Not written by shipped light code. Offset established by the ide test. As SLOPERED. Same rule as SLOPERED. A store at the GO alias (0x858) runs the latched command: the GL's smooth RGB lines end that way.
 
 ### Register `colorback`
 
@@ -181,11 +193,11 @@ Line stipple pattern. Not written by shipped light code. Offset established by t
 
 ### Register `lsmode`
 
-Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept.
+Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple writes 0xf0000 | (repeat - 1) << 8 | (repeat - 1): length field 15 in 19:16 (a 32-bit pattern, as the X server's (width - 17) << 16), repeat count minus one in 15:8 and 7:0, repeat 1 to 256.
 
 ### Register `aweight`
 
-Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write.
+Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write. The IRIX 6.2 GL writes 0xdb987642 once at context set-up (the IRIS GL library holds the same constant) and nothing in it reads or rewrites the register; the GL antialiases lines in software. No dither role is evidenced. devices/rex1/shaded-drawing.md.
 
 ### Register `rwaux1`
 
@@ -197,7 +209,7 @@ Second read/write auxiliary word. Not written by shipped light code. Offset esta
 
 ### Register `rwmask`
 
-Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept, and the ide graphics shell's write-mask command stores its argument here, so the low byte is the pixel write mask (the shipped header's comment calls the register readmask and writemask, in that order, without saying which half is which). The kernel's board-info routine writes it only when CONFIGMODE bits 7:4 read 0; the PROM writes it unconditionally. The X server never writes RWMASK: it keeps the write mask in XSTATE bits 23:16, but it is not the 0xff the board-info routine left: lightPcxSwap saves RWMASK into, and restores it from, the rendering node's image, a node made by lightCreateDDRN has a zero image, and the first load of a never-saved node writes 0 (platforms/lg1/colormap-install.md). The shipped desktop draws with RWMASK 0 and would be blank if hardware gated RWAUX1 host-data writes or reads (tile fill, PutImage, GetImage) with it, so it is inferred not to; what it does gate is unknown.
+Plane write mask for read/write pixel access. lightInitInfo and the PROM write 0xff (all eight planes) before the pixel-memory probe. The ide mask 0xffff shows sixteen bits kept, and the ide graphics shell's write-mask command stores its argument here, so the low byte is the pixel write mask (the shipped header's comment calls the register readmask and writemask, in that order, without saying which half is which). The kernel's board-info routine writes it only when CONFIGMODE bits 7:4 read 0; the PROM writes it unconditionally. The X server never writes RWMASK: it keeps the write mask in XSTATE bits 23:16, but it is not the 0xff the board-info routine left: lightPcxSwap saves RWMASK into, and restores it from, the rendering node's image, a node made by lightCreateDDRN has a zero image, and the first load of a never-saved node writes 0 (platforms/lg1/colormap-install.md). The shipped desktop draws with RWMASK 0 and would be blank if hardware gated RWAUX1 host-data writes or reads (tile fill, PutImage, GetImage) with it, so it is inferred not to; what it does gate is unknown. The IRIX 6.2 GL stores 0xff at context set-up, then after every draw-buffer change the window's full mask (0xf for the 4-bit window, 3 for the overlay, 0xff for the 8-bit one) or 0 when the GL draw buffer is none, and no other value; it expects the mask to gate its own draws (nonzero logic-operation nibble, no COLORAUX). Inferred; devices/rex1/gl-context-state.md.
 
 ### Register `smask1x`
 
@@ -241,7 +253,17 @@ Screen mask word 4Y. Packing as smask1x. Added in the 2026-11-23 review so the g
 
 ### Register `aux2`
 
-Second auxiliary control word. Both initialisations store 0x20000000. lightSetDestinationPlanes keeps bits 28:0 of the window's saved value, ORs in the request's top three bits and, for the window on screen, waits for the engine to go idle and stores the result here, so the top three bits select which plane group a draw reaches. The shipped header names them as one three-bit code, not as three flags: NOPLANES 0, PIXELPLANES 1, OVERLAYPLANES 2 and CIDPLANES 3 (shifted left 29). The X server's plane-group writes agree: 0x20000000 for the displayed pixel planes, 0x40000000 for the overlay clear and 0x60000000 for the window-id fill, whose value is limited to 0 to 3 (rexDrawCID) like the ide CID memory test. The ide mask 0x7fffffff shows 31 bits kept. The X server's line, point and span batches (rexLineSS, rexSegmentSS, rexPolyPoint, rexSolidFillSpans) store (group << 29) | 0xf11 at the start and plain group << 29 at the end, so the low twelve bits are used and the value 0xf11 is not a command word. The header names bits 3:0 SMASK0 to SMASK3 (screen mask enables), bits 7:4 their inside/outside polarity and bits 23:8 four CID match nibbles, so 0xf11 reads as screen mask 0 enabled, inside polarity and CID match nibble 1 set to 0xf (inferred from the names; no shipped code states the effect).
+Second auxiliary control word. Both initialisations store 0x20000000. lightSetDestinationPlanes keeps bits 28:0 of the window's saved value, ORs in the request's top three bits and, for the window on screen, waits for the engine to go idle and stores the result here, so the top three bits select which plane group a draw reaches. The shipped header names them as one three-bit code, not as three flags: NOPLANES 0, PIXELPLANES 1, OVERLAYPLANES 2 and CIDPLANES 3 (shifted left 29). The X server's plane-group writes agree: 0x20000000 for the displayed pixel planes, 0x40000000 for the overlay clear and 0x60000000 for the window-id fill, whose value is limited to 0 to 3 (rexDrawCID) like the ide CID memory test. The ide mask 0x7fffffff shows 31 bits kept. The X server's line, point and span batches (rexLineSS, rexSegmentSS, rexPolyPoint, rexSolidFillSpans) store (group << 29) | 0xf11 at the start and plain group << 29 at the end, so the low twelve bits are used and the value 0xf11 is not a command word. The header names bits 3:0 SMASK0 to SMASK3 (screen mask enables), bits 7:4 their inside/outside polarity and bits 23:8 four CID match nibbles, so 0xf11 reads as screen mask 0 enabled, inside polarity and CID match nibble 1 set to 0xf (inferred from the names; no shipped code states the effect). GL and kernel window contexts use 0xff1 in the low twelve bits (the X server's batches 0xf11): by the header's names screen mask enable bit 0 (the first pair, SMASK1X and SMASK1Y) with inside polarity bit 4, polarity bits 7:5 set on disabled masks, CID match nibble 1 = 0xf. devices/rex1/gl-context-state.md.
+
+| Bits | Field | Grade | Values | Source | Description |
+|---|---|---|---|---|---|
+| 31:29 | `planegroup` | inferred |  |  |  |
+| 23:20 | `cidmatch4` | inferred |  |  |  |
+| 19:16 | `cidmatch3` | inferred |  |  |  |
+| 15:12 | `cidmatch2` | inferred |  |  |  |
+| 11:8 | `cidmatch1` | inferred |  |  |  |
+| 7:4 | `smask_inside` | inferred |  |  |  |
+| 3:0 | `smask_enable` | inferred |  |  |  |
 
 ### Register `diagvram`
 
@@ -289,20 +311,29 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CFGSEL_RDADDR` | 0x3 | established |  | CFGSEL 3: colour map read-address register; VC1 test register (VC1 revision read). |
 | `CFGSEL_SYSCTL` | 0x6 | established |  | CFGSEL 6: VC1 SYS_CTL register; colour map command register. |
 | `CMD_BLOCK` | 0x8 | established |  | Command flag: fill or copy a rectangle rather than a line or point. Present in every rectangle and glyph command the PROM and kernel issue. |
+| `CMD_CLEAR_RGB_DITHER` | 0x3000c329 | established |  | The pixel-plane clear of the IRIX 6.2 GL: the block fill 0x329 with the RGBMODECMD and DITHER bits. The overlay clear is 0x30008329 (DITHER alone, an index colour); without GL_DITHER the words are 0x30004329 and 0x30000329. The plane group is AUX2 31:29, not these bits. |
 | `CMD_COPY_RECT` | 0x30080329 | established |  | Screen copy: fill-rectangle with LOGICSRC. The PROM's scroll routine loads the four coordinates, writes XYMOVE (offset 0x34) at its GO alias, and uses this command word; NetBSD issues the same command. |
+| `CMD_COPY_RECT_GL` | 0x30280329 | established |  | The rectangle copy of the IRIX 6.2 GL: LOGICSRC and bit 21 with the block fill 0x329 and XYMOVE = (x delta << 16) \| (y delta & 0xffff); the GO store of COMMAND runs it. The effect of bit 21 here is unknown. |
 | `CMD_COPY_RECT_STATE` | 0x80329 | established |  | Screen copy with an empty logic-operation nibble (X server rexCopyRect, rexValidateWindowPriv): CMD_COPY_RECT without bits 31:28; XYMOVE at its GO alias executes it. |
+| `CMD_DITHER` | 0x8000 | inferred |  | Command flag named DITHER in the shipped header. The GL adds it whenever GL_DITHER is enabled, for colour-index and RGB draws alike (clears 0x30008329 and 0x3000c329, spans, points, lines, triangle rows), and omits its own rounding offsets in that case. Position-dependent rounding of the colour to the pixel; the matrix and amplitude are unknown. devices/rex1/shaded-drawing.md. |
 | `CMD_DRAW` | 0x1 | established |  | Command opcode bit: draw. Value 0 is a no-op that only latches the coordinates (NetBSD and the PROM glyph code both write it through the GO alias before a glyph). |
+| `CMD_ENLSPATTERN` | 0x800 | inferred |  | Command flag named ENLSPATTERN in the shipped header: use LSPATTERN and LSMODE as the line stipple. Set by the stippled span words (0x921), the X server's stippled rectangles (0x9a9) and the GL stippled lines. |
 | `CMD_ENZPATTERN` | 0x400 | established |  | Command flag: pixels are drawn where the ZPATTERN bit is one, taken from bit 31 downward. Used for every font glyph. |
 | `CMD_FILL_RECT` | 0x30000329 | established |  | Solid rectangle: logic op 3, STOPONX, STOPONY, QUAD, BLOCK, DRAW. light_sboxfi writes it at the GO alias after loading XSTARTI, YSTARTI, XENDI and YENDI; the PROM does the same. |
 | `CMD_FILL_RECT_STATE` | 0x329 | established |  | Rectangle fill with an empty logic-operation nibble: the X server (rexDrawSolidRects, rexDrawCID, rexInitHW, rexClearOverlays) and the kernel clear (rexClear) store this at SET and take the operation, mask and colour from XSTATE; the executing store is the YENDI GO alias. The word is established; taking the operation from XSTATE is inferred. |
 | `CMD_GLYPH16` | 0x300005b9 | established |  | Glyph up to 16 pixels wide: ENZPATTERN, STOPONX, XYCONTINUE, QUAD, LENGTH32, BLOCK, DRAW. light_drawbitmap issues it, then writes the ZPATTERN GO alias (0x860) once per row with the row's bits in the high 16. |
 | `CMD_GLYPH_PIECE` | 0x300005a1 | established |  | Glyph wider than 16: every 16-pixel piece except the last uses this command (no BLOCK, no LENGTH32), with XSTART advanced by the 0x10 per piece through XENDI loads. The last piece of each row uses 0x300005a9 (adds BLOCK, which is where y advances). |
+| `CMD_GL_TRIANGLE_ROW_SHADED_MASKED` | 0x3212c5b1 | established |  | The word the IRIX 6.2 GL builds (__glRexPickTriangleProcs) for a smooth-shaded RGB triangle row with a depth mask: logic op 3, LRQPOLY, SHADECONTINUE, SHADE, DITHER, RGBMODECMD, ENZPATTERN, XYCONTINUE, LENGTH32, QUADMODE, STOPONX, DRAW. Run by the ZPATTERN GO store of each 32-pixel piece. The word is established; the effect of the shaded and LRQPOLY bits is inferred and unknown respectively. |
 | `CMD_HOSTDATA` | 0x200000 | inferred |  | Command flag; the shipped header names bit 21 COLORAUX. Set in the three pixel-memory probe commands, in PutImage (0x2000a9), GetImage (0x2000ab) and the four-pixel tile fill (0x200121); never in a fill, copy, point or glyph command. Inferred, from the name and from every use, to take the pixel word from RWAUX1 (written at its GO alias to run the draw) instead of from the colour registers, and in the read form to return pixels through RWAUX1. The X server also sets the matching XSTATE bit 28 (coloraux) in the tile fill. |
 | `CMD_HOSTDATA_READ` | 0x2000ab | established |  | Host pixel read block (X server GetImage, rexReadImage): CMD_HOSTDATA_WRITE plus opcode bit 1, AUX1 0x30; the X server reads RWAUX1 GO once per four pixels. Effect inferred. |
 | `CMD_HOSTDATA_WRITE` | 0x2000a9 | established |  | Host pixel write block (X server PutImage, rexDrawImage; rexRevADrawImage issues 0x2000a1, without BLOCK): HOSTDATA, XYCONTINUE, QUAD, BLOCK, DRAW with the X raster operation in bits 31:28. The X server then stores one 32-bit word per four pixels, first pixel in the high byte, at the RWAUX1 GO alias (0x870); the run ends at XENDI without a STOPONX flag. AUX1 is 0x28 or 0 around it. Effect inferred. |
+| `CMD_INITFRAC` | 0x40000 | unknown |  | Command flag named INITFRAC in the shipped header. Set by the ide _line (which writes no fraction register) and never by the GL, which writes XSTARTF or YSTARTF instead; read as start the minor coordinate at a default fraction. Effect unknown. devices/rex1/true-lines.md. |
 | `CMD_LENGTH32` | 0x10 | inferred |  | Command flag named LENGTH32 by NetBSD. Set with the 16-pixel glyph command 0x300005b9, clear with the other two glyph commands. Meaning (32-pixel run, or a pattern width) inferred from the pairing only. |
 | `CMD_LOGICOP_SHIFT` | 0x1c | established |  | Bits 31:28 hold the logic operation. 3 is source-replace: every command the PROM, kernel and NetBSD draw with has it (0x30000000). No other value is issued by the objects read, so the table of operations is unknown. |
 | `CMD_LOGICSRC` | 0x80000 | inferred |  | Command flag: source is the frame buffer at the XYMOVE offset (a screen copy). Used with value 0x30080329 in the PROM's scroll and NetBSD's copy. Role inferred from use. |
+| `CMD_LRQPOLY` | 0x2000000 | unknown |  | Command flag named LRQPOLY in the shipped header. Set by every triangle row command of the IRIX 6.2 GL (flat and shaded, index and RGB, masked or not) and by nothing else read. Effect unknown; a model may draw the row as if it were clear. devices/rex1/shaded-drawing.md. |
+| `CMD_LSADVLAST` | 0x1000 | inferred |  | Command flag named LSADVLAST in the shipped header. The GL ORs it with ENLSPATTERN into every stippled line. Effect unknown. |
+| `CMD_LSCONTINUE` | 0x2000 | inferred |  | Command flag named LSCONTINUE in the shipped header. The GL adds it to the later segments of a stippled line strip or loop so that the pattern carries across the joint. devices/rex1/true-lines.md. |
 | `CMD_OP_READ` | 0x2 | inferred |  | Opcode bit 1: set only in 0x30200023, the command whose execution (a read of RWAUX1's GO alias) returns pixel data in that read. Inferred to make opcode 3 a pixel read where opcode 1 (CMD_DRAW) is a write; opcode 2 is never issued. |
 | `CMD_PIXMEM_BIT16` | 0x10000 | inferred |  | Command bit 16, named COLORCOMP in the shipped header (as are AUX1 bit 6 COLORCOMPLT, bit 7 COLORCOMPEQ and bit 8 COLORCOMPGT). Set only in 0x30210021, the second probe write, which the PROM library source issues with AUX1 = 0x100 (COLORCOMPGT). Read as a colour compare: the second write (0x09090909) goes over pixels 01 08 10 20 and replaces only those whose old value compares on the selected side, so one pixel pair of the four changes. Which side a given REX revision implements is the probe: outcome 0x09091020 (data replaces the smaller old values) is what the software calls REX revision B and 0x01080909 (data replaces the larger) revision A; which sense is the intended one is unknown. |
 | `CMD_PIXMEM_READ` | 0x30200023 | established |  | Probe read: logic op 3, bit 21, QUAD, opcode bits 1 and 0. Run by reading the RWAUX1 GO alias (the PROM reads it twice and compares the second value; the kernel compares a fresh read each time). The result 0x01080909 gives outcome 0, 0x09091020 gives outcome 1, anything else 0xff. The word is established; its effect is inferred. |
@@ -310,11 +341,15 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CMD_PIXMEM_WRITE_B` | 0x30210021 | established |  | Probe write 2: as probe write 1 plus bit 16. Run by writing 0x09090909 at the RWAUX1 GO alias with AUX1 set to 0x100 just before. The word is established; its effect is inferred (one pixel pair replaced). |
 | `CMD_POINT` | 0x30000001 | established |  | Single point: logic op 3, DRAW. light_pnt2i (kernel) and the PROM both store it at SET (0x0) and then read the GO alias (0x800), which runs it, after XSTARTI and YSTARTI. |
 | `CMD_QUAD` | 0x20 | inferred |  | Command flag named QUADMODE by NetBSD. Set in every rectangle command. Role inferred from use only. |
+| `CMD_RGBMODE` | 0x4000 | inferred |  | Command flag named RGBMODECMD in the shipped header. Set by every IRIX 6.2 GL draw in an RGB window; the colour comes from the three colour registers instead of the index in COLORRED. The X server never sets it. devices/rex1/shaded-drawing.md. |
+| `CMD_SHADE` | 0x20000 | inferred |  | Command flag named SHADE in the shipped header: the slope registers advance the colour from pixel to pixel (colour of pixel i = start + i * slope). Set by the GL's shaded spans, triangle rows and lines; the ide _span, _polygon and _line use it. devices/rex1/shaded-drawing.md. |
+| `CMD_SHADECONTINUE` | 0x100000 | inferred |  | Command flag named SHADECONTINUE in the shipped header. The GL sets it only together with SHADE on rows driven from ZPATTERN words (0x5b1), the rows that arrive as several 32-pixel pieces; read as: keep the colour running from one piece into the next. devices/rex1/shaded-drawing.md. |
 | `CMD_SPAN` | 0x121 | established |  | Draw, QUAD, STOPONX with no BLOCK: one horizontal run from XSTARTI to XENDI. Used by the X server for solid spans, polygon and triangle fill (rexSolidSpans, rexSolidFillSpans, rexFillTriangle, rexFillPolygon). The line code (rexLineSS, rexSegmentSS, rexSolidZeroSeg) issues (op << 28) \| 0x121 for horizontal runs and (op << 28) \| 0x329 for vertical runs (built as 0x328 ORed into a word that holds the operation and DRAW; there is no draw-less command). Whether the run is one row and how the line variants use MINORSLOPE: unknown (not read in full). |
 | `CMD_SPAN_LSPATTERN` | 0x921 | inferred |  | CMD_SPAN plus bit 11 (0x800), used by rexStippledFS and the stippled line code together with LSPATTERN and LSMODE. Bit 11 is inferred to enable the line stipple; no other source names it. |
 | `CMD_STOPONX` | 0x100 | established |  | Command flag: the draw's x run ends at XENDI (inclusive; NetBSD notes the end is inclusive). |
 | `CMD_STOPONY` | 0x200 | established |  | Command flag: the draw's y run ends at YENDI. Set for rectangle fill and copy, clear for the glyph rows (the glyph's y advances once per pattern write). |
 | `CMD_TILE_HOSTDATA` | 0x200121 | established |  | CMD_SPAN plus HOSTDATA: tile fill, rexTileRects, with AUX1 set to 0x28 or 0x2c (by a board-info flag word being 1 or -1) and the tile words written through RWAUX1 GO. Effect inferred. |
+| `CMD_XMAJOR` | 0x40 | inferred |  | Command flag named XMAJOR in the shipped header. The IRIX 6.2 GL ORs it with STOPONX (0x140) into every line whose x extent is the larger one, and ORs STOPONY alone (0x200) for the others. Read as: step along x and accumulate MINORSLOPE into y. devices/rex1/true-lines.md. |
 | `CMD_XYCONTINUE` | 0x80 | established |  | Command flag: start the draw from the current XSTART/YSTART position the previous command left, not from XSTARTI/YSTARTI. Set in the glyph commands (0x300005a1, 0x300005a9, 0x300005b9) that the kernel and PROM follow with one pattern write per row. |
 | `CMD_ZCONTINUE` | 0x1000000 | unknown |  | Defined by NetBSD, never set by the shipped software read. |
 | `CMD_ZOPAQUE` | 0x800000 | inferred |  | Command flag named ZOPAQUE by NetBSD: with a pattern, pattern zeros paint COLORBACK instead of leaving the pixel alone. The kernel's and the PROM's glyph commands omit it (transparent background); NetBSD sets it. Inferred from NetBSD's use against the shipped commands. |

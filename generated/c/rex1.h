@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 0ce86fe79ca1668bc446ec7b53e0b69df3f37f888c97fbe3e643b82342ffaa41 */
+/* input sha256 518434fbdca28fa78298dce29af8a1fc620a5fc32905179e862a91eb5aff6684 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -45,10 +45,40 @@
  * and PutImage store 0x28 or 0x2c (DOUBLEBUF with DBLDST1, and DBLDST0 for
  * 0x2c) and its GetImage 0x30 (DOUBLEBUF with DBLSRC). The pixel-memory probe
  * stores 0x100 (COLORCOMPGT) here before its second write. ide's register test
- * reads it back whole (test mask 0x3ff).
+ * reads it back whole (test mask 0x3ff). GL contexts use 0x202
+ * (single-buffered, FRACTION1 and DITHERRANGE) or 0x222 plus buffer bits:
+ * GL_FRONT is DBLDST0 (0x226), GL_BACK DBLDST1 and DBLSRC (0x23a), both 0x22e,
+ * the pair exchanged after each swap. devices/rex1/gl-context-state.md.
  */
 /* aux1: rw32, reset unknown */
 #define REX1_AUX1_OFFSET                             0x4u /* established */
+#define REX1_AUX1_DITHERRANGE_SHIFT                  9 /* unknown */
+#define REX1_AUX1_DITHERRANGE_MASK                   0x1u
+#define REX1_AUX1_DITHERRANGE_INPLACE (REX1_AUX1_DITHERRANGE_MASK << REX1_AUX1_DITHERRANGE_SHIFT)
+#define REX1_AUX1_COLORCOMPGT_SHIFT                  8 /* inferred */
+#define REX1_AUX1_COLORCOMPGT_MASK                   0x1u
+#define REX1_AUX1_COLORCOMPGT_INPLACE (REX1_AUX1_COLORCOMPGT_MASK << REX1_AUX1_COLORCOMPGT_SHIFT)
+#define REX1_AUX1_COLORCOMPEQ_SHIFT                  7 /* inferred */
+#define REX1_AUX1_COLORCOMPEQ_MASK                   0x1u
+#define REX1_AUX1_COLORCOMPEQ_INPLACE (REX1_AUX1_COLORCOMPEQ_MASK << REX1_AUX1_COLORCOMPEQ_SHIFT)
+#define REX1_AUX1_COLORCOMPLT_SHIFT                  6 /* inferred */
+#define REX1_AUX1_COLORCOMPLT_MASK                   0x1u
+#define REX1_AUX1_COLORCOMPLT_INPLACE (REX1_AUX1_COLORCOMPLT_MASK << REX1_AUX1_COLORCOMPLT_SHIFT)
+#define REX1_AUX1_DOUBLEBUF_SHIFT                    5 /* inferred */
+#define REX1_AUX1_DOUBLEBUF_MASK                     0x1u
+#define REX1_AUX1_DOUBLEBUF_INPLACE (REX1_AUX1_DOUBLEBUF_MASK << REX1_AUX1_DOUBLEBUF_SHIFT)
+#define REX1_AUX1_DBLSRC_SHIFT                       4 /* inferred */
+#define REX1_AUX1_DBLSRC_MASK                        0x1u
+#define REX1_AUX1_DBLSRC_INPLACE (REX1_AUX1_DBLSRC_MASK << REX1_AUX1_DBLSRC_SHIFT)
+#define REX1_AUX1_DBLDST1_SHIFT                      3 /* inferred */
+#define REX1_AUX1_DBLDST1_MASK                       0x1u
+#define REX1_AUX1_DBLDST1_INPLACE (REX1_AUX1_DBLDST1_MASK << REX1_AUX1_DBLDST1_SHIFT)
+#define REX1_AUX1_DBLDST0_SHIFT                      2 /* inferred */
+#define REX1_AUX1_DBLDST0_MASK                       0x1u
+#define REX1_AUX1_DBLDST0_INPLACE (REX1_AUX1_DBLDST0_MASK << REX1_AUX1_DBLDST0_SHIFT)
+#define REX1_AUX1_FRACTION_SHIFT                     0 /* unknown */
+#define REX1_AUX1_FRACTION_MASK                      0x3u
+#define REX1_AUX1_FRACTION_INPLACE (REX1_AUX1_FRACTION_MASK << REX1_AUX1_FRACTION_SHIFT)
 
 /*
  * Packed draw state word. The kernel stores 0x03ff0000 here before each
@@ -158,7 +188,10 @@
 
 /*
  * Draw start y, fraction.  Offset established by the ide test. Mirror of
- * XSTARTF for y; a write appears in YSTART bits 26:4.
+ * XSTARTF for y; a write appears in YSTART bits 26:4. For lines the IRIX 6.2 GL
+ * writes the float 4096.0 + y at the centre of the first pixel, so the mantissa
+ * is the 12.11 start; the ide read-back shows YSTART = mantissa << 4 (12.15).
+ * devices/rex1/true-lines.md.
  */
 /* ystartf: rw32, reset unknown */
 #define REX1_YSTARTF_OFFSET                          0x20u /* established */
@@ -183,6 +216,8 @@
  * Saved x start (the x that a block-draw returns to at the start of each row,
  * inferred from its name and the context save). lightPcxSwap saves it with the
  * other window registers. Offset established by the ide test. Twelve bits kept.
+ * No routine of the IRIX 6.2 GL that draws lines, triangle rows, spans, points,
+ * clears or copies stores it. devices/rex1/true-lines.md.
  */
 /* xsave: rw32, reset unknown */
 #define REX1_XSAVE_OFFSET                            0x2cu /* established */
@@ -191,7 +226,11 @@
  * Line-draw minor-axis slope. Never written by the shipped light code for
  * rectangles, text or points. Only the name (ide) and the slot between XSAVE
  * and XYMOVE support it. Offset established by the ide test. Written and read
- * back unmasked.
+ * back unmasked. Sign rule, from the ide REX test: 17 bits are kept, bit 31 is
+ * the sign, bit 16 of a negative magnitude is ignored and the result is the
+ * 17-bit two's complement. The GL writes 256.0 + m or -256.0 + m (0x43800000
+ * plus the fraction), which gives 15 fraction bits; each step along the major
+ * axis adds it to the minor coordinate. devices/rex1/true-lines.md.
  */
 /* minorslope: rw32, reset unknown */
 #define REX1_MINORSLOPE_OFFSET                       0x30u /* established */
@@ -212,7 +251,8 @@
  * (see XYWIN). The ide mask 0x7ff07ff shows eleven bits kept per half. A qtest
  * can discriminate: write 0x00100005 at 0x34 and 0x80329 or 0x30080329 at 0,
  * then a copy from (x+16, y+5) happens when 0x800 is touched, and a rectangle
- * with YSTARTI greater than YENDI copies bottom row first.
+ * with YSTARTI greater than YENDI copies bottom row first. The IRIX 6.2 GL's
+ * rectangle copy stores the same layout with the word 0x30280329.
  */
 /* xymove: rw32, reset unknown */
 #define REX1_XYMOVE_OFFSET                           0x34u /* established */
@@ -231,7 +271,11 @@
 /*
  * Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset
  * by name order. Offset established by the ide test. COLORRED holds the red
- * channel with its integer part (COLORREDI, 8 bits) in bits 18:11.
+ * channel with its integer part (COLORREDI, 8 bits) in bits 18:11. Shaded
+ * draws: the IRIX 6.2 GL stores the float c + 6144.0, so the word is 0x45c00000
+ * + c * 2048 (bits above 19 are ignored by the chip, 9 integer and 11 fraction
+ * bits are kept) and a negative c wraps modulo 512. Whether the chip clamps or
+ * wraps out-of-range colours is unknown. devices/rex1/shaded-drawing.md.
  */
 /* colorred: rw32, reset unknown */
 #define REX1_COLORRED_OFFSET                         0x3cu /* established */
@@ -246,7 +290,7 @@
 
 /*
  * Green channel with fraction. Offset established by the ide test. 20 bits
- * kept.
+ * kept. Same format as COLORRED.
  */
 /* colorgreen: rw32, reset unknown */
 #define REX1_COLORGREEN_OFFSET                       0x44u /* established */
@@ -260,6 +304,8 @@
 
 /*
  * Blue channel with fraction. Offset established by the ide test. 20 bits kept.
+ * Same format as COLORRED. A store at the GO alias (0x84c) runs the latched
+ * command: the GL's flat RGB lines and clears end that way.
  */
 /* colorblue: rw32, reset unknown */
 #define REX1_COLORBLUE_OFFSET                        0x4cu /* established */
@@ -267,7 +313,13 @@
 /*
  * Red slope for shaded lines and spans. Not written by shipped light code.
  * Offset established by the ide test. Slope registers are signed: the ide test
- * expects bit 19 of the stored value to read back also in bit 20.
+ * expects bit 19 of the stored value to read back also in bit 20. Sign rule,
+ * from the ide REX register test: bit 31 is the sign and bits 19:0 the
+ * magnitude; with bit 31 set the stored value is the 21-bit two's complement of
+ * the magnitude (bit 20 of the written value is cleared first), read back with
+ * bit 20 ORed with bit 19; bits 30:21 of a write are ignored. The GL writes m +
+ * 6144.0 for a positive slope and m - 6144.0 for a negative one.
+ * devices/rex1/shaded-drawing.md.
  */
 /* slopered: rw32, reset unknown */
 #define REX1_SLOPERED_OFFSET                         0x50u /* established */
@@ -275,14 +327,15 @@
 /*
  * Green slope. Not written by shipped light code. NetBSD names offset 0x54 of
  * the configuration page WCLOCKREV, which is a different page. Offset
- * established by the ide test. As SLOPERED.
+ * established by the ide test. As SLOPERED. Same rule as SLOPERED.
  */
 /* slopegreen: rw32, reset unknown */
 #define REX1_SLOPEGREEN_OFFSET                       0x54u /* established */
 
 /*
  * Blue slope. Not written by shipped light code. Offset established by the ide
- * test. As SLOPERED.
+ * test. As SLOPERED. Same rule as SLOPERED. A store at the GO alias (0x858)
+ * runs the latched command: the GL's smooth RGB lines end that way.
  */
 /* slopeblue: rw32, reset unknown */
 #define REX1_SLOPEBLUE_OFFSET                        0x58u /* established */
@@ -318,14 +371,20 @@
 /*
  * Line stipple mode. Not written by shipped light code. NetBSD's
  * configuration-page name CFGMODE for offset 0x68 is a different page. Offset
- * established by the ide test. 20 bits kept.
+ * established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple
+ * writes 0xf0000 | (repeat - 1) << 8 | (repeat - 1): length field 15 in 19:16
+ * (a 32-bit pattern, as the X server's (width - 17) << 16), repeat count minus
+ * one in 15:8 and 7:0, repeat 1 to 256.
  */
 /* lsmode: rw32, reset unknown */
 #define REX1_LSMODE_OFFSET                           0x68u /* established */
 
 /*
  * Antialias weight. Not written by shipped light code. Offset established by
- * the ide test. Fully read/write.
+ * the ide test. Fully read/write. The IRIX 6.2 GL writes 0xdb987642 once at
+ * context set-up (the IRIS GL library holds the same constant) and nothing in
+ * it reads or rewrites the register; the GL antialiases lines in software. No
+ * dither role is evidenced. devices/rex1/shaded-drawing.md.
  */
 /* aweight: rw32, reset unknown */
 #define REX1_AWEIGHT_OFFSET                          0x6cu /* established */
@@ -374,7 +433,12 @@
  * a never-saved node writes 0 (platforms/lg1/colormap-install.md). The shipped
  * desktop draws with RWMASK 0 and would be blank if hardware gated RWAUX1
  * host-data writes or reads (tile fill, PutImage, GetImage) with it, so it is
- * inferred not to; what it does gate is unknown.
+ * inferred not to; what it does gate is unknown. The IRIX 6.2 GL stores 0xff at
+ * context set-up, then after every draw-buffer change the window's full mask
+ * (0xf for the 4-bit window, 3 for the overlay, 0xff for the 8-bit one) or 0
+ * when the GL draw buffer is none, and no other value; it expects the mask to
+ * gate its own draws (nonzero logic-operation nibble, no COLORAUX). Inferred;
+ * devices/rex1/gl-context-state.md.
  */
 /* rwmask: rw32, reset unknown */
 #define REX1_RWMASK_OFFSET                           0x78u /* established */
@@ -477,10 +541,35 @@
  * to SMASK3 (screen mask enables), bits 7:4 their inside/outside polarity and
  * bits 23:8 four CID match nibbles, so 0xf11 reads as screen mask 0 enabled,
  * inside polarity and CID match nibble 1 set to 0xf (inferred from the names;
- * no shipped code states the effect).
+ * no shipped code states the effect). GL and kernel window contexts use 0xff1
+ * in the low twelve bits (the X server's batches 0xf11): by the header's names
+ * screen mask enable bit 0 (the first pair, SMASK1X and SMASK1Y) with inside
+ * polarity bit 4, polarity bits 7:5 set on disabled masks, CID match nibble 1 =
+ * 0xf. devices/rex1/gl-context-state.md.
  */
 /* aux2: rw32, reset unknown */
 #define REX1_AUX2_OFFSET                             0x47a8u /* established */
+#define REX1_AUX2_PLANEGROUP_SHIFT                   29 /* inferred */
+#define REX1_AUX2_PLANEGROUP_MASK                    0x7u
+#define REX1_AUX2_PLANEGROUP_INPLACE (REX1_AUX2_PLANEGROUP_MASK << REX1_AUX2_PLANEGROUP_SHIFT)
+#define REX1_AUX2_CIDMATCH4_SHIFT                    20 /* inferred */
+#define REX1_AUX2_CIDMATCH4_MASK                     0xfu
+#define REX1_AUX2_CIDMATCH4_INPLACE (REX1_AUX2_CIDMATCH4_MASK << REX1_AUX2_CIDMATCH4_SHIFT)
+#define REX1_AUX2_CIDMATCH3_SHIFT                    16 /* inferred */
+#define REX1_AUX2_CIDMATCH3_MASK                     0xfu
+#define REX1_AUX2_CIDMATCH3_INPLACE (REX1_AUX2_CIDMATCH3_MASK << REX1_AUX2_CIDMATCH3_SHIFT)
+#define REX1_AUX2_CIDMATCH2_SHIFT                    12 /* inferred */
+#define REX1_AUX2_CIDMATCH2_MASK                     0xfu
+#define REX1_AUX2_CIDMATCH2_INPLACE (REX1_AUX2_CIDMATCH2_MASK << REX1_AUX2_CIDMATCH2_SHIFT)
+#define REX1_AUX2_CIDMATCH1_SHIFT                    8 /* inferred */
+#define REX1_AUX2_CIDMATCH1_MASK                     0xfu
+#define REX1_AUX2_CIDMATCH1_INPLACE (REX1_AUX2_CIDMATCH1_MASK << REX1_AUX2_CIDMATCH1_SHIFT)
+#define REX1_AUX2_SMASK_INSIDE_SHIFT                 4 /* inferred */
+#define REX1_AUX2_SMASK_INSIDE_MASK                  0xfu
+#define REX1_AUX2_SMASK_INSIDE_INPLACE (REX1_AUX2_SMASK_INSIDE_MASK << REX1_AUX2_SMASK_INSIDE_SHIFT)
+#define REX1_AUX2_SMASK_ENABLE_SHIFT                 0 /* inferred */
+#define REX1_AUX2_SMASK_ENABLE_MASK                  0xfu
+#define REX1_AUX2_SMASK_ENABLE_INPLACE (REX1_AUX2_SMASK_ENABLE_MASK << REX1_AUX2_SMASK_ENABLE_SHIFT)
 
 /*
  * VRAM diagnostic access. No shipped kernel or PROM runtime path touches it;
@@ -638,9 +727,15 @@
 #define REX1_CFGSEL_SYSCTL                           0x6u /* established */
 #define REX1_CMD_BLOCK                               0x8u /* established */
 /* established */
+#define REX1_CMD_CLEAR_RGB_DITHER                    0x3000c329u
+/* established */
 #define REX1_CMD_COPY_RECT                           0x30080329u
+/* established */
+#define REX1_CMD_COPY_RECT_GL                        0x30280329u
 #define REX1_CMD_COPY_RECT_STATE                     0x80329u /* established */
+#define REX1_CMD_DITHER                              0x8000u /* inferred */
 #define REX1_CMD_DRAW                                0x1u /* established */
+#define REX1_CMD_ENLSPATTERN                         0x800u /* inferred */
 #define REX1_CMD_ENZPATTERN                          0x400u /* established */
 /* established */
 #define REX1_CMD_FILL_RECT                           0x30000329u
@@ -649,12 +744,18 @@
 #define REX1_CMD_GLYPH16                             0x300005b9u
 /* established */
 #define REX1_CMD_GLYPH_PIECE                         0x300005a1u
+/* established */
+#define REX1_CMD_GL_TRIANGLE_ROW_SHADED_MASKED       0x3212c5b1u
 #define REX1_CMD_HOSTDATA                            0x200000u /* inferred */
 #define REX1_CMD_HOSTDATA_READ                       0x2000abu /* established */
 #define REX1_CMD_HOSTDATA_WRITE                      0x2000a9u /* established */
+#define REX1_CMD_INITFRAC                            0x40000u /* unknown */
 #define REX1_CMD_LENGTH32                            0x10u /* inferred */
 #define REX1_CMD_LOGICOP_SHIFT                       0x1cu /* established */
 #define REX1_CMD_LOGICSRC                            0x80000u /* inferred */
+#define REX1_CMD_LRQPOLY                             0x2000000u /* unknown */
+#define REX1_CMD_LSADVLAST                           0x1000u /* inferred */
+#define REX1_CMD_LSCONTINUE                          0x2000u /* inferred */
 #define REX1_CMD_OP_READ                             0x2u /* inferred */
 #define REX1_CMD_PIXMEM_BIT16                        0x10000u /* inferred */
 /* established */
@@ -666,11 +767,15 @@
 /* established */
 #define REX1_CMD_POINT                               0x30000001u
 #define REX1_CMD_QUAD                                0x20u /* inferred */
+#define REX1_CMD_RGBMODE                             0x4000u /* inferred */
+#define REX1_CMD_SHADE                               0x20000u /* inferred */
+#define REX1_CMD_SHADECONTINUE                       0x100000u /* inferred */
 #define REX1_CMD_SPAN                                0x121u /* established */
 #define REX1_CMD_SPAN_LSPATTERN                      0x921u /* inferred */
 #define REX1_CMD_STOPONX                             0x100u /* established */
 #define REX1_CMD_STOPONY                             0x200u /* established */
 #define REX1_CMD_TILE_HOSTDATA                       0x200121u /* established */
+#define REX1_CMD_XMAJOR                              0x40u /* inferred */
 #define REX1_CMD_XYCONTINUE                          0x80u /* established */
 #define REX1_CMD_ZCONTINUE                           0x1000000u /* unknown */
 #define REX1_CMD_ZOPAQUE                             0x800000u /* inferred */
