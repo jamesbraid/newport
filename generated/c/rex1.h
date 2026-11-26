@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 f4c7a14d937a278b669f0b0f624b6e94677fee87c26dbffcd314b845c213e64f */
+/* input sha256 d44625f7853915445d34b6f941bc7509151e86b1e64297b34b92a416a3b77abb */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -52,9 +52,10 @@
  * read returns them. A model run that returned the whole word made the PROM
  * print 'Graphics diagnostic FAILED' on the Entry; that comes from a trace of
  * our own model, not from a board. A qtest can write 0x55555555 at 0x004 and
- * read 0x155. GL contexts use 0x202 (single-buffered, FRACTION1 and
- * DITHERRANGE) or 0x222 plus buffer bits: GL_FRONT is DBLDST0 (0x226), GL_BACK
- * DBLDST1 and DBLSRC (0x23a), both 0x22e, the pair exchanged after each swap.
+ * read 0x155. The IRIS GL library's context set-up stores 2 (FRACTION1 alone).
+ * GL contexts use 0x202 (single-buffered, FRACTION1 and DITHERRANGE) or 0x222
+ * plus buffer bits: GL_FRONT is DBLDST0 (0x226), GL_BACK DBLDST1 and DBLSRC
+ * (0x23a), both 0x22e, the pair exchanged after each swap.
  * devices/rex1/gl-context-state.md.
  */
 /* aux1: rw32, reset unknown */
@@ -397,7 +398,10 @@
  * the ide test. Fully read/write. The IRIX 6.2 GL writes 0xdb987642 once at
  * context set-up (the IRIS GL library holds the same constant) and nothing in
  * it reads or rewrites the register; the GL antialiases lines in software. No
- * dither role is evidenced. devices/rex1/shaded-drawing.md.
+ * dither role is evidenced, and no shipped software varies it or issues the
+ * antialias opcodes with it (the IRIS GL library writes the same constant at
+ * set-up). Its eight nibbles fall steadily (13, 11, 9, 8, 7, 6, 4, 2).
+ * devices/rex1/shaded-drawing.md.
  */
 /* aweight: rw32, reset unknown */
 #define REX1_AWEIGHT_OFFSET                          0x6cu /* established */

@@ -1,6 +1,6 @@
 """generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 defs-gen 3
-input sha256 f4c7a14d937a278b669f0b0f624b6e94677fee87c26dbffcd314b845c213e64f
+input sha256 d44625f7853915445d34b6f941bc7509151e86b1e64297b34b92a416a3b77abb
 REX1 raster engine on the Indigo Entry graphics board (LG1)"""
 
 UNIT = 'rex1'
