@@ -34,7 +34,6 @@ Owning files: [shaded drawing](../devices/rex1/shaded-drawing.md), [GL context s
 
 - The effect of `SHADECONTINUE` (the reading "continue the colour between 32-pixel pieces" is a name-based inference) and of `INITFRAC`.
 - The roles of `AUX1` bits 1:0 (`FRACTION`) and 9 (`DITHERRANGE`), which every GL context sets and the X server never does, and of `AWEIGHT`, which the GL writes once and nothing reads.
-- How the `CIDMATCH` nibbles of `AUX2` act.
 
 Routes tried: every `__glRex*` routine for the span, triangle-row, point, line, clear and copy paths in the 6.2 `libGLcore.so` of the IP20LG1MC arch, the constants of the 6.2 `libgl.so`, the ide diagnostics' REX, VRAM and pattern tests and `minigl.c` (source tree), the 6.2 `lg1.a` context code, `lg1mc.so` for the command words, and the public Linux Newport header by name (the file body was not retrievable). Next: the IRIS GL (`libgl.so`) polygon and line code for the same board, which was not read beyond its constants; the 5.3 and 6.5 builds of the same library if the media hold one for this board; published Newport (REX3) documentation, used only for names unless the register layouts are shown to match.
 

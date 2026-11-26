@@ -57,7 +57,7 @@ the board page read them as independent bits; corrected with this page). **Estab
 
 The window-id planes are what the `AUX2` low bits use: **[hdr]** names bits 3:0 screen mask 0 to 3 enable, bits 7:4 their polarity
 and bits 23:8 four 4-bit CID match fields, so 0xf11 (written around the X server's line, point and span batches) reads as screen mask 0
-on, inside polarity and CID match 1 equal to 0xf (**inferred**; no shipped code states the effect). A model that keeps one plane per
+on, inside polarity and CID match 1 equal to 0xf (**inferred**; no shipped code states the effect, but the kernel builds a one-hot CID nibble for windows that clip by CID, see [GL context state](../../devices/rex1/gl-context-state.md#smask1-and-aux2)). A model that keeps one plane per
 group and writes only the group the code names covers every shipped sequence.
 
 ## DIDs 6 to 8 and bank 3
