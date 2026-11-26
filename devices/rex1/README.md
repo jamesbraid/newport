@@ -212,10 +212,10 @@ probe with 0x033c0000 at XSTART, (b) present busy = 0, (c) return a sensible boa
 (d) accept the colour map and VC1 writes without error. The kernel additionally requires the VC1 revision to be nonzero or it
 skips the VC1 initialisation.
 
-## The 4.0.5G power-on test (established [binary]; 4.0.5D has none)
+## The 4.0.5G power-on test (code reading established [binary]; 4.0.5D has none)
 
-PROM 4.0.5G (070-8116-005) runs a register test on the Entry board before the System Maintenance Menu; 4.0.5D does not (its image has no "REX power on test failed" text and its Entry
-boot has no graphics diagnostic failure). The dispatch is at `0xbfc036c0`: `0xbfc037ac` resets the graphics slot and probes for an Express (`0xbfc124b0`) then an Entry (`0xbfc131d0`); an Entry runs the routine at
+PROM 4.0.5G (070-8116-005) runs a register test on the Entry board before the System Maintenance Menu; 4.0.5D does not (its image holds neither the 0x55555555 pattern nor the "REX power on test failed" text, and its Entry
+boot in the model shows no graphics diagnostic failure). The dispatch is at `0xbfc036c0`: `0xbfc037ac` resets the graphics slot and probes for an Express (`0xbfc124b0`) then an Entry (`0xbfc131d0`); an Entry runs the routine at
 `0xbfc05f88`, which returns -1 on any mismatch, and a negative result makes the caller report "Graphics diagnostic *FAILED*, Check or replace: Graphics board". The detailed message ("REX power on test failed",
 "VC1 power on test failed") is printed only at a verbose level.
 
@@ -240,8 +240,8 @@ The REX part (`0xbfc05f88` to `0xbfc06264`) runs twice, with the pattern 0x55555
 | ZPATTERN | 0x060 | 0x060 | 0xffffffff | 0 |
 
 **What the model does wrong, and the one gap (observed).** A model run of 4.0.5G with the Entry board fitted read back every row correctly except AUX1, which the model stores as a full 32-bit word (read
-0x55555555 and 0xaaaaaaaa, expected 0x155 and 0x2aa), so the REX part fails and the PROM prints "Graphics diagnostic *FAILED*". The cure is a ten-bit AUX1. **The failure is not expected hardware behaviour:** a working board
-passes this test; the model is missing the register width. The run stopped there, so the routine's second and third parts did not run. They are read, not observed, and **Unverified**: a VC1 read-back test
+0x55555555 and 0xaaaaaaaa, expected 0x155 and 0x2aa), so the REX part fails and the PROM prints "Graphics diagnostic *FAILED*". The cure is a ten-bit AUX1. **The failure is not expected hardware behaviour (inferred):** the PROM shipped on working boards,
+which must pass this test; the model is missing the register width. Which rows matched, and that AUX1 alone differed, come from a trace of our own model's accesses, not from a board. The run stopped there, so the routine's second and third parts did not run. They are read, not observed, and **Unverified**: a VC1 read-back test
 (helper `0xbfc07400`, internal registers 0x00, 0x20, 0x22, 0x24, 0x26, 0x27, 0x28, 0x40, 0x42, 0x44, 0x45, 0x60, 0x61, 0x62 and window 1, with the pattern masked to a width the helper `0xbfc072b0` looks up: 16 bits
 for 0x00, 0x20, 0x40, 0x42 and window 1; 11 for 0x22 and 0x28; 12 for 0x24; 8 for 0x26, 0x27, 0x44 and 0x60 to 0x62; 3 for 0x45), then a DAC test (`0xbfc07660`). If the model keeps the VC1 registers as plain bytes
 the 11, 12 and 3-bit rows will fail it next; a trial run with AUX1 fixed settles it.
