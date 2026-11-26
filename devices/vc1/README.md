@@ -87,6 +87,52 @@ consecutive bytes as one 16-bit big-endian value is inferred from the order they
 
 The X server's different values for registers 0x40 to 0x45 and 0x60 to 0x63, the mode-word layout and how DIDs pick a colour-map bank are on [display IDs and the mode table](did-xmap.md); the cursor glyph format and colours are on [the cursor page](cursor.md).
 
+## Read-back widths (the PROM and ide power-on tests)
+
+Which bits of each register a working board must keep, as the shipped read-back tests expect them. **Established** as what the
+software checks: read in full from the 4.0.5G PROM (070-8116-005; the test at 0xbfc06264 to 0xbfc063c8, its width table at
+0xbfc072b0, the write-and-compare routine at 0xbfc07400) and from the ide diagnostic source for the board
+(`stand/arcs/ide/fforward/graphics/LIGHT/vc1.c`, functions `vc1_length` and `test_vc1_register`, **[source]**; the PROM build of the
+test is `lg1_pon` in `rex.c` of the same directory). The binary and the source agree on every width and on the register order. The
+4.0.5D PROM runs no such test (its image has no "VC1 power on test failed" text). What the chip does with bits it does not keep
+is **inferred**: both tests expect the bits above the width to read back 0 after ones were written to them, and software never
+reads them otherwise.
+
+| Offset (window 0) | Name from the shipped header | Bits kept | Expected read-back for 0x5555 / 0xaaaa |
+|---|---|---|---|
+| 0x00 | VID_EP | 16 | 0x5555 / 0xaaaa |
+| 0x20 | CUR_EP | 16 | 0x5555 / 0xaaaa |
+| 0x22 | CUR_XL | 11 | 0x555 / 0x2aa |
+| 0x24 | CUR_YL | 12 | 0x555 / 0xaaa |
+| 0x26 | CUR_MODE | 8 | 0x55 / 0xaa |
+| 0x27 | CUR_BX | 8 | 0x55 / 0xaa |
+| 0x28 | CUR_LY | 11 | 0x555 / 0x2aa |
+| 0x40 | DID_EP | 16 | 0x5555 / 0xaaaa |
+| 0x42 | DID_END_EP | 16 | 0x5555 / 0xaaaa |
+| 0x44 | DID_HOR_DIV | 8 | 0x55 / 0xaa |
+| 0x45 | DID_HOR_MOD | 3 | 0x5 / 0x2 |
+| 0x60 | BLKOUT_EVEN | 8 | 0x55 / 0xaa |
+| 0x61 | BLKOUT_ODD | 8 | 0x55 / 0xaa |
+| 0x62 | AUXVIDEO_MAP | 8 | 0x55 / 0xaa |
+| window 1, offset 0 (entry 0 of the display-mode table) | MODE_REG_0_E | 16 | 0x5555 / 0xaaaa |
+
+How the test touches a register, so a model can pass it byte for byte: set the address counter to the offset (select 5 high byte,
+select 4 low byte), select the window, write the high byte of the 16-bit pattern then the low byte (two consecutive bytes, so the
+second lands at offset + 1), set the address again, select the window, and read one byte, or two for a width above 8, each with the
+usual GO read then plain read. A 16-bit register compares both bytes as one big-endian value against `pattern & ((1 << width) - 1)`;
+an 11 or 12-bit register therefore keeps only bits 2:0 or 3:0 of its first (high) byte; a register of 8 bits or less compares its own byte
+only, which holds the pattern's high byte (equal to the low byte for these patterns). For CUR_XL the test also writes the same two bytes at 0x24 before
+reading 0x22 back. The PROM runs the list twice, with 0x5555 and 0xaaaa, in the order above; a mismatch makes the board test return failure and the System Maintenance Menu
+reports "Graphics diagnostic *FAILED*". The ide full test (`test_vc1`) adds the patterns 0 and 0xffff and every entry of window 1: 64 sixteen-bit entries,
+offsets 0x00 to 0x3e (the "even" half, `MODE_REG_n_E`) and 0x40 to 0x7e (the "odd" half, `MODE_REG_n_O`), all 16 bits wide. Registers the test does not
+list (0x02 to 0x14, 0x2a to 0x30, 0x46 to 0x52, 0x63 and above) have no expected width.
+
+May the model take these as software expectations? Yes: a register file that stores each byte masked to the width above (the second byte written
+at offset + 1 also being stored, since the test writes a byte there) passes the PROM test, and storing plain bytes does not (11, 12 and 3-bit rows
+fail). They are what the diagnostics expect of a working board, not measured behaviour, and the patterns (0x5555, 0xaaaa, 0, 0xffff) have equal bytes, so the
+8-bit rows cannot tell a byte from a masked byte. A qtest can discriminate: write 0x55 then 0x55 at
+0x22 through select 0 and read one byte back, expecting 0x05; at 0x45, write 0x55 and expect 0x05; at 0x24, write 0xaa 0xaa and expect 0x0a.
+
 After the registers, `initVC1` clears the first 0x40 bytes of the display-mode table through window 1 (address counter at 0;
 see below). `initLg1Cursor` does the cursor setup: clears 0x100 bytes of SRAM at 0x3000 (the cursor glyph
 area, all zero so no cursor shape), then sets registers 0x20 to 0x27 as shown.
@@ -122,8 +168,7 @@ exposure for the Express family only).
 Window 1 holds the per-pixel display-mode lookup: entries of two bytes, entry n at address 2 * n. **Established**:
 `lightSetDisplayMode` writes address 0 (high) / 2n (low) through selectors 5 and 4, then two bytes (high, low of a 16-bit
 mode value) through selector 1; `light_read_displaymodes` reads 0x40 entries (0x80 bytes); `initVC1` writes 0x40 zero bytes after setting
-the address to 0 (32 entries), and the retrace handler walks 32 swap slots. How many entries the chip has:
-**unknown**. The first 32 start out zero, and the mode value's meaning (which buffer, which colour-map bank) is
+the address to 0 (32 entries), and the retrace handler walks 32 swap slots. How many entries the chip has: the ide read-back test ([widths](#read-back-widths-the-prom-and-ide-power-on-tests)) expects 64, all 16 bits wide (software expectation); more than 64: **unknown**. The first 32 start out zero, and the mode value's meaning (which buffer, which colour-map bank) is
 **unknown**, except one bit: the kernel's retrace handler (`lightRetraceHandler`, `light_retrace.o`) sets or clears bit 1 of the
 second byte of the entry that a pending swap-buffer request names, once the request counts down to zero at vertical retrace.
 Bit 1 of that byte selects between the two image buffers of a double-buffered window, **inferred** from its use only for

@@ -241,10 +241,10 @@ The REX part (`0xbfc05f88` to `0xbfc06264`) runs twice, with the pattern 0x55555
 
 **What the model does wrong, and the one gap (observed).** A model run of 4.0.5G with the Entry board fitted read back every row correctly except AUX1, which the model stores as a full 32-bit word (read
 0x55555555 and 0xaaaaaaaa, expected 0x155 and 0x2aa), so the REX part fails and the PROM prints "Graphics diagnostic *FAILED*". The cure is a ten-bit AUX1. **The failure is not expected hardware behaviour (inferred):** the PROM shipped on working boards,
-which must pass this test; the model is missing the register width. Which rows matched, and that AUX1 alone differed, come from a trace of our own model's accesses, not from a board. The run stopped there, so the routine's second and third parts did not run. They are read, not observed, and **Unverified**: a VC1 read-back test
-(helper `0xbfc07400`, internal registers 0x00, 0x20, 0x22, 0x24, 0x26, 0x27, 0x28, 0x40, 0x42, 0x44, 0x45, 0x60, 0x61, 0x62 and window 1, with the pattern masked to a width the helper `0xbfc072b0` looks up: 16 bits
-for 0x00, 0x20, 0x40, 0x42 and window 1; 11 for 0x22 and 0x28; 12 for 0x24; 8 for 0x26, 0x27, 0x44 and 0x60 to 0x62; 3 for 0x45), then a DAC test (`0xbfc07660`). If the model keeps the VC1 registers as plain bytes
-the 11, 12 and 3-bit rows will fail it next; a trial run with AUX1 fixed settles it.
+which must pass this test; the model is missing the register width. Which rows matched, and that AUX1 alone differed, come from a trace of our own model's accesses, not from a board. The run stopped there, so the routine's second and third parts did not run. They are read, not observed. The VC1 read-back test (helper `0xbfc07400`, width table `0xbfc072b0`, 14 internal registers and entry 0 of window 1, each written
+with 0x5555 and 0xaaaa) was read in full against the 4.0.5G image and the ide source and its widths are listed and graded on the
+[VC1 page](../vc1/README.md#read-back-widths-the-prom-and-ide-power-on-tests): a model that keeps the VC1 registers as plain bytes fails
+the 11, 12 and 3-bit rows. The DAC test after it (`0xbfc07660`, called with patterns 0x55 and 0xaa) was not read in full and is **Unverified**.
 
 ## What IRIX does after init
 
