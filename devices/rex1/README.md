@@ -98,8 +98,7 @@ ZOPAQUE (NetBSD only). After each `ZPATTERN` write y moves one row toward `YENDI
 at the screen edge is unknown.
 
 The copy: source x and y are the destination's plus the `XYMOVE` halves (source minus destination, settled by the X server's copy routine, which also runs the engine from `YSTARTI` to a smaller `YENDI` when the source is above the destination); the copy direction is chosen by software so
-overlapping scrolls work (the PROM and NetBSD arrange start and end y so that the engine runs the right way), so the model needs
-overlap-safe copying only for those.
+overlapping copies work (the PROM and NetBSD arrange start and end y so that the engine runs the right way; the X server's window move sends start above end on either axis and orders its boxes as well, see [window moves](../../platforms/lg1/window-move.md)), so the model must walk each axis from start toward end, not in ascending order, and read source pixels as they stand.
 
 ### Y origin
 

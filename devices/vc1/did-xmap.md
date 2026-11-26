@@ -147,6 +147,8 @@ and is not tied to bank 0 as this page first said ([how DIDs and mode words are 
 
 Question: after a rendering (GL) window is dragged, does the guest rewrite the display-ID tables for the area it left, and when? Answer: yes, once, at the end of the move request: after the pixels are copied and the vacated area is painted, from the post-validation hook. (An earlier version of this section said before the copy; that came from taking validation kind 3 for the move kind, and kind 3 is unmap, see below.) Tags as above; addresses are 6.2 `lg1mc.so` (hash in [irix-files.md](../../references/irix-files.md)). The slot numbers are byte offsets in the screen record `rexScreenRec` (data 0x5e5724d0); each slot's function was read from the data.
 
+The pixel copy and the exposure fills that come before the table rewrite are on [how the X server moves a window](../../platforms/lg1/window-move.md).
+
 **The slots (established).** 188 `nfbPositionWindow`; 204 `nfbLayerValidateTreeSL` (wrapped by `rrmValidateTree`, 0x5e4a15d8); 208 `nfbPostValidateTree`; 212 `miWindowExposures`; 216 `nfbPaintWindowBackground`; 224 `rexCopyWindow`; 468 `nfbMarkOverlappedWindows`; 480 `nfbMoveWindow`; 492 `miHandleValidateExposures`. The board's own per-screen table `rexScrnPriv` (data 0x5e5723c4) holds `rexValidateVisual` (0x5e489fc0) at offset 108.
 
 **Order for a mapped window moved by a pure move (`nfbMoveWindow`, 0x5e4a5224, established; the validation kind is 2).**
