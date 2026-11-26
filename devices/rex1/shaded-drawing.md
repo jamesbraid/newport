@@ -1,6 +1,6 @@
 # REX1 shaded drawing: what the IRIX 6.2 GL sends for colour, dither and shaded spans
 
-How the OpenGL library for the Indigo Entry board colours pixels: the command bits, the colour registers, the slope registers and the dither flag. The register list is in [registers.md](registers.md), the engine model on the [REX1 page](README.md), the buffer, mask and clip state the same library sets up on GL context state, and lines on true lines.
+How the OpenGL library for the Indigo Entry board colours pixels: the command bits, the colour registers, the slope registers and the dither flag. The register list is in [registers.md](registers.md), the engine model on the [REX1 page](README.md), the buffer, mask and clip state the same library sets up on [GL context state](gl-context-state.md), and lines on true lines.
 
 Grades follow [AGENTS.md](../../AGENTS.md). Tags: **[binary]** read in a shipped object with its address; **[source]** the IRIX source tree, by path; **[hdr]** a name from the shipped header `sys/lg1hw.h` (6.2 copy, revision 1.28; the names the Linux Newport header also carries are public); **[inferred]** says what it rests on. Everything here is what *software expects*: no register was measured on a board, and the library's own arithmetic is the only evidence for what the chip does with the values it is given.
 
