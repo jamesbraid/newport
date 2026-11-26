@@ -61,3 +61,23 @@ Public header `usr/include/sys/lg1hw.h` and `lg1.h` from the public IRIX 4.0.5F 
 The IRIX source tree files cited by path are `irix/kern/ml/IP20.c`, `irix/kern/sys/IP20.h`, `stand/arcs/lib/libsk/graphics/LIGHT/lg1_init.c`, `lg1_tp.c`,
 `stand/arcs/lib/libsk/graphics/htport.c`, `stand/arcs/lib/libsc/gui/background.c`, `stand/arcs/include/style.h`, `stand/arcs/ide/fforward/graphics/LIGHT/` (`cid.c`, `maps.h`, `minigl.c`, `rex.c`)
 and `stand/arcs/ide/fforward/int2/int2_mask.c`, from the 6.5.7 tree, plus `6.5.5/f/root/usr/include/sys/gfx.h` from the 6.5.5 tree.
+
+## IRIX 6.2 install media (shaded-drawing pages, 2026-11-25)
+
+Two SGI-labelled CD images, each a volume header and an EFS filesystem holding a `dist/` tree of inst products (the install media of IRIX 6.2, IP20 Version 03131015 per the installed system's banner): part 1 of 2 (`525e068e82781b2c12ee6b58de11420f824741c3161db8a7c94808029bbe1928`) holds `eoe` and `x_eoe`, part 2 of 2 (`a6aaf159be8b976b50a64338ebc3881958feae1ca49b009ae2f2d41b92eb4d8c`) holds `sysadmdesktop`. The product archives use the record format described for 5.3 above: a record is found by its length-prefixed path, unique in each archive, and a non-zero `cmpsize` is `compress` format.
+
+| Item | SHA-256 |
+|---|---|
+| `usr/gfx/arch/IP20LG1MC/libGLcore.so` (`eoe.sw.gfx`; the OpenGL renderer for the Entry board, read) | `d5e47aaed871a2dfe3b3da3d8f8a6e13719c102d368b858195026305351ca5c2` |
+| `usr/gfx/arch/IP20LG1MC/libgl.so` (IRIS GL, constants only) | `d14e7192c8ec6272109a8f79b2560b39de45d0a714106d7325c3518d1742b189` |
+| `usr/gfx/arch/IP20LG1MC/libGL.so` (the GLX client; not read) | `e635682e3e76f12b59cf11a0c99d954e2c4e358436c38a3b6b48b5ba0d71eda8` |
+| `usr/cpu/sysgen/IP20boot/lg1.a` (6.2; context-default code) | `f6d177e2eb2a05df387c6d31a75b8a77e6473148dec08001764dca275e3a2c00` |
+| `usr/cpu/sysgen/IP20boot/kernel.o` (6.2; searched for constants only) | `a86e87fd3d08a42d7c2bfd2df2d6a7b493d64cc921936bddfd88b2a60e45cdb3` |
+| `usr/include/sys/lg1hw.h` (revision 1.28, names only) | `150090a9091397f445c47d01e6fc6d9c2aaea28efc25ea6930bbe348c6564ac8` |
+| `usr/include/sys/lg1.h` | `545597703529772b2a28735a71bec2097513812349c51f649b7bae1c6c255cd8` |
+| `usr/lib/X11/dyDDX/lg1mc.so` (`x_eoe.sw.Server`; command words and immediates) | `fbe0ff5bce91be67f788e136b421634e8e97395d15dec153081c3ec978d9ce2d` |
+| `usr/gfx/arch/GENERIC/Xsgi` (strings only) | `cd2d1757c46b3dbd2f2dc811f5af0d910c36580a396b8016e1d79a176809a22f` |
+| `usr/Cadmin/bin/clogin` (`sysadmdesktop.sw.clients`, part 2; symbols and strings) | `8d63080744252754cba0eb662e8dcdda1c6f8c2fead258705e809e92182d4888` |
+| `usr/lib/X11/app-defaults/Clogin` | `d9042ebd8b3ede503be017a6f19d8fb26af5e7b440b35b0c9d3a5ff72791345e` |
+
+The 6.2 objects are 32-bit big-endian MIPS ELF (the shared objects are stripped but export their routine names). The IRIX source files cited by the shaded-drawing pages are `stand/arcs/ide/fforward/graphics/LIGHT/minigl.c`, `rex.c`, `vram.c` and `rexpatterns.c`, from the 6.5.7 tree.
