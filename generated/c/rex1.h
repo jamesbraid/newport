@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 05dfac2d5ca1042075a14e08ba05f3260998429934295e343602a66b2e0ed4de */
+/* input sha256 e15885f06afd30bde7804061b7a3c27c7aa8a84bbf11526ff8b3c47b0e47276c */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -397,9 +397,9 @@
  * length of 16 or less, and a 16-bit GL pattern is sent as a doubled 32-bit one
  * with field 15); bits 15:8 and 7:0 are written equal by every software that
  * sets them; 7:0 is read as the live down counter and 15:8 as the repeat factor
- * it reloads from (inferred: the sibling REX3 chip's published LSMODE has its
- * counter and factor at the same positions, the writers load both bytes alike,
- * and the wide-line code, which issues the stipple-save opcode and then
+ * it reloads from (inferred: the sibling REX3 chip's published LSMODE (page 27)
+ * has its counter and factor at the same positions, the writers load both bytes
+ * alike, and the wide-line code issues the stipple-save opcode and then
  * rewrites this register; no REX1 text states it); a repeat value n from 1 to
  * 255 holds each pattern bit for n pixels (inferred from the IRIS GL lsrepeat
  * contract and the OpenGL factor). A value of 0 is used as one pixel per bit by
