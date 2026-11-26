@@ -77,4 +77,4 @@ background.
 
 - Whether the board pads GetImage rows to a whole word, and what happens when XSTARTI is not a multiple of four (answer: a data sheet
   for REX1, or the REX3 equivalent, if the two share the host-data unit; they are not claimed to).
-- The pattern bit order, and how `LSMODE` encodes a width other than 32.
+- The pattern bit order (bit 31 first is inferred; [LSMODE](true-lines.md#lsmode-length-and-repeat) gives the length encoding, 17 to 32 as field + 17, and the repeat count).

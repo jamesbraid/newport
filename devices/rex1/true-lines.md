@@ -44,11 +44,54 @@ The colour routine runs last, from the jump at the end of `__glRexLine_asm` (its
 
 ## Stippled lines
 
-For a stipple, `__glRexPickLineProcs` loads `LSPATTERN` (0x64) with the 16-bit GL stipple, bit-reversed through a table and written into both halves of the word, and `LSMODE` (0x68) with `0xf0000 | n << 8 | n`, where n is the low 8 bits of the GL repeat factor (clamped to 1..256 by `glLineStipple`, so 256 is stored as 0 and the field is a count with 0 meaning 256; there is no subtraction of one); the command gets `ENLSPATTERN` and `LSADVLAST`. The pattern length field (bits 19:16) is 0xf, which agrees with the X server's `LSMODE` = (width - 17) << 16 for a 32-bit width ([getimage and stipple](getimage-and-stipple.md)): the 16-bit pattern is presented as a 32-bit one, repeated. Within a connected run each later segment adds `LSCONTINUE` once the first has drawn, so the pattern carries across the joint. **Established** for the stores; the lookup table is the 256-entry byte bit-reversal (its first entries read 0x00, 0x80, 0x40, 0xc0), so GL stipple bit 0 lands in bit 15 and bit 31 of `LSPATTERN`.
+For a stipple, `__glRexPickLineProcs` loads `LSPATTERN` (0x64) with the 16-bit GL stipple, bit-reversed through a table and written into both halves of the word, and `LSMODE` (0x68) with `0xf0000 | n << 8 | n`, where n is the low 8 bits of the GL repeat factor (clamped to 1..256 by `glLineStipple`, so 256 is stored as 0; there is no subtraction of one); the command gets `ENLSPATTERN` and `LSADVLAST`. The pattern length field (bits 19:16) is 0xf, which agrees with the X server's `LSMODE` = (width - 17) << 16 for a 32-bit width ([getimage and stipple](getimage-and-stipple.md)): the 16-bit pattern is presented as a 32-bit one, repeated. What the length and repeat fields mean is under [LSMODE](#lsmode-length-and-repeat). Within a connected run each later segment adds `LSCONTINUE` once the first has drawn, so the pattern carries across the joint. **Established** for the stores; the lookup table is the 256-entry byte bit-reversal (its first entries read 0x00, 0x80, 0x40, 0xc0), so GL stipple bit 0 lands in bit 15 and bit 31 of `LSPATTERN`.
 
 **Which bit a line draws first: bit 31 (MSB first), inferred.** Three software facts agree and none contradicts. (1) OpenGL draws stipple bit 0 first (the Khronos `glLineStipple` reference page: "Bit zero is used first"), and the GL reverses the bits through a table before storing them, which puts the first bit at the top of each half. (2) The X server's dashed-line code (`rexLineSD`, 6.2 `lg1mc.so` 0x5e51ff40) rotates its pattern word left by the distance already covered (mod the pattern width) before it stores `LSPATTERN`; a left rotation by k moves the bit that is k places below the top to the top, so the top bit is the one drawn at the start of the piece. (3) The `ZPATTERN` word of the glyph and triangle-row paths also starts at bit 31 ([REX1 page](README.md)). No manual states it, so it stays inferred.
 
 **Phase across a joint (inferred).** The X server loads a pattern with a store to `LSPATTERN` followed by a `COMMAND` GO store of 0 (a no-op command: 0x5e5200d4 and 0x5e5200dc), once at the start and again before every later piece of a dashed line, each time with the pattern rotated for the distance skipped (clipped parts are skipped by software). Every draw it then issues carries `ENLSPATTERN`, `LSADVLAST` and `LSCONTINUE` (0x3a01 for the vertical runs, 0x3941 for the horizontal ones, ORed with the operation in 31:28 and `LSOPAQUE` for opaque dashes: 0x5e520314 and 0x5e5205fc). The reading that fits both clients: the chip keeps a working stipple position apart from `LSPATTERN`; the no-op GO store after a `LSPATTERN` write loads that position from `LSPATTERN` and `LSMODE` (bit 31 next); a draw without `LSCONTINUE` loads it from `LSPATTERN` at its start; a draw with `LSCONTINUE` carries on from where the previous draw left it. The GL's first segment of a run has no `LSCONTINUE` and starts at bit 31, and each later segment has it, so the pattern runs on across the joint with no repeat: the diamond-exit rule above gives every segment an exclusive end, so the joint pixel belongs to one segment only. The position moves by one bit for each pixel the draw writes, in the direction the draw runs from the start register to the end register (the X server rotates for either direction by the distance from the piece's own start; that part was read, not traced in full). What `LSADVLAST` does is unknown: both clients always set it with `ENLSPATTERN`, the ide tests never use a stipple, and the name suggests the position steps past the last pixel.
+
+## LSMODE: length and repeat
+
+Read 2026-11-26. Every writer in the shipped software is here; all are **established** as stores, and what the fields do is **inferred** from the values written and
+from what each client does around them. No software reads `LSMODE` back except the kernel's window context switch (`lightPcxSwap`, save and restore) and the ide register test
+(write, read back, 20 bits kept).
+
+| Writer | Value | Source |
+|---|---|---|
+| X server, dashed lines (`rexLineSD`, 0x5e51ff40, store at 0x5e5200c8) | `((len - 17) << 16) \| 0x0101`, len 17 to 32 | 6.2 `lg1mc.so` |
+| X server, stippled fills (`rexStippledFS`, 0x5e4ae6f4; `rexStippledFillRects`, 0x5e49ed40) | `(w - 17) << 16`, repeat bytes 0 | 6.2 `lg1mc.so` |
+| OpenGL, stippled line set-up (`__glRexPickLineProcs` +0x2a4; reloaded by `__glRexWideLine_asm` for each copy of a wide line) | `0xf0000 \| n << 8 \| n`, n = factor & 0xff | 6.2 `libGLcore.so` |
+| IRIS GL `lsrepeat` (`gl_i_lsrepeat`, `gl_c_lsrepeat`, `_popattributes`, and reloads in `_C_line_alpha`, `_C_line_zb`, `_C_line_sm`, `_C_line_sm_zb`, `__xwide`) | `0xf0000 \| n << 8 \| n`, n clamped to 1 to 255 | 6.2 `libgl.so` |
+| ide REX register test | test patterns, mask 0xfffff | `stand/arcs/ide/fforward/graphics/LIGHT/rex.c`, **[source]** |
+| 4.0.5G PROM | none: no store at 0x68 or 0x868 from a non-stack base in the whole image | 070-8116-005 |
+
+IRIS GL `setlinestyle` writes only `LSPATTERN` (the style's 32-bit word); `LSMODE` is written by `lsrepeat` and the reloads. `deflinestyle` builds the word by reversing the 16-bit
+mask and storing it in both halves.
+
+**Length: field + 17, from 17 to 32 bits [inferred, from every writer agreeing].** The X server stores `len - 17` for the whole range 17 to 32, and it builds
+every pattern it sends so that the length is in that range: the dash builder at 0x5e4a053c adds up the dash lengths, hands the line to software when the total is above 32, and
+otherwise doubles the pattern (12 becomes 24, 5 becomes 20, 16 becomes 32) until it is at least 17 bits, shifts it to the top of the word, and rotates it left by the dash offset. Both GL libraries
+send a 16-bit stipple as two copies in one 32-bit word with field 15. Nothing writes a length of 16 or below, and a length of "field + 1" would make field 15 sixteen bits long, which
+contradicts the X server's 32-bit dashes. The sibling Newport ide command uses the same rule (`(n - 17)` for n 17 to 32, placed in a higher field there), which is a hint, not evidence for this chip.
+The pattern is top-aligned: bit 31 is the first pixel and only the top `length` bits are used. The X server's rotation `(word << k) | (word >> (length - k))` leaves stray bits
+below position `length`, so the chip must ignore them (inferred from that, not seen).
+
+**Repeat: each pattern bit is held for n pixels [inferred].** The IRIS GL call is named `lsrepeat` and the OpenGL factor has that meaning in its own specification; both write n in 7:0 and 15:8,
+n = 1 being the default (one pixel per bit, which is also what the X server's dashes need: it rotates its pattern by the distance in pixels and stores 0x0101). Which of the two bytes
+is the working counter and which the reload value is **unknown**: every software that sets them writes both alike (the X server's fills write both as 0).
+
+**Advance rule for a model (inferred).** With L = field + 17 and r = max(repeat byte, 1), the pixel drawn k pixels after the start of the stipple (counting each pixel the
+draw writes, in draw order) uses bit `31 - ((k div r) mod L)` of `LSPATTERN`. A draw with `LSCONTINUE` carries k on from the previous draw; a draw without it, and the no-op `COMMAND` GO store after a
+`LSPATTERN` write, restart at k = 0. With the GL's field 15 and a doubled 16-bit pattern this is the 16-pixel stipple with each bit held n pixels.
+
+**Conflict on a repeat of 0.** The X server's stippled fills store 0 in both bytes and need one pixel per bit; the OpenGL library stores 256 as 0 and means 256. Both cannot be true of one
+counter. The two paths differ in the command word (the fills use 0x921, with no `LSADVLAST`; every line has it), but nothing shows that the repeat count depends on that bit. A model should
+treat 0 as 1 (the fills are on every desktop and the GL case is a factor of 256) and count how often a draw with `LSADVLAST` arrives with a repeat of 0. What would settle it: a
+published description of the REX1 stipple unit, or a recorded GL run at factor 256.
+
+**Unverified side finding.** `rexValidateWindowGC` takes the stipple fast path for any stipple pixmap up to 32 pixels wide, with no lower limit, while the pixmap padding routine (`mfbPadPixmap`)
+widens only widths that divide 32 (1, 2, 4, 8, 16). For a width such as 5 or 12 the server stores `(w - 17) << 16`, a negative value whose bits 19:16 are w - 1; with length = field + 17 the chip would
+then take w + 16 pixels. Not traced further; no software reads the result, and real hardware behaviour here is unknown.
 
 ## What a model must do
 
@@ -56,7 +99,7 @@ For a stipple, `__glRexPickLineProcs` loads `LSPATTERN` (0x64) with the 16-bit G
 2. Keep `XSTART`/`YSTART` as 12.15 and load their fraction from `XSTARTF`/`YSTARTF` (the ide shift of four); accumulate `MINORSLOPE` as a 17-bit two's-complement 15-fraction-bit number; the pixel is the integer part. Do not round.
 3. Run the draw when the command is latched and a **GO-alias** store hits `COMMAND`, `COLORRED`, `COLORBLUE`, `SLOPERED` or `SLOPEBLUE` (any register at its GO alias runs the latched command; the library chooses the last one it writes).
 4. Colour: the same slope and 11-fraction-bit rule as a span, with one step per major pixel.
-5. Stipple: keep a working position (bit 31 first, one bit per pixel written, in draw order) apart from `LSPATTERN`; a draw without `LSCONTINUE` starts it at bit 31, a draw with it carries on, and a no-op GO store after a `LSPATTERN` write reloads it (all **inferred**). `LSADVLAST` has no known effect. The pattern length field (`LSMODE` 19:16) and the repeat count are stored; a model that supports only the length 32 the GL writes covers the GL, and the X server's lengths 17 to 32 need the rotation above to be modulo that length.
+5. Stipple: keep a working position (bit 31 first, one bit per pixel written, in draw order) apart from `LSPATTERN`; a draw without `LSCONTINUE` starts it at bit 31, a draw with it carries on, and a no-op GO store after a `LSPATTERN` write reloads it (all **inferred**). `LSADVLAST` has no known effect. The length (`LSMODE` 19:16 plus 17, so 17 to 32) and the repeat count (7:0) apply as under [LSMODE](#lsmode-length-and-repeat); a model that supports only the length 32 and repeat 1 covers the GL's default and every X server dash pattern of 32 bits.
 6. `XSAVE` and `XYMOVE` have no effect on lines.
 
 A test for the accumulator, which is a prediction of the inferred model and not a measurement: `XSTARTI` 10, `XENDI` 13, `YSTARTF` 0x45802e00 (4096.0 + 5.75), `MINORSLOPE` 0x43804000 (256.0 + 0.5), command 0x30000141 at SET with colour index 7, then a GO store of `COMMAND`. The accumulator runs 5.75, 6.25, 6.75, 7.25, so the pixels are (10, 5), (11, 6), (12, 6) and (13, 7).

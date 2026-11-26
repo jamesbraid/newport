@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 215500cb7a789af02feb2e9126ba34c2493fb9517b9ac2556b00db0e14f03150 */
+/* input sha256 ecd9811a9c5fe86af059b576ba476501aafd1e4d9ea05cff66e16a35ef28e01d */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -375,23 +375,44 @@
  * stipple bit-reversed into both halves; the X server stores a pattern word
  * rotated left by the distance already covered, then a no-op GO store of
  * COMMAND. The first pixel drawn takes bit 31 (inferred from the GL reversal of
- * OpenGL bit-0-first, the X server rotation and the ZPATTERN order).
- * devices/rex1/true-lines.md.
+ * OpenGL bit-0-first, the X server rotation and the ZPATTERN order). Only the
+ * top LSMODE-length bits are used (inferred: the X server's rotation leaves
+ * stray bits below them). devices/rex1/true-lines.md.
  */
 /* lspattern: rw32, reset unknown */
 #define REX1_LSPATTERN_OFFSET                        0x64u /* established */
 
 /*
- * Line stipple mode. Not written by shipped light code. NetBSD's
- * configuration-page name CFGMODE for offset 0x68 is a different page. Offset
- * established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple
- * writes 0xf0000 | n << 8 | n: length field 15 in 19:16 (a 32-bit pattern, as
- * the X server's (width - 17) << 16) and n in 15:8 and 7:0, where n is the GL
- * repeat factor 1 to 256 masked to 8 bits (256 is stored as 0; no subtraction
- * of one).
+ * Line stipple mode. 20 bits kept (the ide mask is 0xfffff). Every writer in
+ * the shipped software: the X server's dashed lines (rexLineSD) write ((length
+ * - 17) << 16) | 0x0101 with length 17 to 32, its dash builder doubling a
+ * pattern until it is at least 17 bits long and giving up (software fallback)
+ * above 32; the X server's stippled fills (rexStippledFS, rexStippledFillRects)
+ * write (width - 17) << 16 with both repeat bytes 0; the IRIX 6.2 OpenGL
+ * library writes 0xf0000 | n << 8 | n with n the GL repeat factor masked to 8
+ * bits (256 is stored as 0); the IRIS GL library writes the same form with n
+ * clamped to 1 to 255; the kernel's window context switch saves and restores
+ * it. The 4.0.5G PROM never stores it. Bits 19:16 are the pattern length minus
+ * 17 (software expectation: no software writes a length of 16 or less, and a
+ * 16-bit GL pattern is sent as a doubled 32-bit one with field 15); bits 15:8
+ * and 7:0 are written equal by every software that sets them, so which byte is
+ * the live count is unknown; a repeat value n from 1 to 255 holds each pattern
+ * bit for n pixels (inferred from the IRIS GL lsrepeat contract and the OpenGL
+ * factor). A value of 0 is used as one pixel per bit by the X server's fills
+ * and as 256 by the OpenGL library; both cannot hold (unknown).
+ * devices/rex1/true-lines.md#lsmode-length-and-repeat.
  */
 /* lsmode: rw32, reset unknown */
 #define REX1_LSMODE_OFFSET                           0x68u /* established */
+#define REX1_LSMODE_LENGTH_SHIFT                     16 /* inferred */
+#define REX1_LSMODE_LENGTH_MASK                      0xfu
+#define REX1_LSMODE_LENGTH_INPLACE (REX1_LSMODE_LENGTH_MASK << REX1_LSMODE_LENGTH_SHIFT)
+#define REX1_LSMODE_REPEAT_COPY_SHIFT                8 /* unknown */
+#define REX1_LSMODE_REPEAT_COPY_MASK                 0xffu
+#define REX1_LSMODE_REPEAT_COPY_INPLACE (REX1_LSMODE_REPEAT_COPY_MASK << REX1_LSMODE_REPEAT_COPY_SHIFT)
+#define REX1_LSMODE_REPEAT_SHIFT                     0 /* inferred */
+#define REX1_LSMODE_REPEAT_MASK                      0xffu
+#define REX1_LSMODE_REPEAT_INPLACE (REX1_LSMODE_REPEAT_MASK << REX1_LSMODE_REPEAT_SHIFT)
 
 /*
  * Antialias weight. Not written by shipped light code. Offset established by

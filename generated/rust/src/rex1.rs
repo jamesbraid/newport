@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 215500cb7a789af02feb2e9126ba34c2493fb9517b9ac2556b00db0e14f03150
+// input sha256 ecd9811a9c5fe86af059b576ba476501aafd1e4d9ea05cff66e16a35ef28e01d
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -296,10 +296,40 @@ pub mod lspattern {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x64;
 }
-/// Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established (established)
+/// Line stipple mode. 20 bits kept (the ide mask is 0xfffff). Every writer in the shipped software: the X server's dashed lines (rexLineSD) write ((lengt (established)
 pub mod lsmode {
     pub const WIDTH: u32 = 32;
     pub const OFFSET: u64 = 0x68;
+    pub mod length { // bits 19:16, inferred
+        pub const SHIFT: u32 = 16;
+        pub const MASK: u32 = 0xf;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod repeat_copy { // bits 15:8, unknown
+        pub const SHIFT: u32 = 8;
+        pub const MASK: u32 = 0xff;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
+    pub mod repeat { // bits 7:0, inferred
+        pub const SHIFT: u32 = 0;
+        pub const MASK: u32 = 0xff;
+        pub const fn get(v: u32) -> u32 {
+            (v >> SHIFT) & MASK
+        }
+        pub const fn set(v: u32, x: u32) -> u32 {
+            (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
+        }
+    }
 }
 /// Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write. The IRIX 6.2 GL writes 0xdb987642 once at c (established)
 pub mod aweight {

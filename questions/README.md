@@ -12,6 +12,10 @@ Each entry gives the owning file, the routes already tried and the next route to
 Bits 21, 16 and 1 of the probe commands and `AUX1` bit 8 are named and decoded (inferred) on the [REX1 page](../devices/rex1/README.md#the-pixel-memory-probe-commands): COLORAUX, COLORCOMP and COLORCOMPGT in the shipped header, so the second write is a one-sided colour compare. Open: which compare sense outcomes 0 (REX revision A) and 1 (revision B) are, and what they mean for the board. Routes tried: kernel, both PROMs and the `ide` board-info copy (same routine); no object reads info byte
 0x29 afterwards; the `ide` VRAM test uses only the fill, point and glyph commands; the X server module (IRIX 5.3 and 6.5) never issues bit 16 and reads only the other board-info fields. Next: `gfxinfo` output on a real machine, if a transcript exists in a public archive.
 
+### LSMODE repeat count of 0
+
+The X server's stippled fills store 0 in both repeat bytes of `LSMODE` and need one pixel per pattern bit; the IRIX 6.2 OpenGL library stores a repeat factor of 256 as 0 and needs 256 ([LSMODE](../devices/rex1/true-lines.md#lsmode-length-and-repeat)). Both cannot hold for one counter. Routes tried: every `LSMODE` writer in the 6.2 `lg1mc.so`, `libGLcore.so` and `libgl.so`, the ide `rex.c` register test, the 4.0.5G PROM (no writer). Next: a published description of the REX1 or REX3 stipple unit; the 5.3 and 6.5 X server modules for a write with both bytes unequal.
+
 ### CONFIGMODE bit 31, bits 22:21, and the FIFO interrupt condition
 
 `initRex` and the pixel DMA path store 0x807fe000; `lightPcxSwap` saves bit 31 inverted. The X server stores 0xc0180000 | (level << 13) and 0x80180000 | (level << 13) (levels 7 to 31), so bits 17:13 are a level and bits 20:19 are constant ([REX1 register list](../devices/rex1/registers.md)); what bit 31 does, what bits 22:21 do (the kernel sets them, the server does not), and which count crosses the level to raise the interrupt on GIO line 0 are not settled. Routes tried: every kernel and X server user. Next: the ide `lg1_*` tests and any GIO specification section on the FIFO.
