@@ -216,7 +216,7 @@ skips the VC1 initialisation.
 PROM 4.0.5G (070-8116-005) runs a register test on the Entry board before the System Maintenance Menu; 4.0.5D does not (its image holds neither the 0x55555555 pattern nor the "REX power on test failed" text, and its Entry
 boot in the model shows no graphics diagnostic failure). The dispatch is at `0xbfc036c0`: `0xbfc037ac` resets the graphics slot and probes for an Express (`0xbfc124b0`) then an Entry (`0xbfc131d0`); an Entry runs the routine at
 `0xbfc05f88`, which returns -1 on any mismatch, and a negative result makes the caller report "Graphics diagnostic *FAILED*, Check or replace: Graphics board". The detailed message ("REX power on test failed",
-"VC1 power on test failed") is printed only at a verbose level.
+"VC1 power on test failed", "Bt479 power on test failed") is printed only at a verbose level.
 
 The REX part (`0xbfc05f88` to `0xbfc06264`) runs twice, with the pattern 0x55555555 and then 0xaaaaaaaa. For each register it stores the whole pattern at the write offset, stores 0 at the GO alias
 (`+0x800`, or `+0x814` for XSTATE) three times to flush the write, reads the read offset and compares with `(pattern & mask) << shift`:
@@ -243,7 +243,15 @@ The REX part (`0xbfc05f88` to `0xbfc06264`) runs twice, with the pattern 0x55555
 which must pass this test; the model is missing the register width. Which rows matched, and that AUX1 alone differed, come from a trace of our own model's accesses, not from a board. The run stopped there, so the routine's second and third parts did not run. They are read, not observed. The VC1 read-back test (helper `0xbfc07400`, width table `0xbfc072b0`, 14 internal registers and entry 0 of window 1, each written
 with 0x5555 and 0xaaaa) was read in full against the 4.0.5G image and the ide source and its widths are listed and graded on the
 [VC1 page](../vc1/README.md#read-back-widths-the-prom-and-ide-power-on-tests): a model that keeps the VC1 registers as plain bytes fails
-the 11, 12 and 3-bit rows. The DAC test after it (`0xbfc07660`, called with patterns 0x55 and 0xaa) was not read in full and is **Unverified**.
+the 11, 12 and 3-bit rows.
+
+**Call order and what skips what (read in full in 4.0.5G, established [binary]).** The power-on routine in `0xbfc03020` (called once from the main start-up routine at `0xbfc01630`, which the cold-reset path jumps to at `0xbfc005c0` with no branch around it; the exception vectors take another route) calls the dispatch at `0xbfc036c0` with no test of `diagmode` or `console` before it: those two variables only choose the verbosity (`diagmode` starting with M or v) and whether "Running power-on diagnostics..." is printed before or after the graphics step. So on a normal power-on the Entry tests run whenever the probe finds an Entry board; with no board the dispatch returns 1 before any test (what the caller does with that value was not traced), and an Express board takes a different routine (`0xbfc07130`, with its own "GR2: Dac test" text; not read). For an Entry board the routine at `0xbfc05f88` runs three parts in a row and leaves at the first failure:
+
+1. The REX part, twice (0x55555555, 0xaaaaaaaa). At `0xbfc06264` a nonzero error count prints "REX power on test failed." (verbose only) and returns -1: the VC1 and DAC parts do not run.
+2. The VC1 part (the loop of `0xbfc06290` to `0xbfc063c4`, patterns 0x5555 then 0xaaaa). At `0xbfc063c8` a nonzero count prints "VC1 power on test failed." and returns -1: the DAC part does not run.
+3. The DAC part (`0xbfc063ec` to `0xbfc06408`): the routine at `0xbfc07660` for pattern 0x55 and then 0xaa, always with map 0. A nonzero total prints "Bt479 power on test failed." and returns -1; zero returns 0. What it writes and reads is on the [colour map page](../bt479/README.md#power-on-read-back-test-prom-405g-0xbfc07660); the model must give back the byte it was given on all 768 palette reads, and the test cannot tell addresses apart.
+
+The dispatch turns -1 into the result 2 (the "Graphics diagnostic *FAILED*" text above). When the routine returns 0 or more, the dispatch also calls `0xbfc2cc40`, the graphics-console set-up, and returns 2 if that reports failure as well (read as far as the flag it returns; the routine it calls was not read). The DAC part takes the board revision from the probe's record, so one routine serves the Bt479 (revision below 2) and the LUT1 (revision 2 and up) boards.
 
 ## What IRIX does after init
 

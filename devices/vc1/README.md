@@ -123,7 +123,7 @@ usual GO read then plain read, whatever the width; the second byte is compared o
 an 11 or 12-bit register therefore keeps only bits 2:0 or 3:0 of its first (high) byte; a register of 8 bits or less compares its own byte
 only, which holds the pattern's high byte (equal to the low byte for these patterns). For CUR_XL the test also writes the same two bytes at 0x24 before
 reading 0x22 back. The PROM runs the list twice, with 0x5555 and 0xaaaa, in the order above; a mismatch makes the board test return failure and the System Maintenance Menu
-reports "Graphics diagnostic *FAILED*". The ide full test (`test_vc1`) adds the patterns 0 and 0xffff and every entry of window 1: 64 sixteen-bit entries,
+reports "Graphics diagnostic *FAILED*" and skips the colour-map part that follows (see [the PROM's call order](../rex1/README.md#the-405g-power-on-test-code-reading-established-binary-405d-has-none)). The ide full test (`test_vc1`) adds the patterns 0 and 0xffff and every entry of window 1: 64 sixteen-bit entries,
 offsets 0x00 to 0x3e (the "even" half, `MODE_REG_n_E`) and 0x40 to 0x7e (the "odd" half, `MODE_REG_n_O`), all 16 bits wide. Registers the test does not
 list (0x02 to 0x14, 0x2a to 0x30, 0x46 to 0x52, 0x63 and above) have no expected width.
 

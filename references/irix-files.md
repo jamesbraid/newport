@@ -81,3 +81,11 @@ Two SGI-labelled CD images, each a volume header and an EFS filesystem holding a
 | `usr/lib/X11/app-defaults/Clogin` | `d9042ebd8b3ede503be017a6f19d8fb26af5e7b440b35b0c9d3a5ff72791345e` |
 
 The 6.2 objects are 32-bit big-endian MIPS ELF (the shared objects are stripped but export their routine names). The IRIX source files cited by the shaded-drawing pages are `stand/arcs/ide/fforward/graphics/LIGHT/minigl.c`, `rex.c`, `vram.c` and `rexpatterns.c`, from the 6.5.7 tree.
+
+## IP20 PROM read for the power-on test (2026-11-26)
+
+| Item | SHA-256 |
+|---|---|
+| IP20 PROM 070-8116-005 (4.0.5G), `ip20prom-070-8116-005-BE.bin`, the image whose addresses the Entry power-on test pages cite | `ae35c0971b594c9f028f79e2fd97bf45fbf170697b334d2ca8a4f46349d939bd` |
+
+The ide source files cited with it are `stand/arcs/ide/fforward/graphics/LIGHT/btdac.c` and `rex.c`, from the 6.5.7 tree.

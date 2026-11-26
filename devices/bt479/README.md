@@ -59,6 +59,19 @@ beyond that: **unknown**.
 
 The four banks, which program loads which, and the bank-select rule the model needs are on [Colour-map banks](banks.md).
 
+## Power-on read-back test (PROM 4.0.5G, `0xbfc07660`)
+
+The 4.0.5G PROM fills one colour-map bank with a byte and reads it back, as the last part of its Entry-board power-on test; the 4.0.5D image has no such code (no "Bt479 power on test failed" or "Error reading from" text). **Established** from the routine at `0xbfc07660`, read in full in the 4.0.5G image (070-8116-005), and from the loop that calls it at `0xbfc063ec` to `0xbfc06408`. The call order, what skips it and how a failure is reported are on the [REX1 page](../rex1/README.md#the-405g-power-on-test-code-reading-established-binary-405d-has-none).
+
+- **Calls.** One call per pattern, map number 0, pattern 0x55 and then 0xaa (the loop adds 0x55 until it reaches 0xff). The routine returns the number of mismatched bytes, and the caller adds them up.
+- **Control value.** It reads the board revision and monitor-type bytes that the probe stored in the PROM's board record. Revision below 2 (this page's Bt479): `CONFIGSEL` 0 and 0x82 to `RWDAC` and its GO alias, then the control value `(map << 4) | 0xf`, which is 0x0f for map 0. Revision 2 and up: no 0x82 step, and the control value is `(map << 6) | sync | 2` with `sync` = 1 unless the monitor type is 6.
+- **Write.** `CONFIGSEL` 6: control value to `RWDAC` and the GO alias. `CONFIGSEL` 0: 0 to both (palette address 0). `CONFIGSEL` 1, then 256 times three SET and GO store pairs of the pattern byte (red, green and blue of one entry), so all 256 entries of the selected bank hold the pattern in all three channels.
+- **Read-back.** Revision below 2: the 0x82 step again. `CONFIGSEL` 6: the same control value. `CONFIGSEL` 3: 0 to both (read address 0). `CONFIGSEL` 1, one GO read whose value is dropped (the `light_read_bt_colormaps` pattern), then 256 times a SET read and a GO read three times over. Only the GO read of each pair is kept: the SET read lands in the same byte and is overwritten. The 768 kept bytes are compared with the pattern as whole bytes (all 8 bits); each mismatch prints "Error reading from (red|green|blue) DAC address ..." at error level and counts one.
+- **What a model returns to pass.** Every one of the 768 GO reads must return the pattern byte written to the bank the control value selected (bank 0 for both writes and reads), so an 8-bit-wide palette store with the three-byte auto-increment of the write address, and a read address that starts at 0 after a write of 0 to `CONFIGSEL` 3. The SET reads are never compared. Because every entry holds the same byte, the test cannot tell addresses, the read pipeline's one-byte offset or an extra address step on a SET read apart: a model that is off by one entry still passes. It does fail a store narrower than 8 bits (0x55 and 0xaa are complementary) and a palette read that returns anything but the stored data.
+- **State left behind.** Bank 0 holds 0xaa in every entry and the control byte is the value above; the test restores nothing, and the PROM's later colour set-up is what reloads the palette (**inferred**: the colour routines load tables and no code was seen reading the test's leftovers).
+
+The ide diagnostic source (`stand/arcs/ide/fforward/graphics/LIGHT/btdac.c`, function `test_palette`, **[source]**) takes a map and a data byte, writes the byte to all 256 entries and reads them back, comparing each byte; its full test `btdactest` runs the data bytes 0, 0x55 and 0xaa over maps 0 to 3. The `lg1_pon` function of `rex.c` in the same directory runs the REX, VC1 and Bt479 parts in that order, returning at the first part that fails. These are the diagnostic's own expectations of a working board.
+
 ## qtest hooks
 
 A register-contract test for a model can check: after `CONFIGSEL` 0 <- n, three writes to selector 1 and `CONFIGSEL` 3 <- n
