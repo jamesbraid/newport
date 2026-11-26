@@ -32,7 +32,6 @@ board, or the board's parts list if SGI published one.
 
 Owning files: [shaded drawing](../devices/rex1/shaded-drawing.md), [GL context state](../devices/rex1/gl-context-state.md) and [true lines](../devices/rex1/true-lines.md). What is open, each of it a hardware behaviour the IRIX 6.2 GL expects but whose arithmetic no shipped software contains:
 
-- What a colour accumulator does outside 0 to 255 (the library stores values from below zero to above 511 and never clamps).
 - The effect of `SHADECONTINUE` (the reading "continue the colour between 32-pixel pieces" is a name-based inference) and of `INITFRAC`.
 - The roles of `AUX1` bits 1:0 (`FRACTION`) and 9 (`DITHERRANGE`), which every GL context sets and the X server never does, and of `AWEIGHT`, which the GL writes once and nothing reads.
 - Which nibble is buffer 0 (the software fixes only the pairing with mode-word bit 1), how the `CIDMATCH` nibbles of `AUX2` act, and the stipple bit order of the GL's line stipple.
