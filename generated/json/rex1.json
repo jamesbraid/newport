@@ -1,6 +1,6 @@
 {
  "generator": "defs-gen 3",
- "input_sha256": "1f9834d143fdd5ab9217f91a6581ebeb13404d3f6c678d5026dabde3e569710f",
+ "input_sha256": "05dfac2d5ca1042075a14e08ba05f3260998429934295e343602a66b2e0ed4de",
  "schema": "defs-flat/1",
  "source": "devices/rex1/registers.toml",
  "profile": "public",
@@ -495,15 +495,15 @@
   {
    "unit": "rex1",
    "kind": "field",
-   "name": "lsmode.repeat_copy",
+   "name": "lsmode.repeat_reload",
    "hi": 15,
    "lo": 8,
-   "grade": "unknown"
+   "grade": "inferred"
   },
   {
    "unit": "rex1",
    "kind": "field",
-   "name": "lsmode.repeat",
+   "name": "lsmode.repeat_count",
    "hi": 7,
    "lo": 0,
    "grade": "inferred"
@@ -1124,6 +1124,14 @@
    "kind": "constant",
    "name": "CMD_LSCONTINUE",
    "value": 8192,
+   "count": 1,
+   "grade": "inferred"
+  },
+  {
+   "unit": "rex1",
+   "kind": "constant",
+   "name": "CMD_LSPATSAVE",
+   "value": 8194,
    "count": 1,
    "grade": "inferred"
   },

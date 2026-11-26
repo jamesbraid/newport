@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 1f9834d143fdd5ab9217f91a6581ebeb13404d3f6c678d5026dabde3e569710f */
+/* input sha256 05dfac2d5ca1042075a14e08ba05f3260998429934295e343602a66b2e0ed4de */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -396,23 +396,30 @@
  * pattern length minus 17 (inferred from the writers: no software writes a
  * length of 16 or less, and a 16-bit GL pattern is sent as a doubled 32-bit one
  * with field 15); bits 15:8 and 7:0 are written equal by every software that
- * sets them, so which byte is the live count is unknown; a repeat value n from
- * 1 to 255 holds each pattern bit for n pixels (inferred from the IRIS GL
- * lsrepeat contract and the OpenGL factor). A value of 0 is used as one pixel
- * per bit by the X server's fills and as 256 by the OpenGL library; both cannot
- * hold (unknown). devices/rex1/true-lines.md#lsmode-length-and-repeat.
+ * sets them; 7:0 is read as the live down counter and 15:8 as the repeat factor
+ * it reloads from (inferred: the sibling REX3 chip's published LSMODE has its
+ * counter and factor at the same positions, the writers load both bytes alike,
+ * and the wide-line code, which issues the stipple-save opcode and then
+ * rewrites this register; no REX1 text states it); a repeat value n from 1 to
+ * 255 holds each pattern bit for n pixels (inferred from the IRIS GL lsrepeat
+ * contract and the OpenGL factor). A value of 0 is used as one pixel per bit by
+ * the X server's fills (spans and rectangles) and as 256 by the OpenGL library
+ * (lines); both cannot hold for one counter (unknown; the reading that fits
+ * every writer is a repeat honoured in line draws only, with 0 meaning 256
+ * there, an approximation).
+ * devices/rex1/true-lines.md#lsmode-length-and-repeat.
  */
 /* lsmode: rw32, reset unknown */
 #define REX1_LSMODE_OFFSET                           0x68u /* established */
 #define REX1_LSMODE_LENGTH_SHIFT                     16 /* inferred */
 #define REX1_LSMODE_LENGTH_MASK                      0xfu
 #define REX1_LSMODE_LENGTH_INPLACE (REX1_LSMODE_LENGTH_MASK << REX1_LSMODE_LENGTH_SHIFT)
-#define REX1_LSMODE_REPEAT_COPY_SHIFT                8 /* unknown */
-#define REX1_LSMODE_REPEAT_COPY_MASK                 0xffu
-#define REX1_LSMODE_REPEAT_COPY_INPLACE (REX1_LSMODE_REPEAT_COPY_MASK << REX1_LSMODE_REPEAT_COPY_SHIFT)
-#define REX1_LSMODE_REPEAT_SHIFT                     0 /* inferred */
-#define REX1_LSMODE_REPEAT_MASK                      0xffu
-#define REX1_LSMODE_REPEAT_INPLACE (REX1_LSMODE_REPEAT_MASK << REX1_LSMODE_REPEAT_SHIFT)
+#define REX1_LSMODE_REPEAT_RELOAD_SHIFT              8 /* inferred */
+#define REX1_LSMODE_REPEAT_RELOAD_MASK               0xffu
+#define REX1_LSMODE_REPEAT_RELOAD_INPLACE (REX1_LSMODE_REPEAT_RELOAD_MASK << REX1_LSMODE_REPEAT_RELOAD_SHIFT)
+#define REX1_LSMODE_REPEAT_COUNT_SHIFT               0 /* inferred */
+#define REX1_LSMODE_REPEAT_COUNT_MASK                0xffu
+#define REX1_LSMODE_REPEAT_COUNT_INPLACE (REX1_LSMODE_REPEAT_COUNT_MASK << REX1_LSMODE_REPEAT_COUNT_SHIFT)
 
 /*
  * Antialias weight. Not written by shipped light code. Offset established by
@@ -806,6 +813,7 @@
 #define REX1_CMD_LRQPOLY                             0x2000000u /* unknown */
 #define REX1_CMD_LSADVLAST                           0x1000u /* inferred */
 #define REX1_CMD_LSCONTINUE                          0x2000u /* inferred */
+#define REX1_CMD_LSPATSAVE                           0x2002u /* inferred */
 #define REX1_CMD_OP_READ                             0x2u /* inferred */
 #define REX1_CMD_PIXMEM_BIT16                        0x10000u /* inferred */
 /* established */

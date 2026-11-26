@@ -1,6 +1,6 @@
 // @generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source
 // defs-gen 3
-// input sha256 1f9834d143fdd5ab9217f91a6581ebeb13404d3f6c678d5026dabde3e569710f
+// input sha256 05dfac2d5ca1042075a14e08ba05f3260998429934295e343602a66b2e0ed4de
 // REX1 raster engine on the Indigo Entry graphics board (LG1)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -310,7 +310,7 @@ pub mod lsmode {
             (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
         }
     }
-    pub mod repeat_copy { // bits 15:8, unknown
+    pub mod repeat_reload { // bits 15:8, inferred
         pub const SHIFT: u32 = 8;
         pub const MASK: u32 = 0xff;
         pub const fn get(v: u32) -> u32 {
@@ -320,7 +320,7 @@ pub mod lsmode {
             (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
         }
     }
-    pub mod repeat { // bits 7:0, inferred
+    pub mod repeat_count { // bits 7:0, inferred
         pub const SHIFT: u32 = 0;
         pub const MASK: u32 = 0xff;
         pub const fn get(v: u32) -> u32 {
@@ -549,6 +549,7 @@ pub const CMD_LOGICSRC: u32 = 0x80000; // inferred
 pub const CMD_LRQPOLY: u32 = 0x2000000; // unknown
 pub const CMD_LSADVLAST: u32 = 0x1000; // inferred
 pub const CMD_LSCONTINUE: u32 = 0x2000; // inferred
+pub const CMD_LSPATSAVE: u32 = 0x2002; // inferred
 pub const CMD_OP_READ: u32 = 0x2; // inferred
 pub const CMD_PIXMEM_BIT16: u32 = 0x10000; // inferred
 pub const CMD_PIXMEM_READ: u32 = 0x30200023; // established

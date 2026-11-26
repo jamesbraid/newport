@@ -1,6 +1,6 @@
 # generated from devices/ and formats/ by defs-gen - do not edit, change the source
 # defs-gen 3
-# input sha256 1f9834d143fdd5ab9217f91a6581ebeb13404d3f6c678d5026dabde3e569710f
+# input sha256 05dfac2d5ca1042075a14e08ba05f3260998429934295e343602a66b2e0ed4de
 [package]
 name = "hwdefs"
 version = "0.1.0"

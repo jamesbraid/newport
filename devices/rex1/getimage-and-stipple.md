@@ -51,12 +51,12 @@ pixels, high byte first, rows padded to a word, after one discarded read.
 pattern bit order. The words are built at 0x5e30d9d4 and 0x5e30d9f8: `(operation << 28) | 0x9a9` for a transparent stipple and the same with
 0x400000 (`LSOPAQUE` [hdr]) added for an opaque one. With the replace operation (3) the first is 0x300009a9. The flags are, by their [hdr] names,
 DRAW, BLOCK, QUADMODE, XYCONTINUE, STOPONX and ENLSPATTERN (bit 11) (the [register list](registers.md) already has the same flag set without
-ENLSPATTERN as `CMD_SPAN_LSPATTERN`, 0x921, for spans). The word is not an image command: the "mono image" calls are `rexDrawMonoImage`
+ENLSPATTERN as `CMD_SPAN_LSPATTERN`, 0x921, for spans). Neither this word nor 0x921 carries `LSADVLAST` or `LSCONTINUE`: the rectangle path stores a fresh pattern word for every row, so nothing carries over from one row to the next ([LSADVLAST](true-lines.md#lsadvlast-command-bit-12)). The word is not an image command: the "mono image" calls are `rexDrawMonoImage`
 (0x5b9 and relatives, driven by `ZPATTERN`, see the [register list](registers.md)).
 
 Per rectangle (x0, y0, x1, y1), with w the stipple's width in pixels (the repeat length, encoded into `LSMODE` below):
 
-1. Once, before the first rectangle: `AUX2` = plane group << 29; `LSMODE` = (w - 17) << 16; `XSTATE` = foreground colour in bits 7:0, the plane mask in
+1. Once, before the first rectangle: `AUX2` = plane group << 29; `LSMODE` = (w - 17) << 16 (both repeat bytes 0; what a 0 means is [unknown](true-lines.md#lsmode-length-and-repeat)); `XSTATE` = foreground colour in bits 7:0, the plane mask in
    bits 23:16 and, for the opaque form, the background colour in bits 15:8 (0x5e30d9d4 to 0x5e30da24; **inferred** from which
    fields the code ORs together).
 2. `XSTARTI` = x0, `YSTARTI` = y0, `XENDI` = x1 - 1, `YENDI` = y1 - 1; `COMMAND` GO alias (0x800) = 0, then `COMMAND` = the word above.
@@ -77,4 +77,4 @@ background.
 
 - Whether the board pads GetImage rows to a whole word, and what happens when XSTARTI is not a multiple of four (answer: a data sheet
   for REX1, or the REX3 equivalent, if the two share the host-data unit; they are not claimed to).
-- The pattern bit order (bit 31 first is inferred; [LSMODE](true-lines.md#lsmode-length-and-repeat) gives the length encoding, 17 to 32 as field + 17, and the repeat count).
+- The pattern bit order (bit 31 first is inferred; [LSMODE](true-lines.md#lsmode-length-and-repeat) gives the length encoding, 17 to 32 as field + 17, and the repeat bytes).

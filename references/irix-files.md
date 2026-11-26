@@ -89,3 +89,11 @@ The 6.2 objects are 32-bit big-endian MIPS ELF (the shared objects are stripped 
 | IP20 PROM 070-8116-005 (4.0.5G), `ip20prom-070-8116-005-BE.bin`, the image whose addresses the Entry power-on test pages cite | `ae35c0971b594c9f028f79e2fd97bf45fbf170697b334d2ca8a4f46349d939bd` |
 
 The ide source files cited with it are `stand/arcs/ide/fforward/graphics/LIGHT/btdac.c` and `rex.c`, from the 6.5.7 tree.
+
+## REX3 specification read for the stipple registers (2026-11-26)
+
+Used only for the layout and names of the sibling REX3 chip, never as a REX1 fact; each statement taken from it is marked as a sibling expectation where it is used.
+
+| Item | SHA-256 |
+|---|---|
+| REX3 Specification, revision 1.0 (Silicon Graphics, August 1993; held in the Library as `erikarn-sgi_indy_rex3.pdf`; the pages carry a proprietary and confidential banner) | `9abe890d1a806ed67c26647e9b7ab309072d4d2a8faf2c75af52cc1530b33917` |
