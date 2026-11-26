@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 4e3e162a19b5ad359dfb2c06fe288722bbf3739fa204bc9378317f657b0d78a0 -->
+<!-- input sha256 744d116773a7b36fd994a151a9f7932be15066bf5ea7e17d147b9ee0988295c0 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -342,7 +342,7 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CMD_POINT` | 0x30000001 | established |  | Single point: logic op 3, DRAW. light_pnt2i (kernel) and the PROM both store it at SET (0x0) and then read the GO alias (0x800), which runs it, after XSTARTI and YSTARTI. |
 | `CMD_QUAD` | 0x20 | inferred |  | Command flag named QUADMODE by NetBSD. Set in every rectangle command. Role inferred from use only. |
 | `CMD_RGBMODE` | 0x4000 | inferred |  | Command flag named RGBMODECMD in the shipped header. Set by every IRIX 6.2 GL draw in an RGB window; the colour comes from the three colour registers instead of the index in COLORRED. The X server never sets it. devices/rex1/shaded-drawing.md. |
-| `CMD_SHADE` | 0x20000 | inferred |  | Command flag named SHADE in the shipped header: the slope registers advance the colour from pixel to pixel (colour of pixel i = start + i * slope). Set by the GL's shaded spans, triangle rows and lines; the ide _span, _polygon and _line use it. devices/rex1/shaded-drawing.md. |
+| `CMD_SHADE` | 0x20000 | inferred |  | Command flag named SHADE in the shipped header: the slope registers advance the colour from pixel to pixel (colour of pixel i = start + i * slope). Set by the GL's shaded spans, triangle rows and lines; the ide _span uses it (and _polygon through it); the ide _line does not. devices/rex1/shaded-drawing.md. |
 | `CMD_SHADECONTINUE` | 0x100000 | inferred |  | Command flag named SHADECONTINUE in the shipped header. The GL sets it only together with SHADE on rows driven from ZPATTERN words (0x5b1), the rows that arrive as several 32-pixel pieces; read as: keep the colour running from one piece into the next. devices/rex1/shaded-drawing.md. |
 | `CMD_SPAN` | 0x121 | established |  | Draw, QUAD, STOPONX with no BLOCK: one horizontal run from XSTARTI to XENDI. Used by the X server for solid spans, polygon and triangle fill (rexSolidSpans, rexSolidFillSpans, rexFillTriangle, rexFillPolygon). The line code (rexLineSS, rexSegmentSS, rexSolidZeroSeg) issues (op << 28) \| 0x121 for horizontal runs and (op << 28) \| 0x329 for vertical runs (built as 0x328 ORed into a word that holds the operation and DRAW; there is no draw-less command). Whether the run is one row and how the line variants use MINORSLOPE: unknown (not read in full). |
 | `CMD_SPAN_LSPATTERN` | 0x921 | inferred |  | CMD_SPAN plus bit 11 (0x800), used by rexStippledFS and the stippled line code together with LSPATTERN and LSMODE. Bit 11 is inferred to enable the line stipple; no other source names it. |
