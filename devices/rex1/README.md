@@ -87,6 +87,8 @@ All established from what the shipped code issues; the chip's behaviour for comm
 
 The X server issues more command words (0x329 and 0x80329 with the operation and colour in `XSTATE`, 0x1, 0x121, 0x921, 0x200121, 0x2000a9, 0x2000ab, 0x5a1 to 0x5b9 and others) and reads back more state; they are tabulated with their callers on the [board page](../../platforms/lg1/README.md#x-server-the-drawing-commands-it-issues) and the words are CMD_ constants in the [register list](registers.md).
 
+The IRIX 6.2 OpenGL library's shaded draws (colour modes, dither, the slope registers), its buffer, mask and clip state and its lines are on [shaded drawing](shaded-drawing.md), [GL context state](gl-context-state.md) and [true lines](true-lines.md).
+
 Pixel result, where the code makes it clear: the rectangle commands set every pixel in the closed range [XSTARTI, XENDI] x
 [YSTARTI, YENDI] to the colour (NetBSD's comment says the end coordinates are inclusive; the PROM clear writes XENDI = 1023 and
 YENDI = 767 through the stored 767 - y form). A pattern draw with ENZPATTERN and XYCONTINUE writes one row per `ZPATTERN` GO

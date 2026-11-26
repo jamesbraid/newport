@@ -1,6 +1,6 @@
 # REX1 context state the IRIX 6.2 GL sets: buffers, write mask and clip
 
-What the OpenGL library for the Indigo Entry board puts in `AUX1`, `AUX2`, `RWMASK`, the screen mask and the window offset around its draws, and what each is expected to do. The colour and shading side is on [shaded drawing](shaded-drawing.md), lines on true lines, the register list in [registers.md](registers.md). Grades, tags and the objects read are the same as on the shaded-drawing page (`libGLcore.so` of `usr/gfx/arch/IP20LG1MC` in IRIX 6.2, read as MIPS disassembly; the ide sources under `stand/arcs/ide/fforward/graphics/LIGHT/`); the Entry-run trace is a decoded log of `ivview` on the emulated Entry model and shows what the guest sends, not what a chip does.
+What the OpenGL library for the Indigo Entry board puts in `AUX1`, `AUX2`, `RWMASK`, the screen mask and the window offset around its draws, and what each is expected to do. The colour and shading side is on [shaded drawing](shaded-drawing.md), lines on [true lines](true-lines.md), the register list in [registers.md](registers.md). Grades, tags and the objects read are the same as on the shaded-drawing page (`libGLcore.so` of `usr/gfx/arch/IP20LG1MC` in IRIX 6.2, read as MIPS disassembly; the ide sources under `stand/arcs/ide/fforward/graphics/LIGHT/`); the Entry-run trace is a decoded log of `ivview` on the emulated Entry model and shows what the guest sends, not what a chip does.
 
 ## Coordinates, the window offset and what a clear leaves behind
 
