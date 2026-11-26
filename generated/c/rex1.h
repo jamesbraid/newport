@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 213c5db29b5e447386ff8f3bb4be0d2c13b7d43e8763e3e39bc1b7eba23abcb8 */
+/* input sha256 3aa82cc4c75111a7e0822c6310f63dc8287b56b5dbc253e1bbc9299ec9d46901 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -446,11 +446,14 @@
  * a never-saved node writes 0 (platforms/lg1/colormap-install.md). The shipped
  * desktop draws with RWMASK 0 and would be blank if hardware gated RWAUX1
  * host-data writes or reads (tile fill, PutImage, GetImage) with it, so it is
- * inferred not to; what it does gate is unknown. The IRIX 6.2 GL stores 0xff at
- * context set-up, then after every draw-buffer change the window's full mask
- * (0xf for the 4-bit window, 3 for the overlay, 0xff for the 8-bit one) or 0
- * when the GL draw buffer is none, and no other value; it expects the mask to
- * gate its own draws (nonzero logic-operation nibble, no COLORAUX). Inferred;
+ * inferred not to. The X server's lines, dashes and glyphs also draw with a
+ * non-zero logic-operation nibble and RWMASK 0, taking the plane mask from
+ * XSTATE 23:16, so the nibble does not decide either. The IRIX 6.2 GL stores
+ * 0xff at context set-up, then after every draw-buffer change the window's full
+ * mask (0xf for the 4-bit window, 3 for the overlay, 0xff for the 8-bit one) or
+ * 0 when the GL draw buffer is none, and no other value, and never stores
+ * XSTATE. The hardware rule for how RWMASK and XSTATE 23:16 combine is unknown;
+ * every shipped writer is satisfied by their OR.
  * devices/rex1/gl-context-state.md.
  */
 /* rwmask: rw32, reset unknown */
