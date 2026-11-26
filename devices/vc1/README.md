@@ -90,8 +90,8 @@ The X server's different values for registers 0x40 to 0x45 and 0x60 to 0x63, the
 ## Read-back widths (the PROM and ide power-on tests)
 
 Which bits of each register a working board must keep, as the shipped read-back tests expect them. **Established** as what the
-software checks: read in full from the 4.0.5G PROM (070-8116-005; the test at 0xbfc06264 to 0xbfc063c8, its width table at
-0xbfc072b0, the write-and-compare routine at 0xbfc07400) and from the ide diagnostic source for the board
+software checks: read in full from the 4.0.5G PROM (070-8116-005; the test at 0xbfc06264 to 0xbfc063c8, its width lookup at
+0xbfc072b0 (a chain of compares on window and offset, not a data table), the write-and-compare routine at 0xbfc07400) and from the ide diagnostic source for the board
 (`stand/arcs/ide/fforward/graphics/LIGHT/vc1.c`, functions `vc1_length` and `test_vc1_register`, **[source]**; the PROM build of the
 test is `lg1_pon` in `rex.c` of the same directory). The binary and the source agree on every width and on the register order. The
 4.0.5D PROM runs no such test (its image has no "VC1 power on test failed" text). What the chip does with bits it does not keep
@@ -118,8 +118,8 @@ reads them otherwise.
 
 How the test touches a register, so a model can pass it byte for byte: set the address counter to the offset (select 5 high byte,
 select 4 low byte), select the window, write the high byte of the 16-bit pattern then the low byte (two consecutive bytes, so the
-second lands at offset + 1), set the address again, select the window, and read one byte, or two for a width above 8, each with the
-usual GO read then plain read. A 16-bit register compares both bytes as one big-endian value against `pattern & ((1 << width) - 1)`;
+second lands at offset + 1), set the address again, select the window, and read two bytes, each with the
+usual GO read then plain read, whatever the width; the second byte is compared only for a width above 8. A 16-bit register compares both bytes as one big-endian value against `pattern & ((1 << width) - 1)`;
 an 11 or 12-bit register therefore keeps only bits 2:0 or 3:0 of its first (high) byte; a register of 8 bits or less compares its own byte
 only, which holds the pattern's high byte (equal to the low byte for these patterns). For CUR_XL the test also writes the same two bytes at 0x24 before
 reading 0x22 back. The PROM runs the list twice, with 0x5555 and 0xaaaa, in the order above; a mismatch makes the board test return failure and the System Maintenance Menu
