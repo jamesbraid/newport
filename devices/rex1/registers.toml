@@ -329,7 +329,7 @@ width = 32
 reset = "unknown"
 grade = "established"
 from = "ide REX register test (LSMODE, mask 0xfffff); offset by name order; ide IP20 REX register test at 0xa853d968 (helper 0xa853d670: write offset, read-back offset, mask, shift): write 0x68, read back 0x68, mask 0xfffff (reviewed 2026-11-23)"
-doc = "Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple writes 0xf0000 | (repeat - 1) << 8 | (repeat - 1): length field 15 in 19:16 (a 32-bit pattern, as the X server's (width - 17) << 16), repeat count minus one in 15:8 and 7:0, repeat 1 to 256."
+doc = "Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple writes 0xf0000 | n << 8 | n: length field 15 in 19:16 (a 32-bit pattern, as the X server's (width - 17) << 16) and n in 15:8 and 7:0, where n is the GL repeat factor 1 to 256 masked to 8 bits (256 is stored as 0; no subtraction of one)."
 
 [registers.aweight]
 offset = 0x06c

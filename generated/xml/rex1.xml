@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 744d116773a7b36fd994a151a9f7932be15066bf5ea7e17d147b9ee0988295c0 -->
+<!-- input sha256 2b518def1651291ae77838755f667396319226c08ae62a681b0af5a31a025992 -->
 <genxml unit="rex1" prefix="REX1" title="REX1 raster engine on the Indigo Entry graphics board (LG1)">
   <doc>Register file of the REX1 chip as the Indigo's Entry graphics board presents it on the GIO graphics slot. Offsets are bytes from the board base (0x1f3f0000 for the first head, 0x1f3f8000 for a second). Every register is 32 bits wide. A register written at its offset is only stored (the SET alias). The same register at offset + 0x800 (the GO alias) is stored and then the latched command is executed. Names are the ones the shipped diagnostics (ide) print for the REX register test, where it prints one; the rest use the names of the NetBSD sgimips light driver. The three off-chip ports (WCLOCK, RWDAC, RWVC1) are covered here as REX registers; the chips behind them are in devices/vc1 and devices/bt479. Grades follow AGENTS.md: established means the whole routine was read in the shipped Indigo kernel graphics driver or the Indigo PROM; inferred is a reading with the reasoning given; unknown means no shipped software settles it. Nothing was measured on a board.</doc>
   <struct name="COMMAND" size="4" grade="established" register="yes" offset="0x0" access="rw" reset="unknown">
@@ -99,7 +99,7 @@
     <doc>Line stipple pattern. Not written by shipped light code. Offset established by the ide test. Fully read/write.</doc>
   </struct>
   <struct name="LSMODE" size="4" grade="established" register="yes" offset="0x68" access="rw" reset="unknown">
-    <doc>Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple writes 0xf0000 | (repeat - 1) &lt;&lt; 8 | (repeat - 1): length field 15 in 19:16 (a 32-bit pattern, as the X server's (width - 17) &lt;&lt; 16), repeat count minus one in 15:8 and 7:0, repeat 1 to 256.</doc>
+    <doc>Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple writes 0xf0000 | n &lt;&lt; 8 | n: length field 15 in 19:16 (a 32-bit pattern, as the X server's (width - 17) &lt;&lt; 16) and n in 15:8 and 7:0, where n is the GL repeat factor 1 to 256 masked to 8 bits (256 is stored as 0; no subtraction of one).</doc>
   </struct>
   <struct name="AWEIGHT" size="4" grade="established" register="yes" offset="0x6c" access="rw" reset="unknown">
     <doc>Antialias weight. Not written by shipped light code. Offset established by the ide test. Fully read/write. The IRIX 6.2 GL writes 0xdb987642 once at context set-up (the IRIS GL library holds the same constant) and nothing in it reads or rewrites the register; the GL antialiases lines in software. No dither role is evidenced. devices/rex1/shaded-drawing.md.</doc>

@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 744d116773a7b36fd994a151a9f7932be15066bf5ea7e17d147b9ee0988295c0 -->
+<!-- input sha256 2b518def1651291ae77838755f667396319226c08ae62a681b0af5a31a025992 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -193,7 +193,7 @@ Line stipple pattern. Not written by shipped light code. Offset established by t
 
 ### Register `lsmode`
 
-Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple writes 0xf0000 | (repeat - 1) << 8 | (repeat - 1): length field 15 in 19:16 (a 32-bit pattern, as the X server's (width - 17) << 16), repeat count minus one in 15:8 and 7:0, repeat 1 to 256.
+Line stipple mode. Not written by shipped light code. NetBSD's configuration-page name CFGMODE for offset 0x68 is a different page. Offset established by the ide test. 20 bits kept. The IRIX 6.2 GL line stipple writes 0xf0000 | n << 8 | n: length field 15 in 19:16 (a 32-bit pattern, as the X server's (width - 17) << 16) and n in 15:8 and 7:0, where n is the GL repeat factor 1 to 256 masked to 8 bits (256 is stored as 0; no subtraction of one).
 
 ### Register `aweight`
 
