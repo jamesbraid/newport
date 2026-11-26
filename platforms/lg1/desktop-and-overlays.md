@@ -96,7 +96,18 @@ found is GL colour index 5 of the default colour-index map in the ide diagnostic
 (`stand/arcs/ide/fforward/graphics/LIGHT/maps.h`), which is the usual GL colour 5. If the model draws magenta where the logo should be violet, check that the write
 to index 49 (`CONTROL` 0x0f, `WRITE_ADDR` 49, three bytes through `PALETTE_RAM`) reaches bank 0 and that the screen is not being read
 through another bank. The program that draws the "IRIS" logo on the login screen was not identified (`xdm`'s resources name only a
-greeting; `clogin` was not read), so its colour index and bank are **unknown**.
+greeting; the 5.3 `clogin` was not read), so its colour index and bank are **unknown**.
+
+## The login window's checkerboard (IRIX 6.2)
+
+On the emulated Entry running IRIX 6.2 the user list of the login window is a one-pixel checkerboard of (219, 219, 170) and (219, 219, 255) where the Express shows flat grey (217, 217, 217) (a run observation on the model, not a hardware capture). Neither the X server's software nor the REX1 and VC1 hardware makes that pattern; the login client does.
+
+- **Who draws it [binary].** The login program is `clogin` (`usr/Cadmin/bin/clogin`, subsystem `sysadmdesktop.sw.clients` on the 6.2 media; the run's process list shows `clogin` beside `Xsgi` and `xdm`). It defines `ordered_dither_uchar`, `dont_dither_uchar` and `dont_dither_uchar_fast`, `XAllocColorCubeAndAdditionalColors` and `imageIcon::GetXPixmap` and `DrawX`, whose last parameters are a dither mode and a colour cube; it imports `XCreatePixmap`, `XCreateImage` and `XPutImage`, and it takes the icon panel's `renderBackground` and `setBackgroundColor` from `libdesktopIcon.so`. Its strings include the resource names `ditherBackground` and `installColormap`. The user list is the icon panel. **Established** for the routines and resource names; **inferred** that the panel background goes through `ordered_dither_uchar` (the call from `renderBackground` was not traced).
+- **The colours fit the 8-bit cube.** Red and green 219 are level 6 of the 3-bit fields (6 * 255 / 7 = 218.6) and blue 170 and 255 are levels 2 and 3 of the 2-bit field (0, 85, 170, 255), the cube the 8-bit TrueColor visual presents. The grey 217 asks for red and green level 6 and a blue 55 percent of the way from level 2 to level 3, which an ordered dither renders as alternate pixels of the two blue levels.
+- **The server and the board do not issue it.** The X server's draw functions use only the colour-index forms (an empty logic-operation nibble, the colour from `XSTATE`, `RGBMODECMD` and `DITHER`, bits 14 and 15, never set: [REX1 page](../../devices/rex1/README.md), and an immediate scan of `lg1mc.so` found no command word with either bit), and the core server has no dither code (its only dither strings belong to the video extension). A colour the server hands out is one pixel value, never a pattern. **Established** for the scan; the full `lg1mc.so` was not read for every immediate.
+- **The Express shows flat grey** because its visual is 24-bit, where the client has no cube to dither to and the same code takes the `dont_dither` path (**inferred** from the two routine names and the observation).
+
+So the checkerboard is correct output arriving as pixel data (a `PutImage` or a stipple fill) and is not a rendering bug in the board model. The model has nothing to add for it.
 
 ## Open
 
