@@ -235,7 +235,7 @@ pointer in every object that touches the board:
 | `lg1.a` `light_init.o` `lightInitInfo` +0xb4 (0x10000a9c) | 0xff | | established; runs only when CONFIGMODE bits 7:4 read 0 |
 | `lg1.a` `light.o` `lightPcxSwap` (+0x15c save, +0x344 restore) | copies the word between hardware and a saved image | image word | established |
 | the other `lg1.a` members (`light_dma.o`, `light_retrace.o`, `light_tp.o`) | none | | established (searched for the offsets and for the constants) |
-| PROM board library (`lg1_init.c`, **[source]**; 4.0.5D image 0xbfc0fa94, 4.0.5G image 0xbfc12944) | 0xff | | established in both images, source agrees; written just before its pixel-memory probe, unconditionally |
+| PROM board library (`lg1_init.c`, **[source]**; 4.0.5D image 0xbfc0fa94, 4.0.5G image 0xbfc12944) | 0xff | | established in both images; written just before its pixel-memory probe, unconditionally |
 | ide REX test, `rex_clear` and write-mask command (`rex.c`, `minigl.c`) | test patterns, 0x00ff, user value | | source; diagnostics only |
 
 So no desktop, tile, `XFillRectangle`, `GetImage`, cursor or private-request path (`lightPrivate`'s seven requests) writes RWMASK. The

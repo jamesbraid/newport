@@ -93,7 +93,7 @@ Which bits of each register a working board must keep, as the shipped read-back 
 software checks: read in full from the 4.0.5G PROM (070-8116-005; the test at 0xbfc06264 to 0xbfc063c8, its width lookup at
 0xbfc072b0 (a chain of compares on window and offset, not a data table), the write-and-compare routine at 0xbfc07400) and from the ide diagnostic source for the board
 (`stand/arcs/ide/fforward/graphics/LIGHT/vc1.c`, functions `vc1_length` and `test_vc1_register`, **[source]**; the PROM build of the
-test is `lg1_pon` in `rex.c` of the same directory). The binary and the source agree on every width and on the register order. The
+test is `lg1_pon` in `rex.c` of the same directory). The
 4.0.5D PROM runs no such test (its image has no "VC1 power on test failed" text). What the chip does with bits it does not keep
 is **inferred**: both tests expect the bits above the width to read back 0 after ones were written to them, and software never
 reads them otherwise.
