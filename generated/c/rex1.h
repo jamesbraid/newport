@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 ecd9811a9c5fe86af059b576ba476501aafd1e4d9ea05cff66e16a35ef28e01d */
+/* input sha256 1f9834d143fdd5ab9217f91a6581ebeb13404d3f6c678d5026dabde3e569710f */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -386,21 +386,21 @@
  * Line stipple mode. 20 bits kept (the ide mask is 0xfffff). Every writer in
  * the shipped software: the X server's dashed lines (rexLineSD) write ((length
  * - 17) << 16) | 0x0101 with length 17 to 32, its dash builder doubling a
- * pattern until it is at least 17 bits long and giving up (software fallback)
- * above 32; the X server's stippled fills (rexStippledFS, rexStippledFillRects)
- * write (width - 17) << 16 with both repeat bytes 0; the IRIX 6.2 OpenGL
- * library writes 0xf0000 | n << 8 | n with n the GL repeat factor masked to 8
- * bits (256 is stored as 0); the IRIS GL library writes the same form with n
- * clamped to 1 to 255; the kernel's window context switch saves and restores
- * it. The 4.0.5G PROM never stores it. Bits 19:16 are the pattern length minus
- * 17 (software expectation: no software writes a length of 16 or less, and a
- * 16-bit GL pattern is sent as a doubled 32-bit one with field 15); bits 15:8
- * and 7:0 are written equal by every software that sets them, so which byte is
- * the live count is unknown; a repeat value n from 1 to 255 holds each pattern
- * bit for n pixels (inferred from the IRIS GL lsrepeat contract and the OpenGL
- * factor). A value of 0 is used as one pixel per bit by the X server's fills
- * and as 256 by the OpenGL library; both cannot hold (unknown).
- * devices/rex1/true-lines.md#lsmode-length-and-repeat.
+ * pattern until it is at least 17 bits long and recording a length of 0 above
+ * 32 (its consumer was not read); the X server's stippled fills (rexStippledFS,
+ * rexStippledFillRects) write (width - 17) << 16 with both repeat bytes 0; the
+ * IRIX 6.2 OpenGL library writes 0xf0000 | n << 8 | n with n the GL repeat
+ * factor masked to 8 bits (256 is stored as 0); the IRIS GL library writes the
+ * same form with n clamped to 1 to 255; the kernel's window context switch
+ * saves and restores it. The 4.0.5G PROM never stores it. Bits 19:16 are the
+ * pattern length minus 17 (inferred from the writers: no software writes a
+ * length of 16 or less, and a 16-bit GL pattern is sent as a doubled 32-bit one
+ * with field 15); bits 15:8 and 7:0 are written equal by every software that
+ * sets them, so which byte is the live count is unknown; a repeat value n from
+ * 1 to 255 holds each pattern bit for n pixels (inferred from the IRIS GL
+ * lsrepeat contract and the OpenGL factor). A value of 0 is used as one pixel
+ * per bit by the X server's fills and as 256 by the OpenGL library; both cannot
+ * hold (unknown). devices/rex1/true-lines.md#lsmode-length-and-repeat.
  */
 /* lsmode: rw32, reset unknown */
 #define REX1_LSMODE_OFFSET                           0x68u /* established */
