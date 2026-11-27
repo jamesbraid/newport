@@ -142,7 +142,7 @@ Published specifications, Library `library/cache/graphics/indy/`:
 | `erikarn-sgi_indy_rex3.pdf` (REX3 Specification, revision 1.0, 13 August 1993) | `9abe890d1a806ed67c26647e9b7ab309072d4d2a8faf2c75af52cc1530b33917` |
 | `erikarn-sgi_indy_xmap9.pdf` (XMAP9 Specification, revision 2.1, 29 October 1993) | `01f286964acbf1a843483eaad0f4448221e686bc1ef5f7c76ef12bfc02fa64a1` |
 | `erikarn-sgi_indy_ro1.pdf` (RO1 Specification) | `d34e27959a9f30a152a86dd0536c58573aa06881ac05d3c3ff33efe369696937` |
-| `erikarn-sgi_indy_vc2.pdf` (VC2 Specification; searched, not read in full) | `fe4a6a0ec593254e97443ad9e4ab5811330576c603cc72d188260010c8542fbd` |
+| `erikarn-sgi_indy_vc2.pdf` (VC2 Specification, revision 2.0, 17 May 1993; text read in full, cursor-table figure read as an image) | `fe4a6a0ec593254e97443ad9e4ab5811330576c603cc72d188260010c8542fbd` |
 | `erikarn-sgi_indy_gio64.pdf` (GIO Bus specification, version 1.1 draft, 1992) | `5b8599ac622fe1b59de3357d664df5ccb943141813e6245849d5be02bd7b69f2` |
 | `erikarn-sgi_indy_mc.pdf` (MC Chip Specification) | `03e7062abcb842ea067a81b785756ad5f0d2dd28944fcc313f79c6b2738a3472` |
 | `erikarn-sgi_indy_dmux1.pdf` (MUX Chip Specification) | `232fabd4033011941045e82309eb649c8359cc897fef0aa6ae70c274fcb82ed3` |
@@ -151,3 +151,17 @@ Published specifications, Library `library/cache/graphics/indy/`:
 Public drivers: Linux v7.2-rc7 (`db2ddb87143519e20a95aa36c60b36107b736a58`) `include/video/newport.h` and
 `drivers/video/console/newport_con.c`; NetBSD tree `07004b2a9dac23a1cdd33b76dc45b65be56c6f1f` `sys/arch/sgimips/gio/newport.c`,
 `newportreg.h`.
+
+## VC2 cursor pages, 2026-11-27
+
+| Item | SHA-256 |
+|---|---|
+| `ip22prom-5.3revE.bin`, an IP22 PROM image (512 KiB, flat, read as big-endian MIPS at 0xbfc00000): cursor routine at 0xbfc1d8c0, glyph loader 0xbfc1cd44, display enable at 0xbfc1d2bc | `7b3eb33889bcc40c3dadc7093c06d3e221b6e2a5073acc556f62932b08b6cd8a` |
+
+The 6.5 base media `ng1.a` and `ng1.so` above were read again for the cursor routines (`newportPositionCursor`, `newportPrivate`
+request 21001, `initVC2`, `initNg1Cursor`, `vc2LoadSRAM`, `newportInit`; `rex3DisplayCursor`, `rex3InstallCursor`, `rex3CursorOn`,
+`rex3BlankScreen`) and for the six `rex3DrawImage`/`rex3ReadImage` routines. IRIX 6.5.7 source files cited by path:
+`stand/arcs/lib/libsk/graphics/NEWPORT/np_timing.h` (the table sets by board revision), `stand/arcs/lib/libsk/graphics/CURSOR/vc1cursor.c`,
+`stand/arcs/include/cursor.h`, `stand/arcs/ide/fforward/graphics/NEWPORT/vc2.c` and `stand/arcs/ide/isddevices/video/MCO/mco_diag.h`
+(constants only: it says it copies the kernel's `vc2.h`, which is not in the tree). Public drivers, same revisions as above: Linux
+`include/video/newport.h` and `drivers/video/console/newport_con.c`; NetBSD `newportreg.h` and `newport.c`.

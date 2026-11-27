@@ -3,7 +3,7 @@
 The Newport board in the Indy (IP24) and the Indigo2 (IP22): a REX3 raster engine, a VC2 video controller, two XMAP9 mode mappers,
 two CMAP colour maps, a Bt445 DAC and VRAM, in an 8-bit-plane build and a 24-bit-plane build. This page covers how software finds
 the depth and what a 24-bit board changes for software against an 8-bit one. It is the board-level account; chip detail is on
-[REX3](../../devices/rex3/README.md) and [XMAP9](../../devices/xmap9/README.md). The Indigo's Entry board is a different design: see
+[REX3](../../devices/rex3/README.md), [VC2](../../devices/vc2/README.md) (cursor only) and [XMAP9](../../devices/xmap9/README.md). The Indigo's Entry board is a different design: see
 [LG1](../lg1/README.md).
 
 Grades follow [AGENTS.md](../../AGENTS.md). Review 2026-11-27. Sources: the IRIX 6.5.7 source tree's PROM library

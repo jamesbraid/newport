@@ -82,6 +82,47 @@ a board with revision 2 or higher can report 24 planes with bit 7 set. Routes tr
 `rex3Probe` in `ng1.so` for the visual arrays; read the Bt445 scan page by page from images; the IRIX ide Newport sources for the
 Indigo2 version source (`lg3_version`).
 
+## VC2 cursor
+
+### Cursor X origin on each board revision
+
+Owning file: [VC2](../devices/vc2/README.md#where-the-constant-29-comes-from). IRIX adds 29 to X and 31 to Y; Linux uses 29, and 21 on board
+revision 3. The PROM library's timing tables put the cursor-position channel 18 state-run units (36 pixels) ahead of the visible line for
+boards below revision 3 and 14 units for revision 3, an 8-pixel difference that matches Linux. Open: whether the IRIX kernel's own timing
+tables (it has no revision term in its position routine) use the 14-unit lead on revision 3, and the exact relation between the lead and
+the origin (the specification asks for a lead of 20 units and gives an origin of 31 pixels). Routes tried: the VC2 and XMAP9
+specifications, `newportPositionCursor`, `initVC2`, `ng1_init.c` and every table in `np_timing.h`, Linux and NetBSD. Next: decode the
+kernel's tables in `newport_init.o` (`ng1_video_timing` records) for the position-channel lead per revision.
+
+### What the VC2 does with an out-of-range cursor position
+
+Owning file: [VC2](../devices/vc2/README.md#open). The specification's maximum for X is 2047 in the text and 4095 in the register table
+(Y 2047). IRIX sends `x - hotx + 29` with no clamp and masks it to 16 bits, so a pointer at x = 0 with a large hot spot gives a wrapped
+value. Routes tried: the specification in full text, the kernel routine, the ide `ng1vc2cursor` command (writes raw values). Next: any
+published note on the VC2 cursor counter; otherwise unknown with no shipped software depending on it.
+
+### 64 x 64 x 1 cursor and crosshair colour codes
+
+Owning file: [VC2](../devices/vc2/README.md#open). The specification does not say which two-bit cursor code a set pixel of the one-plane
+64 x 64 glyph produces, or which code the crosshair drives (its block diagram feeds the crosshair to input "01"). Only the ide command
+`ng1vc2cursormode` selects either. Routes tried: the specification (text and the cursor-generation figure), the PROM library, the ide
+sources, the kernel and X server (neither sets the 64 x 64 bit; the X server sets the crosshair bit). Next: the image-only parts of the
+specification at higher resolution; any published screenshot of the crosshair.
+
+### X server glyph buffer rows and the third cursor colour
+
+Owning file: [VC2](../devices/vc2/README.md#glyph-format). `rex3DisplayCursor` fills at most 32 rows from the cursor bitmaps; whether the
+rest of its 256-byte buffer is cleared first, and what sets the flag byte in the extra colour record that selects the three-colour
+glyph, were not read. Routes tried: `rex3DisplayCursor`, `rex3InstallCursor`. Next: decode the cursor realize routine (`nfbRealizeCursor`)
+that allocates the buffer.
+
+### Colour-map command register values 7 and 3
+
+Owning file: [VC2](../devices/vc2/README.md#colour-map-access). Cursor and ramp loads store 7 to colour-map register CRS 3 before and 3
+after; the PROM source comments tie 7 to disabling composite blanking during a load and 3 to half-full FIFO trip. No colour-map
+specification is held. Routes tried: the PROM source and image, the kernel, the X server, Linux and NetBSD (neither writes the register for
+cursor colours). Next: the colour-map specification, if it can be found by part number in the Library.
+
 ## REX3 host pixels
 
 ### Which host depth the X server sets for each visual
