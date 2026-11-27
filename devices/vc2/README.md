@@ -69,6 +69,7 @@ Word addresses, **established** for the values written. The bounds of each table
 | 0x0400 to 0x04ff | video-timing frame table | PROM, kernel |
 | **0x0500 to 0x057f** | **cursor glyph (128 words)** | PROM, kernel, X server |
 | 0x0600 | display-ID frame table (DID Entry Pointer, index 5) | PROM, kernel |
+| 0x0f00 | one halfword, the display control value `newportInit` has just written (outside every table; purpose unknown) | kernel |
 | 0x1000 | display-ID line table | PROM, kernel |
 
 ## Glyph format
@@ -108,7 +109,7 @@ Glyph evidence beyond the figure, **established** as software expectation:
 
 ## Position
 
-**Established** (specification section 3.1.6, kernel `newportPositionCursor` at `newport.o` +0x524, PROM routine at 0xbfc1d8c0).
+**Established** (specification section 3.1.6, kernel `newportPositionCursor` at `newport.o` +0x524; the PROM's cursor initialisation at 0xbfc1d8c0 loads the glyph and colours and writes both position registers as zero).
 
 - Registers: Cursor X Location (index 2), Cursor Y Location (index 3). 16 bits each.
 - Write X, then Y. The Y write copies the X value into Current Cursor X (index 4, read-only to the host) and the pair is then taken
@@ -118,7 +119,9 @@ Glyph evidence beyond the figure, **established** as software expectation:
   no shipped code sets a crosshair position other than through the same registers).
 - The origin is **31 pixels left of and 31 lines above** the visible screen (specification). A glyph at (0, 0) therefore shows only its
   bottom-right pixel in the screen's top-left corner, and a glyph at (31, 31) is fully visible in the corner. The offset exists so a
-  cursor can sit partly off the top and left.
+  cursor can sit partly off the top and left. The specification adds that the X origin can only sit an odd number of pixels from the
+  screen's left edge (29, 31 and 21 all are), and its timing text asserts `VPOS_VC` 32 lines and `HPOS_VC` from the next line before the
+  first visible line, which is the 31-line Y origin.
 - The kernel's routine takes pointer position (x, y) and writes `x - hotx + 29` to index 2, then `y - hoty - (b164 - b168) + 31` to
   index 3, each masked to 16 bits and sent as the three-byte register write above. It reads `DCBMODE` first, waits for the display bus to
   be idle, and writes the old `DCBMODE` back afterwards. Both bookkeeping words `b164` and `b168` start as `(TOPSCAN + 1) & 0x3ff`; the
@@ -143,10 +146,16 @@ property of the video-timing table, which sets where the internal cursor-positio
 
 `ng1_init.c` picks the set from the board and Bt445 revisions in this way. Linux's switch from 29 to 21 on board revision 3 is the same 8
 pixels. **Established** for the table contents and the selection (decoded from `np_timing.h` for every table: 18 or 14, and 17 in one
-case, `n1024_70_r3`) and for Linux's constant; that the 8 pixels are the difference in the cursor origin is **inferred** (the numbers fit:
-offset 29 at lead 18 and 21 at lead 14). Two things are not settled: IRIX's routine has no revision term, so whether the kernel's own
-tables for a revision 3 board put `HPOS_VC` 18 units ahead is **unknown** (the kernel's tables were not decoded); and the specification's own
-figure for the lead is 20 units, which neither set matches.
+case, `n1024_70_r3`) and for Linux's constant.
+
+The kernel carries the same data. Its `newport_init.o` holds all 19 frame and line tables byte for byte as in `np_timing.h`, three sets of seven table
+pointers, and `newportInitInfo` picks the set by the same rule (board revision below 3: unsuffixed; 3: `_r3`; above 3: `_r4` if the Bt445
+revision is above 0xa, else `_r3`). **Established** (table bytes compared and the selection read in full). So on a revision 3 board IRIX programs the 14-unit
+tables and still writes `x - hotx + 29`: `newportPositionCursor` has no revision term, and the hot spot words are set only by the
+21001 request (and restored by a context swap). IRIX therefore uses one offset for both leads, where Linux switches by 8 pixels. That the 8 pixels are the
+difference in the cursor origin is **inferred** from Linux alone and is not supported by IRIX; either IRIX is 8 pixels off on revision 3
+or the lead does not set the origin by itself. Which is **unknown**. The specification's own figure for the lead is 20 units (31 pixels
+plus 4 half-rate cycles of pipe delay), which neither set matches.
 
 ## Hot spot
 
@@ -175,7 +184,7 @@ PROM and kernel write.
 | 2 | video timing enable | | kernel `initVC2` writes 4 first (0x44 for an interlaced mode) |
 | 3 | DID function enable | | set at init |
 | 4 | **cursor function enable** | the VC2 reads cursor data; when clear, "undefined" cursor values | set at init; the X server sets and clears it with bit 7 |
-| 5 | gensync enable | | kernel ORs 0x20 with bit 10 for one flag combination |
+| 5 | gensync enable | | kernel `initVC2` sets it when timing-table flag 0x08 is set, and adds bit 10 when flag 0x10 is set as well |
 | 6 | interlace | | set from a timing flag |
 | 7 | **cursor display enable** | 0 drives zeros on the cursor lines, 1 drives the cursor; takes effect at once, not at the next retrace | set at init; the X server sets and clears it with bit 4 |
 | 8 | **cursor mode** | 0 glyph, 1 crosshair | X server sets it for the crosshair cursor, clears it for a glyph |
@@ -225,11 +234,12 @@ clear the server writes one luminance value (a weighted sum of the three, trunca
 
 ### Colour-map access
 
-Both colour-map chips are written at once with `DCBADDR` 1 (`DCB_CMAP_ALL` in Linux). Per colour: `DCBMODE` 0x008480b1 (CRS 3, one byte,
+Both colour-map chips are written at once with `DCBADDR` 1 (`DCB_CMAP_ALL` in Linux). `DCBMODE` 0x008480b1 (CRS 3, one byte,
 no acknowledge, chip-select width 4) and a byte store of **7** at `DCBDATA0`+3; `DCBMODE` 0x1084808a (CRS 0 with auto-increment, two bytes,
 `SWAPENDIAN`) and a halfword store of the address at `DCBDATA0`+2; `DCBMODE` 0x008480a3 (CRS 2, three bytes) and a word store of
-`red << 24 | green << 16 | blue << 8`. Then, after the last colour, a byte store of **3** to CRS 3. **Established** (kernel
-`initNg1Cursor`, X server, and the PROM routine at 0xbfc1d9ac to 0xbfc1dac0). The PROM source comments say writing the table needs the
+`red << 24 | green << 16 | blue << 8`. Then a byte store of **3** to CRS 3. The kernel and the PROM do the 7 once, write the address once
+and send the three colours back to back before the 3. The X server (`rex3DisplayCursor`) repeats the whole 7, address, colour, 3 sequence
+for each of its three entries. **Established** (kernel `initNg1Cursor`, X server, and the PROM routine at 0xbfc1d9ac to 0xbfc1dac0). The PROM source comments say writing the table needs the
 composite blanking disabled and calls 7 that state, and 3 the normal one ("trip on half full"), so CRS 3 is the colour-map command
 register with a bit that holds blanking off during a load: **inferred** from comments, no colour-map specification held. That the
 address auto-increments after each RGB triple (the PROM and kernel rely on it for entries 0x1CE0 to 0x1CE2) is likewise **inferred**.
@@ -241,8 +251,8 @@ address auto-increments after each RGB triple (the PROM and kernel rely on it fo
 2. Honour three-byte register writes and the byte-pair reads and writes through CRS 1, 2 and 3.
 3. When control bits 4 and 7 are both set, in glyph mode with bit 9 clear, draw the 32 x 32 glyph with its top-left at screen pixel
    `(X - 31, Y - 31)` per the specification. The shipped IRIX and Linux code behaves as if the X origin were 29 on most boards (21 on
-   board revision 3); a model that follows the specification and the drivers together should take the origin from a property of the
-   modelled timing table, or use 29 and accept a 2-pixel difference from the specification. Read both planes from the entry pointer; code 0
+   board revision 3); a model that follows the specification should use 31, or use 29 as IRIX does and accept a 2-pixel difference.
+   Linux's 21 on revision 3 is not matched by IRIX (see where the constant 29 comes from). Read both planes from the entry pointer; code 0
    shows the frame buffer and codes 1 to 3 give the colour-map entry `(XMAP9 CRS 3 << 5) + code`.
 4. In crosshair mode draw a crosshair through (X, Y); the colour code is **inferred** to be 1 (the specification's block diagram feeds the
    crosshair into the same two-bit output as code 01).
@@ -266,4 +276,6 @@ Entered in [questions](../../questions/README.md#vc2-cursor).
 - **X server glyph rows below the cursor height.** `rex3DisplayCursor` copies at most 32 rows of the cursor; whether the buffer's
   other rows are cleared before it is loaded was not read.
 - **Configuration revision.** The VC2 revision comes from index 0x1f bits 7 to 5 (000 for the first revision per the specification);
-  Linux prints the field. Differences between revisions are not described anywhere read.
+  Linux prints the field, but its header defines the register as 0x20 where the specification and NetBSD use 0x1f; a 5-bit index would
+  read the Video Entry Pointer instead, so the revision Linux prints is **inferred** to be unreliable. Differences between revisions are
+  not described anywhere read.

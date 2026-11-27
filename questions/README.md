@@ -88,11 +88,12 @@ Indigo2 version source (`lg3_version`).
 
 Owning file: [VC2](../devices/vc2/README.md#where-the-constant-29-comes-from). IRIX adds 29 to X and 31 to Y; Linux uses 29, and 21 on board
 revision 3. The PROM library's timing tables put the cursor-position channel 18 state-run units (36 pixels) ahead of the visible line for
-boards below revision 3 and 14 units for revision 3, an 8-pixel difference that matches Linux. Open: whether the IRIX kernel's own timing
-tables (it has no revision term in its position routine) use the 14-unit lead on revision 3, and the exact relation between the lead and
-the origin (the specification asks for a lead of 20 units and gives an origin of 31 pixels). Routes tried: the VC2 and XMAP9
-specifications, `newportPositionCursor`, `initVC2`, `ng1_init.c` and every table in `np_timing.h`, Linux and NetBSD. Next: decode the
-kernel's tables in `newport_init.o` (`ng1_video_timing` records) for the position-channel lead per revision.
+boards below revision 3 and 14 units for revision 3, an 8-pixel difference that matches Linux. The IRIX kernel carries the same tables
+and selects them by the same rule, yet its position routine adds 29 on every revision. Open: whether IRIX is 8 pixels off on revision 3 or
+the lead does not set the origin alone, and the exact relation between the lead and the origin (the specification asks for a lead of 20
+units and gives an origin of 31 pixels). Routes tried: the VC2 and XMAP9 specifications, `newportPositionCursor`, `initVC2`,
+`newportInitInfo`, the kernel's and the PROM library's tables, Linux and NetBSD. Next: a published report or capture of cursor
+placement on a revision 3 board.
 
 ### What the VC2 does with an out-of-range cursor position
 
