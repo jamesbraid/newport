@@ -38,4 +38,5 @@ REX1, so none of it is established lineage.
   REX3 reaches VC2, XMAP9, CMAP and Bt445 through its display-control bus (`DCBMODE`/`DCBDATA`). The VC1 and VC2 share a name
   prefix; whether VC2 is a successor of VC1 is not read here and not claimed.
 - **Where to read next.** The REX1 reading is in [devices/rex1](devices/rex1/README.md) and the board in
-  [platforms/lg1](platforms/lg1/README.md). The REX3 side has its host-access page, [byte lanes](devices/rex3/byte-lanes.md),; the REX3 register map is not written.
+  [platforms/lg1](platforms/lg1/README.md). The REX3 side has its host-access page, [byte lanes](devices/rex3/byte-lanes.md), the
+  [XMAP9](devices/xmap9/README.md) page and the [Newport board](platforms/newport/README.md) page; the REX3 register map is not written.

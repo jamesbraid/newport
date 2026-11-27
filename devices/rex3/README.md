@@ -11,5 +11,7 @@ Grades follow [AGENTS.md](../../AGENTS.md).
 | Page | Covers |
 |---|---|
 | [byte-lanes.md](byte-lanes.md) | Which bytes of a word the chip takes for register, display-bus and pixel-port writes, what the Indy and Indigo2 memory controller does to them, and what a little-endian CPU must do |
+| [../xmap9/README.md](../xmap9/README.md) | The XMAP9 mode and overlay mapper: configuration register, mode table, pixel formats |
+| [../../platforms/newport/README.md](../../platforms/newport/README.md) | The board: how software finds the frame-buffer depth, and what an XL24 changes against an XL8 |
 
 LG1's REX1 is a different chip; see [REX1](../rex1/README.md) and the lineage notes in the [top README](../../README.md#rex1-and-rex3).

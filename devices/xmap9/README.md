@@ -10,7 +10,8 @@ Grades follow [AGENTS.md](../../AGENTS.md). Sources: the XMAP9 Specification, re
 extracted text, not from page images), the PROM source's Newport files, the IRIX 6.5 IP22 kernel's `newport_init.o` (function
 `initXMAP9`, read in full), the ide diagnostics' visual table, and the public Linux and NetBSD drivers. Where this page says a
 field name from the ide table is a given XMAP9 field, that is **inferred** from the name and the specification's bit positions: the
-header that gives the macro values (`sys/xmap9.h`) is not in the source tree. Board-level depth handling is on the Newport board page.
+header that gives the macro values (`sys/xmap9.h`) is not in the source tree. Board-level depth handling is on the
+[Newport board page](../../platforms/newport/README.md).
 
 ## Registers
 

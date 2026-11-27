@@ -70,3 +70,14 @@ access sizes (big-endian only); Linux and NetBSD (big-endian only); the Library'
 Not tried: the OpenBSD and MAME Newport code (big-endian machines, so unlikely to help); the REX3 specification's page images beyond
 page 79; a search of `ng1.so` and the kernel for endian-dependent code. Next: a published description of REX3's GIO pad logic or a
 run of any little-endian CPU against a real REX3, if a transcript exists in a public archive.
+
+### Newport 24-bit board: remaining gaps
+
+Owning file: [Newport board](../platforms/newport/README.md). Open: where an Indigo2 gets its board revision (the PROM keeps a
+per-slot version from another source); the condition under which the kernel ORs 0xd0 into the XMAP9 configuration byte; the visual
+each entry of the X server's per-depth tables names (the arrays are filled at run time in `rex3Init`); the contents of the colour map
+and Bt445 (no colour-map specification is held, and `erikarn-bt445_ramdac.pdf` is an image-only scan that has not been read); whether
+a board with revision 2 or higher can report 24 planes with bit 7 set. Routes tried: the PROM source, the IP22 kernel's
+`newport_init.o`, the `ng1.so` data tables and `rex3Install24Map`, the Library by part name. Next: decompile `rex3Init` and
+`rex3Probe` in `ng1.so` for the visual arrays; read the Bt445 scan page by page from images; the IRIX ide Newport sources for the
+Indigo2 version source (`lg3_version`).

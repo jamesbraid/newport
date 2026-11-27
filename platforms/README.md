@@ -5,3 +5,4 @@
 | Page | Title | Summary |
 |---|---|---|
 | [lg1/](lg1/README.md) | LG1: the Indigo Entry graphics board | The Entry ("Starter", LG1) graphics board of the SGI Indigo: a REX1 raster engine, a VC1 video controller with its... |
+| [newport/](newport/README.md) | Newport: the Indy and Indigo2 graphics board, 8-bit against 24-bit | The Newport board in the Indy (IP24) and the Indigo2 (IP22): a REX3 raster engine, a VC2 video controller, two XMAP9... |
