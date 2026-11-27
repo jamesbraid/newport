@@ -89,6 +89,7 @@ None of these affect `gfxinit`'s exit; they are what `-v` prints and what the X 
 | +0x29 REX revision (the pixel-memory probe's outcome) | 0, 1, 2, other | REX revision "A", "B", "1.5" or "unknown" | none read |
 | +0x2a VC1 revision | 0, 1, other | VC1 revision "A", "B", "unidentified" or "unknown" | below 1 the kernel skips VC1 init; the X server's line-table extra entry |
 | +0x2b monitor type | 0 to 7 | 6 is 14", 2 and 5 are 16", 1 and 4 are 19", 3 is 20", 7 "unknown", 0 "unidentified (0)" | X's `lg1MonitorSizeTable` (physical size, mm); the PROM and kernel colour-map setup (below) |
+| +0x2c video installed (`WCLOCK` bit 6 clear) | 0, 1 | "video option installed." or "video option not installed." (6.5 read in full; 5.3 inferred equal) | the 5.3 and 6.2 X server's video route; nothing in 6.5 ([board configuration byte](board-config-byte.md)) |
 
 The PROM library source (`stand/arcs/lib/libsk/graphics/LIGHT/lg1_init.c`, **[source]**) names the record fields `boardrev` (+0x28),
 `rexrev` (+0x29), `vc1rev` (+0x2a), `monitortype` (+0x2b) and `videoinstalled` (+0x2c, 1 when `WCLOCK` bit 6 is clear), and its

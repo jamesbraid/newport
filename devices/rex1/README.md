@@ -22,7 +22,10 @@ command values agree with what is written here and it supplied none of it. The c
 - **Revision as software sees it.** `WCLOCK` read with `CONFIGSEL` = 4: bits 2:0 are a board revision. The kernel takes
   `rev < 2` to be an LG1 (Bt479 colour map, first clock table, `htp` function table `lg1_htp_fncs`) and `rev >= 2` an LG2
   (LUT1 colour map, second clock table, `lg2_htp_fncs`). Bits 5:3 are a monitor type (6 selects a variant of the colour map
-  command word) and bit 6 set means "no video board". NetBSD agrees about the `rev < 2` rule. **Established.**
+  command word) and bit 6 set means no video option: software stores 1 in a "video installed" word when the bit is clear
+  ([board configuration byte](../../platforms/lg1/board-config-byte.md): readers and what a model returns). NetBSD agrees about the
+  `rev < 2` rule. **Established** for the three fields as software uses them; that the bit is a strap for the optional video board
+  is **inferred**.
   Values a real board returns: **unknown**.
 - A second "head": a second board at the next 0x8000 (`0x1f3f8000`). Established that both addresses are probed; whether a
   real second board works with IRIX: the kernel keeps a per-board table of two entries, so the code path exists.
@@ -289,7 +292,7 @@ and the IP20 `ide` image, re-disassembled from the shipped objects. Verdicts per
   The code stores `YSTARTI` = 767 - y1 and `YENDI` = 767 - y0 (arguments x0, y0, x1, y1), the PROM fill does the same, so YSTARTI <= YENDI for y0 <= y1.
   The kernel's `light_pnt2i` also reads the GO alias after storing the command at SET.
 - **CONFIGSEL port sharing (CONFIRMED).** WCLOCK, RWDAC and RWVC1 use it. The board revision, monitor type and bit 6 are read with CONFIGSEL 4 (GO read, 1 microsecond,
-  SET read); bit 6 clear stores 1 in the info word at +0x2c. The VC1 revision read is CONFIGSEL 3 after the address counter was set to 5. `initClock` writes the selector through its
+  SET read); bit 6 clear stores 1 in the info word at +0x2c (the model returns bit 6 set; see the [board configuration byte](../../platforms/lg1/board-config-byte.md)). The VC1 revision read is CONFIGSEL 3 after the address counter was set to 5. `initClock` writes the selector through its
   GO alias (0x4fec). Not a fault: `lightInit` runs `rexClear` twice, the second after `lightInitInfo`, whose pixel-memory probe leaves pixels behind.
 - **Offsets named only by the ide test (UPGRADED to established).** The ide test at 0xa853d968 calls a helper (0xa853d670) with the write offset, the read-back offset, the
   name, a mask and a shift, and all 41 offsets are now read directly. Every inferred offset was right. Findings that change the model: XSTARTF (0x10), XENDF

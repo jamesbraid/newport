@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 c587e1ddbf4df01b89d5a6e5451b3a0f4832d35a6c7184199c0e9cbeff4c1670 -->
+<!-- input sha256 5b91c1a2c90c901f624413a727c1f1c73a8c06c320a0a3949eaae0b43c119707 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -277,7 +277,7 @@ VRAM diagnostic access. No shipped kernel or PROM runtime path touches it; the i
 
 ### Register `wclock`
 
-Port to the pixel clock generator and the board configuration byte; the byte is picked by CFGSEL. Reading with CFGSEL 4 (after a dummy read of the GO alias and a one microsecond wait) returns: bits 2:0 board revision, bits 5:3 monitor type, bit 6 set when no video board is present. light_init stores them in bytes 0x28, 0x2b and 0x2c of the board info. Writing with CFGSEL 2 clocks the clock generator's program bytes in: initClock writes 17 bytes in a row to the SET and GO aliases, selected by board revision (below 2: the first of the two 17-byte clock tables in the driver, 2 and above: the second). A qtest can discriminate: CFGSEL 4 then a read of GO and SET returns the configured byte; a model needs a settable board revision to take the revision 1 path (the PROM and kernel need the revision below 2 branch for the Bt479 colour map).
+Port to the pixel clock generator and the board configuration byte; the byte is picked by CFGSEL. Reading with CFGSEL 4 (after a dummy read of the GO alias and a one microsecond wait) returns: bits 2:0 board revision, bits 5:3 monitor type, bit 6 set when the video option is absent (software stores 1 in the word at 0x2c when the bit is clear; the 5.3 and 6.2 X server then tries the video driver and falls back to 0 if it cannot open it, the 6.5 server and every PROM and kernel path ignore it). light_init stores them in bytes 0x28, 0x2b and the word 0x2c of the board info. A model with no video board returns bit 6 set; platforms/lg1/board-config-byte.md. Writing with CFGSEL 2 clocks the clock generator's program bytes in: initClock writes 17 bytes in a row to the SET and GO aliases, selected by board revision (below 2: the first of the two 17-byte clock tables in the driver, 2 and above: the second). A qtest can discriminate: CFGSEL 4 then a read of GO and SET returns the configured byte; a model needs a settable board revision to take the revision 1 path (the PROM and kernel need the revision below 2 branch for the Bt479 colour map).
 
 ### Register `rwdac`
 
@@ -355,7 +355,7 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CMD_SPAN_LSPATTERN` | 0x921 | inferred |  | CMD_SPAN plus bit 11 (0x800), used by rexStippledFS and the stippled line code together with LSPATTERN and LSMODE. Bit 11 is inferred to enable the line stipple; no other source names it. |
 | `CMD_STOPONX` | 0x100 | established |  | Command flag: the draw's x run ends at XENDI (inclusive; NetBSD notes the end is inclusive). |
 | `CMD_STOPONY` | 0x200 | established |  | Command flag: the draw's y run ends at YENDI. Set for rectangle fill and copy, clear for the glyph rows (the glyph's y advances once per pattern write). |
-| `CMD_TILE_HOSTDATA` | 0x200121 | established |  | CMD_SPAN plus HOSTDATA: tile fill, rexTileRects, with AUX1 set to 0x28 or 0x2c (by a board-info flag word being 1 or -1) and the tile words written through RWAUX1 GO. Effect inferred. |
+| `CMD_TILE_HOSTDATA` | 0x200121 | established |  | CMD_SPAN plus HOSTDATA: tile fill, rexTileRects, with AUX1 set to 0x28 or 0x2c (by a field of the window's multibuffer private record being 1 or -1; not a board-info word) and the tile words written through RWAUX1 GO. Effect inferred. |
 | `CMD_XMAJOR` | 0x40 | inferred |  | Command flag named XMAJOR in the shipped header. The IRIX 6.2 GL ORs it with STOPONX (0x140) into every line whose x extent is the larger one, and ORs STOPONY alone (0x200) for the others. Read as: step along x and accumulate MINORSLOPE into y. devices/rex1/true-lines.md. |
 | `CMD_XYCONTINUE` | 0x80 | established |  | Command flag: start the draw from the current XSTART/YSTART position the previous command left, not from XSTARTI/YSTARTI. Set in the glyph commands (0x300005a1, 0x300005a9, 0x300005b9) that the kernel and PROM follow with one pattern write per row. |
 | `CMD_ZCONTINUE` | 0x1000000 | unknown |  | Defined by NetBSD, never set by the shipped software read. |

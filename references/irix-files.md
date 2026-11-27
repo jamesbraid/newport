@@ -97,3 +97,15 @@ Used only for the layout and names of the sibling REX3 chip, never as a REX1 fac
 | Item | SHA-256 |
 |---|---|
 | REX3 Specification, revision 1.0 (Silicon Graphics, August 1993; held in the Library as `erikarn-sgi_indy_rex3.pdf`; the pages carry a proprietary and confidential banner) | `9abe890d1a806ed67c26647e9b7ab309072d4d2a8faf2c75af52cc1530b33917` |
+
+## Files read for the video-option page (2026-11-26)
+
+Already listed above and read again: the 5.3, 6.2 and 6.5 `lg1.a` and `lg1mc.so`, the 5.3 and 6.5 `kernel.o`, the 6.5 `gfxinit` and `Xsgi`, the 5.3 `Xsgi` (`ddxGetBoardInfo` only), the 6.2 and 6.5 `libgl.so` of the Entry arch (the board-info compatibility check) and the 4.0.5G PROM. New here:
+
+| Item | SHA-256 |
+|---|---|
+| IP20 PROM 070-8116-004 (4.0.5D), `ip20prom.070-8116-004.BE.bin` | `e6e1f1ed90d5979ef5829f823c2a4ff65ea24c3273a2b065a8b71abeba97f82f` |
+| `ide.IP20` from the 6.5 base media (an ECOFF executable; the Entry board-info routine at 0xa85694ac is read from it) | `5ede622efa1b55d199218ff2cf10fb4556289288125b0c0e627bbbd424a4fea0` |
+| `usr/gfx/arch/IP20LG1MC/libgl.so` (6.5; the IRIS GL context set-up and the board-info compatibility check) | `1ccdbf47ae829449ecfaa4128db441a0c36f2dbc78c3229dc37a0292cda8ba32` |
+
+The IRIX source files cited with it are `stand/arcs/lib/libsk/graphics/LIGHT/lg1_init.c` and the video board's own diagnostics under `stand/arcs/ide/IP20/video/LIGHT/`, from the 6.5.7 tree, and the published `lg1.h` of the 6.2 media.

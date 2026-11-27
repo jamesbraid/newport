@@ -35,16 +35,19 @@ width and height, the tile origin, the raster operation, the plane mask and the 
 
 When the tile width is exactly 4 pixels it draws with the hardware, as below. Any other width (the code compares the width with 4
 at 0x5e31207c) is cut into chunks and handed to a per-screen function pointer that is not the tile command (0x5e31232c onward;
-the pointer is loaded at 0x5e312078 through the board record, and the chunk calls pass the operation, mask and screen), so **only
+the pointer is loaded at 0x5e312078 from offset 8 of the structure the window's `nfbWindowPrivateIndex` record points to, and the chunk calls pass the operation, mask and screen), so **only
 four-pixel tiles reach this command**. The pointer's target was not identified; the chunk loops are consistent with image writes
 from host memory, so larger tiles are **inferred** to be drawn as ordinary images.
 
 Setup, once per call (0x5e31209c to 0x5e312158):
 
-1. `AUX1` (0x4) = 0x28, or 0x2c, but only when a flag in the screen record (bit 31 of its word at +0x18) is set and the board
-   record's copy of the board-info +0x2c word is 1 (0x28) or -1 (0x2c). Otherwise `AUX1` is not written here. In the header's names
+1. `AUX1` (0x4) = 0x28, or 0x2c, but only when bit 31 of the word at +0x18 of the window argument is set and the +0x18 field of the
+   window's multibuffer private record (the record indexed by the module's `nmbxWindowPrivateIndex` in the window's private-data
+   array, 0x5e3120bc to 0x5e3120f4) is 1 (0x28) or -1 (0x2c). It is **not** the board-info +0x2c word: the base register traces to
+   the window array, and the board record is reached through a different index (corrected 2026-11-26, see the
+   [board configuration byte](../../platforms/lg1/board-config-byte.md)). Otherwise `AUX1` is not written here. In the header's names
    0x28 is DOUBLEBUF and DBLDST1 and 0x2c adds DBLDST0 (**[hdr]**; role **inferred**: draw into a double-buffered destination). When
-   the word is 1 the plane mask is also shifted right by 4 (a four-plane buffer); for -1 it is not.
+   the field is 1 the plane mask is also shifted right by 4 (a four-plane buffer); for -1 it is not.
 2. `COMMAND` (0x0) = 0x00200121.
 3. `XSTATE` (0x8) = (plane mask & 0xff) << 16 | (operation << 24) | 0x10000000: plane mask in bits 23:16, the X raster operation (0
    to 15, replace is 3) in bits 27:24, and **bit 28 set**, the header's XSTATE_COLORAUX (the state copy of command bit 21; **inferred**).
@@ -102,7 +105,8 @@ registers unchanged. Discriminating checks:
 
 ## Open
 
-- Which board-info word and screen flag select `AUX1` 0x28 or 0x2c, and what DOUBLEBUF with a destination bit does on a board that
+- What the multibuffer record's 1 and -1 stand for (which buffer of a multibuffered window; **inferred** from the destination bits),
+  and what DOUBLEBUF with a destination bit does on a board that
   is not double buffered (the model may ignore `AUX1` and write the displayed buffer).
 - Whether the hardware repeats at the data word or at quad alignment when `XSTARTI` is not a multiple of 4 (the software never
   relies on quad alignment here, which is why the phase is read as relative to `XSTARTI`).

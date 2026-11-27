@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 c587e1ddbf4df01b89d5a6e5451b3a0f4832d35a6c7184199c0e9cbeff4c1670 */
+/* input sha256 5b91c1a2c90c901f624413a727c1f1c73a8c06c320a0a3949eaae0b43c119707 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -641,15 +641,18 @@
  * Port to the pixel clock generator and the board configuration byte; the byte
  * is picked by CFGSEL. Reading with CFGSEL 4 (after a dummy read of the GO
  * alias and a one microsecond wait) returns: bits 2:0 board revision, bits 5:3
- * monitor type, bit 6 set when no video board is present. light_init stores
- * them in bytes 0x28, 0x2b and 0x2c of the board info. Writing with CFGSEL 2
- * clocks the clock generator's program bytes in: initClock writes 17 bytes in a
- * row to the SET and GO aliases, selected by board revision (below 2: the first
- * of the two 17-byte clock tables in the driver, 2 and above: the second). A
- * qtest can discriminate: CFGSEL 4 then a read of GO and SET returns the
- * configured byte; a model needs a settable board revision to take the revision
- * 1 path (the PROM and kernel need the revision below 2 branch for the Bt479
- * colour map).
+ * monitor type, bit 6 set when the video option is absent (software stores 1 in
+ * the word at 0x2c when the bit is clear; the 5.3 and 6.2 X server then tries
+ * the video driver and falls back to 0 if it cannot open it, the 6.5 server and
+ * every PROM and kernel path ignore it). light_init stores them in bytes 0x28,
+ * 0x2b and the word 0x2c of the board info. A model with no video board returns
+ * bit 6 set; platforms/lg1/board-config-byte.md. Writing with CFGSEL 2 clocks
+ * the clock generator's program bytes in: initClock writes 17 bytes in a row to
+ * the SET and GO aliases, selected by board revision (below 2: the first of the
+ * two 17-byte clock tables in the driver, 2 and above: the second). A qtest can
+ * discriminate: CFGSEL 4 then a read of GO and SET returns the configured byte;
+ * a model needs a settable board revision to take the revision 1 path (the PROM
+ * and kernel need the revision below 2 branch for the Bt479 colour map).
  */
 /* wclock: rw32, reset unknown */
 #define REX1_WCLOCK_OFFSET                           0x47e4u /* established */
