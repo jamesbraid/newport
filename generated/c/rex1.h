@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 5b91c1a2c90c901f624413a727c1f1c73a8c06c320a0a3949eaae0b43c119707 */
+/* input sha256 4d528a646d992b25eee26b40a60312b0538b33d44bc51ee680c7e1baef88350c */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -283,8 +283,11 @@
  * channel with its integer part (COLORREDI, 8 bits) in bits 18:11. Shaded
  * draws: the IRIX 6.2 GL stores the float c + 6144.0, so the word is 0x45c00000
  * + c * 2048 (bits above 19 are ignored by the chip, 9 integer and 11 fraction
- * bits are kept) and a negative c wraps modulo 512. Whether the chip clamps or
- * wraps out-of-range colours is unknown. devices/rex1/shaded-drawing.md.
+ * bits are kept) and a negative c wraps modulo 512. The sibling REX3's register
+ * of the same shape clamps each iteration, reading the nine integer bits as
+ * -0.5 to +1.5; REX1 is inferred to clamp the same way (the only reading that
+ * gives the GL's negative and positive overshoots the result it needs), not
+ * shown by anything for REX1. devices/rex1/shaded-drawing.md.
  */
 /* colorred: rw32, reset unknown */
 #define REX1_COLORRED_OFFSET                         0x3cu /* established */

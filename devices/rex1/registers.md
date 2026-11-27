@@ -1,6 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
 <!-- defs-gen 3 -->
-<!-- input sha256 5b91c1a2c90c901f624413a727c1f1c73a8c06c320a0a3949eaae0b43c119707 -->
+<!-- input sha256 4d528a646d992b25eee26b40a60312b0538b33d44bc51ee680c7e1baef88350c -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
 
@@ -149,7 +149,7 @@ Foreground pixel colour (the ide test reads a write back through COLORRED at 0x3
 
 ### Register `colorred`
 
-Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red channel with its integer part (COLORREDI, 8 bits) in bits 18:11. Shaded draws: the IRIX 6.2 GL stores the float c + 6144.0, so the word is 0x45c00000 + c * 2048 (bits above 19 are ignored by the chip, 9 integer and 11 fraction bits are kept) and a negative c wraps modulo 512. Whether the chip clamps or wraps out-of-range colours is unknown. devices/rex1/shaded-drawing.md.
+Red channel with fraction for shaded draws, 20 bits in the ide mask. Offset by name order. Offset established by the ide test. COLORRED holds the red channel with its integer part (COLORREDI, 8 bits) in bits 18:11. Shaded draws: the IRIX 6.2 GL stores the float c + 6144.0, so the word is 0x45c00000 + c * 2048 (bits above 19 are ignored by the chip, 9 integer and 11 fraction bits are kept) and a negative c wraps modulo 512. The sibling REX3's register of the same shape clamps each iteration, reading the nine integer bits as -0.5 to +1.5; REX1 is inferred to clamp the same way (the only reading that gives the GL's negative and positive overshoots the result it needs), not shown by anything for REX1. devices/rex1/shaded-drawing.md.
 
 ### Register `colorgreeni`
 
@@ -321,7 +321,7 @@ Window origin offset: x in bits 27:16 and y in bits 11:0, 0x800 each at init (th
 | `CMD_COPY_RECT` | 0x30080329 | established |  | Screen copy: fill-rectangle with LOGICSRC. The PROM's scroll routine loads the four coordinates, writes XYMOVE (offset 0x34) at its GO alias, and uses this command word; NetBSD issues the same command. |
 | `CMD_COPY_RECT_GL` | 0x30280329 | established |  | The rectangle copy of the IRIX 6.2 GL: LOGICSRC and bit 21 with the block fill 0x329 and XYMOVE = (x delta << 16) \| (y delta & 0xffff); the GO store of COMMAND runs it. The effect of bit 21 here is unknown. |
 | `CMD_COPY_RECT_STATE` | 0x80329 | established |  | Screen copy with an empty logic-operation nibble (X server rexCopyRect, rexValidateWindowPriv): CMD_COPY_RECT without bits 31:28; XYMOVE at its GO alias executes it. |
-| `CMD_DITHER` | 0x8000 | inferred |  | Command flag named DITHER in the shipped header. The GL adds it whenever GL_DITHER is enabled, for colour-index and RGB draws alike (clears 0x30008329 and 0x3000c329, spans, points, lines, triangle rows), and omits its own rounding offsets in that case. Position-dependent rounding of the colour to the pixel; the matrix and amplitude are unknown. devices/rex1/shaded-drawing.md. |
+| `CMD_DITHER` | 0x8000 | inferred |  | Command flag named DITHER in the shipped header. The GL adds it whenever GL_DITHER is enabled, for colour-index and RGB draws alike (clears 0x30008329 and 0x3000c329, spans, points, lines, triangle rows), and omits its own rounding offsets in that case. Position-dependent rounding of the colour to the pixel (inferred). The matrix, phase and amplitude of REX1 are unknown; the sibling REX3's published rule (4 by 4 Bayer matrix on the low two bits of window-relative x and y, compared with the top four fraction bits) is the weakly inferred candidate, and a carry out of the top of a field is inferred to saturate. devices/rex1/shaded-drawing.md. |
 | `CMD_DRAW` | 0x1 | established |  | Command opcode 1, named REX_DRAW in the shipped header: draw. Opcode 0 (REX_NOP) is a no-op that only latches the coordinates (NetBSD and the PROM glyph code both write it through the GO alias before a glyph). |
 | `CMD_ENLSPATTERN` | 0x800 | inferred |  | Command flag named ENLSPATTERN in the shipped header: use LSPATTERN and LSMODE as the line stipple. Set by the stippled span words (0x921), the X server's stippled rectangles (0x9a9) and the GL stippled lines. |
 | `CMD_ENZPATTERN` | 0x400 | established |  | Command flag: pixels are drawn where the ZPATTERN bit is one, taken from bit 31 downward. Used for every font glyph. |

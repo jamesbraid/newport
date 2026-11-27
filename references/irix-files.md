@@ -109,3 +109,11 @@ Already listed above and read again: the 5.3, 6.2 and 6.5 `lg1.a` and `lg1mc.so`
 | `usr/gfx/arch/IP20LG1MC/libgl.so` (6.5; the IRIS GL context set-up and the board-info compatibility check) | `1ccdbf47ae829449ecfaa4128db441a0c36f2dbc78c3229dc37a0292cda8ba32` |
 
 The IRIX source files cited with it are `stand/arcs/lib/libsk/graphics/LIGHT/lg1_init.c` and the video board's own diagnostics under `stand/arcs/ide/IP20/video/LIGHT/`, from the 6.5.7 tree, and the published `lg1.h` of the 6.2 media.
+
+## Files read for the dither pages (2026-11-26)
+
+| Item | SHA-256 |
+|---|---|
+| `usr/gfx/arch/IP20LG1MC/libGLcore.so` (6.5; constants, the dither routines and the span set-up) | `7e0dcde0106d404be00342d3d6a9f0022ce61a24e397eee7354cf9670eb0fcb9` |
+
+The 6.5 `libgl.so` above was read for the same context set-up. The 5.3, 6.2 and 6.5 `lg1mc.so`, `Xsgi`, `gfxinit`, both kernels, both PROMs and the `ide` image were also scanned for the 4 by 4 ordered-dither matrix (only the two `libGLcore.so` copies hold it). The REX3 specification (listed above) was read again for its dither, rounding and colour-register sections; its use stays the same: a sibling expectation, never a REX1 fact.
