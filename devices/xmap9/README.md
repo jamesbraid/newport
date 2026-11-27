@@ -26,7 +26,7 @@ header that gives the macro values (`sys/xmap9.h`) is not in the source tree. Bo
 | 3 | read-write, 8 bits | Cursor colour-map MSB: bits 12:5 of the colour-map address of the cursor's four entries |
 | 4 | read-write, 8 bits | Pop-up colour-map MSB, same form |
 | 5 | write 32 bits, read 8 | Mode table: a write is the entry number (5 bits) in the first byte, then the three bytes of the 24-bit entry, most significant first, as one four-byte transfer; reads are one byte at a time through CRS 7 |
-| 7 | read-write, 8 bits | Mode table address, for reads: bit 7 read-port select, bits 6:2 entry, bits 1:0 byte (0 is bits 23:16, 1 bits 15:8, 2 bits 7:0) |
+| 7 | read-write, 8 bits | Mode table address, for reads: bit 7 read-port select, bits 6:2 entry, bits 1:0 byte: 0 selects bits 7:0, 1 bits 15:8, 2 bits 23:16 (the specification's translation table, page 15; its prose calls bits 23:16 "byte 0", so a reader who takes the field as the byte number gets the order backwards) |
 
 Mode writes go through a FIFO and take effect in blanking; a read right after a write may return stale data for about ten pixel
 clocks, so the host writes another entry or talks to another chip first.
