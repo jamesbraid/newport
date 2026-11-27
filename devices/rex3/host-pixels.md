@@ -31,9 +31,10 @@ unused trailing fields. **Established** (specification section 3.10).
 
 ## Packing per depth
 
-**Established** as the published figure ("big endian format illustrated"; the figure has no little-endian counterpart). A 32-bit
-transfer uses the low word of the 64-bit bus, which is `HOSTRW0` (the specification names `HOSTRW0` the most significant word and
-`HOSTRW1` the least significant, but with `RWDOUBLE` clear only `HOSTRW0` is used). Bit positions below are within that word. The figure
+**Established** as the published figure ("big endian format illustrated"; the figure has no little-endian counterpart). The
+`RWDOUBLE` clear rows occupy `GIO_DATA(31:0)`. The specification names `HOSTRW0` the most significant word and `HOSTRW1` the least
+significant, yet says a 32-bit access uses only `HOSTRW0`, and does not say how the two statements fit; this page takes the 32-bit rows as
+the word a program reads and writes at `HOSTRW0` (**inferred**, and the X server does exactly that). Bit positions below are within that word. The figure
 is an 8-cell strip with one shaded region per case; the cells are bytes, so within a byte a half-cell shading is a nibble.
 
 32-bit transfer (`RWDOUBLE` 0), `HOSTRW0` bits:
@@ -64,8 +65,8 @@ positions (8-bit in 31:24, 12-bit in 27:16), and the probe writes two 12-bit pix
 at 0x5e9545b8, `rex3DrawImage24` at 0x5e8de534, `rex3ReadImage` at 0x5e8dc554, `rex3ReadImage12` at 0x5e953ca0, `rex3ReadImage24` at
 0x5e954d44).
 
-- All six routines OR `RWPACKED` (0x80) into the `DRAWMODE1` value, on top of a per-visual base word read from the screen record
-  (offset 20) and a logical-operation nibble shifted to bits 31:28. `HOSTDEPTH` and `DRAWDEPTH` come from that base word, so no
+- All six routines OR `RWPACKED` (0x80) into the `DRAWMODE1` value, on top of a base word at offset 20 of a per-format record (reached
+  through a table at offset 0x84 of the screen record) and a logical-operation nibble shifted to bits 31:28. `HOSTDEPTH` and `DRAWDEPTH` come from that base word, so no
   X server path was seen to set the host depth directly. Which base word each visual gets was **not traced**; that the 24-bit routines use
   `HOSTDEPTH` 3 and the 12-bit routines `HOSTDEPTH` 2 is **inferred** from their data movement below.
 - Image put: `DRAWMODE0` is **0x46** (opcode DRAW, `ADRMODE` block, `COLORHOST`). The routine writes `XYSTARTI` (0x150) and `XYENDI` (0x154) as
@@ -78,17 +79,19 @@ at 0x5e9545b8, `rex3DrawImage24` at 0x5e8de534, `rex3ReadImage` at 0x5e8dc554, `
   in the upper halfword however the row starts, matching the packed 12-bit layout.
 - 8-bit put: source bytes are re-aligned into words with variable shifts chosen from the low two bits of the start address, four pixels
   to a word, first pixel in the top byte.
-- Image get (`rex3ReadImage`, `ReadImage12`, `ReadImage24`): `DRAWMODE0` is **0x45** (opcode READ, block, `COLORHOST`) and `DRAWMODE1` also has
-  `PREFETCH` (0x04000000) set. The routine writes a dummy word, 0xdeadbeef, to the `HOSTRW0` GO alias first; the specification's setup
-  rule is a write to GO to prefetch, then reads of `HOSTRW` with GO. Large reads use `DRAWMODE0` 0x145 (adds `STOPONX`) and pixel DMA.
-- Size split: puts above 16384 (8-bit and 12-bit routines: pixels; 24-bit routine: bytes, so 4096 pixels) and gets above 7000 (all three
-  read routines) go through kernel request 21002, which the kernel handles in `Ng1PixelDma` (a 32-byte argument). Smaller transfers are
-  the programmed-I/O stores above. **Established** for the thresholds as code; the unit of the 12-bit and 24-bit read counts was not checked.
+- Image get (`rex3ReadImage`, `ReadImage12`, `ReadImage24`), small transfers: `DRAWMODE0` is **0x45** (opcode READ, block, `COLORHOST`) and
+  `DRAWMODE1` also has `PREFETCH` (0x04000000) set. The routine writes a dummy word, 0xdeadbeef, to the `HOSTRW0` GO alias first; the
+  specification's setup rule is a write to GO to prefetch, then reads of `HOSTRW` with GO. Large reads use `DRAWMODE0` 0x145 (adds
+  `STOPONX`) with `PREFETCH` clear, which is the specification's rule for pixel DMA reads, and go to the kernel.
+- Size split: every routine compares a byte count (width times height times 1, 2 or 4 bytes a pixel for the 8-, 12- and 24-bit routines).
+  Puts of 16384 bytes or more (16384, 8192 or 4096 pixels) and gets of 7000 bytes or more (7000, 3500 or 1750 pixels) go through kernel
+  request 21002, which the kernel handles in `Ng1PixelDma` (a 32-byte argument). Smaller transfers are the programmed-I/O stores above.
+  **Established** for the thresholds as code.
 
 ## Open
 
 - **Which base word each visual uses.** The per-visual `DRAWMODE1` base (and so `HOSTDEPTH`) was not traced in `rex3Init` and the visual
-  setup. Would settle it: decode where the per-visual records at screen-record offset 20 are filled, or the X server's 24-bit visual setup,
+  setup. Would settle it: decode where the per-format records (offset 20, reached through the screen record's table at 0x84) are filled, or the X server's 24-bit visual setup,
   and compare with the diagnostics' table on the [XMAP9 page](../xmap9/README.md#the-visuals-the-irix-diagnostics-program).
 - **64-bit host transfers.** No shipped software was seen using `RWDOUBLE` from the CPU (the kernel and X server use only word stores
   and the DMA path is not decoded here). Which register a half lands in on a little-endian 64-bit store is on the byte-lane page.

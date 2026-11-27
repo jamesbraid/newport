@@ -128,5 +128,5 @@ cursor colours). Next: the colour-map specification, if it can be found by part 
 ### Which host depth the X server sets for each visual
 
 Owning file: [REX3 host pixels](../devices/rex3/host-pixels.md#open). All six image routines OR `RWPACKED` into a per-visual `DRAWMODE1`
-base word read from the screen record; the base words are filled elsewhere. Routes tried: the six routines, `rex3Init`, the visual setup
-by string and constant search. Next: decode the code that fills the record at offset 20 (the 24-bit visual setup).
+base word at offset 20 of a per-format record found through a table in the screen record; the records are filled elsewhere. Routes tried: the six routines, `rex3Init`, the visual setup
+by string and constant search. Next: decode the code that fills those records (the 24-bit visual setup).
