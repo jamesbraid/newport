@@ -8,7 +8,7 @@ the depth and what a 24-bit board changes for software against an 8-bit one. It 
 
 Grades follow [AGENTS.md](../../AGENTS.md). Review 2026-11-27. Sources: the IRIX 6.5.7 source tree's PROM library
 (`stand/arcs/lib/libsk/graphics/NEWPORT/ng1_init.c`) and ide diagnostics (`stand/arcs/ide/fforward/graphics/NEWPORT/`), read for
-the functions named; the IRIX 6.5 base media IP22 kernel archive `ng1.a` (members `newport_init.o`, `newport.o`) and the X server
+the functions named; the IRIX 6.5 base media IP22 kernel archive `ng1.a` (all six members, `newport_init.o` read for the XMAP9 and depth code) and the X server
 module `usr/lib/X11/dyDDX/ng1.so`, from the same disc as the hashes in [irix-files.md](../../references/irix-files.md); the REX3,
 XMAP9 and RO1 specifications; the Linux v7.2-rc7 and NetBSD Newport drivers. Nothing was run on a board. The colour-map
 specification is not held and the Bt445 specification is an image-only scan that was not read, so statements about those two rest on
@@ -44,8 +44,12 @@ values as one byte at `DCBDATA0`+3 to each chip: chip 0 with bit 1 clear (the ev
 in both, so 0x01 and 0x03 on a 24-bit board and 0x05 and 0x07 on an 8-bit one, then cursor MSB 0xe7, pop-up MSB 0, a wait for an empty
 mode FIFO and mode entry 0. With a flat panel attached the PROM source writes the 8-bit-system, pop-up, Express-video, video-option
 bits and RGB map 1 whatever the depth (0xd5 by the specification's bit positions; the macro values are in a header not in the
-tree); the kernel, under a condition not identified, ORs 0xd0 into the byte. **Established** for what is written; the kernel
-condition is **unknown** and the 0xd5 value **inferred**.
+tree); the kernel ORs 0xd0 into the byte (so 0xd1 or 0xd5 by depth) when a per-board flag is set. **Established** for what is written. **Inferred** (the code path was read in the
+disassembly, the function was not read end to end) for the flag's origin: `newportInitInfo` sets the flag to 1 when a non-zero byte in the board's info record (the flat-panel probe's
+result: 0 when the panel I2C bus does not answer, 130 or 131 for the two panel types it knows, 255 when it answers but gives no
+panel id) coexists with a first word of the chosen video-timing record that has bit 9 set, and to 0 otherwise; `initXMAP9` tests
+it. **Inferred** also: that the bit 9 timing flag marks a flat-panel timing, and so that this is the kernel's counterpart of the PROM's
+panel case; the 0xd5 value for the PROM is **inferred** from the specification's bit positions.
 
 ## What changes between an 8-bit and a 24-bit board
 
@@ -90,5 +94,5 @@ All derived from the rows above; none tested.
 ## Open
 
 Entered in [questions](../../questions/README.md#rex3-and-newport-from-a-little-endian-cpu): the board-revision source on the
-Indigo2, what condition makes the kernel OR 0xd0 into the XMAP9 byte, the visual list the X server builds per depth, the colour map
+Indigo2, what bit 9 of the timing record means (it gates the kernel's 0xd0), the visual list the X server builds per depth, the colour map
 and Bt445 contents (no specification), and whether any 24-bit board reports revision 2 or higher with bit 7 clear.

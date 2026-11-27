@@ -126,8 +126,8 @@ from the toolchain image (`mips64-linux-gnuabi64-objdump`); no decompiler was ru
 
 | Item | SHA-256 |
 |---|---|
-| `usr/cpu/sysgen/IP22boot/ng1.a` (6.5 base; members `newport_init.o`, `newport.o`, `newport_dma.o`, `newport_retrace.o`, `newport_tp.o`, `corona_i2c.o`; `initXMAP9` and `fbdepth` read in full, the rest searched for `DCBDATA0` access patterns) | `2cab6999585fced59f65bd2ea6e026afc1875cf948808370f18e8584a028962b` |
-| `usr/lib/X11/dyDDX/ng1.so` (6.5 base; data tables `rex3Depths8`, `rex3Depths24`, `rex3Formats`, function `rex3Install24Map`) | `4ff30c46ae2470691065ea5426824552d47bf4da49539e1ba056884700c66c71` |
+| `usr/cpu/sysgen/IP22boot/ng1.a` (6.5 base; members `newport_init.o`, `newport.o`, `newport_dma.o`, `newport_retrace.o`, `newport_tp.o`, `corona_i2c.o`; `initXMAP9` and `fbdepth` read in full; every `DCBDATA0` and `HOSTRW` access in all six members paired with its `DCBMODE` value by script) | `2cab6999585fced59f65bd2ea6e026afc1875cf948808370f18e8584a028962b` |
+| `usr/lib/X11/dyDDX/ng1.so` (6.5 base; data tables `rex3Depths8`, `rex3Depths24`, `rex3Formats`, function `rex3Install24Map`; every `DCBDATA0` access paired with its `DCBMODE` value by script) | `4ff30c46ae2470691065ea5426824552d47bf4da49539e1ba056884700c66c71` |
 | `usr/lib/X11/dyDDX/ng1.so` (6.5.30; the same three tables compared) | `c1c5c4d188d8861bbdbe06d5d78d6563d7ed512356d8a513d6d74ffd9073acce` |
 | `sbin/hinv` (6.5 base; strings only) | `179e6fcef50d000480c73a644b47732fd5b933b41d422887ea5b4d0c51222c14` |
 

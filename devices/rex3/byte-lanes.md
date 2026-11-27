@@ -18,7 +18,7 @@ or in an emulator for this page.
 | What must a little-endian driver do for `DCBDATA0` and `HOSTRW0` data that is more than one byte? | **unknown.** The sources leave three candidate rules; [the table below](#what-a-little-endian-driver-stores-under-each-rule) gives the store for each. No shipped software or published source runs REX3 from a little-endian CPU. | **unknown** |
 
 The consequence for a driver that copies the big-endian constants unchanged (`ireg << 24`, `px << 24`) is that it is right only
-under rule 2 below, the one an emulator author is most likely to have chosen. Nothing read shows the hardware does that.
+under rule 2 below. Nothing read shows the hardware does that.
 
 ## What the published specifications say
 
@@ -73,7 +73,8 @@ The shipped IP22 kernel, the PROM source and the two public drivers all touch `D
 | Source | One byte (`DATAWIDTH` 1) | Two bytes | Three or four bytes | Grade |
 |---|---|---|---|---|
 | IRIX 6.5 IP22 kernel, `initXMAP9` (read in full) | byte store at `DCBDATA0`+3 | not in this function | word store at +0 | **established** for that function |
-| Same kernel, `newport_init.o` of `ng1.a`, by instruction pattern | 92 byte stores and 16 byte loads at offset 0x243 from the REX3 base pointer, none at +0 to +2 | 12 halfword stores and 4 halfword loads at 0x242 | 32 word stores at 0x240, no word loads at 0x240, no doubleword store | **inferred** (counted by pattern; the base register was not checked at every site). The other three members (`newport.o`, `newport_retrace.o`, `newport_tp.o`) show the same patterns and no others at 0x240 to 0x243 |
+| Same kernel, all six members of `ng1.a`, each access paired with the `DCBMODE` value stored before it (script over the disassembly; sites it could not resolve were read by hand) | 102 byte stores and 28 byte loads, all at offset 0x243 from the REX3 base pointer, every resolved one under `DATAWIDTH` 1; none at +0 to +2 | 15 halfword stores and 5 halfword loads, all at 0x242, every one under `DATAWIDTH` 2 | 42 word stores at 0x240 under `DATAWIDTH` 3 (RGB triplets, first byte in bits 31:24) or 0; no word or doubleword load at 0x240 and no doubleword store | **inferred** by the repository's rule (not every function body was read end to end; `initXMAP9`, `SetGammaIdentity`, `vc2LoadSRAM`, the `newportSetGammaRamp` loop and the start of `initClock` were). No site contradicts the pairing; `HOSTRW0` and `HOSTRW1` are touched only by word loads and stores |
+| X server module `ng1.so` (6.5 base), same method | 25 byte stores and 18 byte loads at 0x243 under `DATAWIDTH` 1 | 115 halfword stores and 1 halfword load at 0x242 under `DATAWIDTH` 2 | 41 word stores and 1 word load at 0x240; no doubleword access. Five apparent mismatches were checked by hand: four halfword stores in `rex3CopyWindow` run under a `DCBMODE` of 0x00841032 (`DATAWIDTH` 2) held in a register the script lost across a branch, and the one word store the script paired with `DATAWIDTH` 1 in `rex3DisplayCursor` packs an RGB triplet with its `DCBMODE` set on a path the script did not follow | **inferred**, same reason. The module holds no string or branch about endianness; its only `swap` names are about buffer swaps |
 | Linux `newport.h` (v7.2-rc7) | byte at `b3` (+3) | halfword at `s1` (+2) | word | **established** (public driver) |
 | NetBSD `newport.c` | word store with the byte in bits 31:24 (`val << 24`), word load shifted right 24 | word store with the pair in bits 31:16, load shifted right 16 | word store, first byte in bits 31:24 | **established** (public driver) |
 
@@ -113,13 +114,17 @@ Other big-endian facts from the same sources:
 **Unknown.** The routes tried, so nobody repeats them: the REX3 specification in full text (the little-endian statement quoted
 above is the whole of it, and the packing figure is big-endian only); the GIO64, MC and multiplexer specifications; the IRIX 6.5.7
 Newport sources (`libsk` and the ide diagnostics), searched for `endian`, `little` and `_MIPSEL`: only the `SWAPENDIAN` handling
-turns up, so the Newport sources have no little-endian branch (the IP22 PROM source has a little-endian build option for its own
-start-up code, in `csu.s`); the 6.5 IP22 kernel's Newport objects, read for their `DCBDATA0` and `HOSTRW0` access sizes only; the
-X server module `ng1.so`, read for its depth tables only, not searched for endian handling; Linux and NetBSD, which are big-endian
-only for this chip (Linux's IP22 is configured for big-endian CPUs only). The OpenBSD and MAME Newport code was not read. The Library's
-Usenet archive and mailing-list inboxes had no hit for a little-endian Newport driver. The specification of the colour-map chip is
-not held, and the RAMDAC specification (`erikarn-bt445_ramdac.pdf`) is an image-only PDF that was
-not read.
+turns up, so the Newport sources have no little-endian branch; the 6.5 IP22 kernel's six Newport objects and the X server module
+`ng1.so`, every `DCBDATA0` and `HOSTRW` access checked for size and `DATAWIDTH` (table above), with no endian string or branch in
+either; Linux and NetBSD, which are big-endian only for this chip (Linux's `SGI_IP22` selects only `SYS_SUPPORTS_BIG_ENDIAN`,
+`arch/mips/Kconfig` at the cited revision). The IP22 PROM source builds little-endian under `_MIPSEL` (`csu.s`; `main.c` prints "(LE)"), and `libsk`, whose makefile builds the `NEWPORT` directory for IP22, is
+its device library (that a little-endian PROM image was ever shipped was not checked). The Newport code reaches the display bus through helper macros (`xmap9SetReg`, `cmapGetReg` and others) and the panel code in
+`libsk/io/corona_i2c.c` uses a union member `dcbdata0.bybyte.b3`; the headers that define them are in neither the source tree nor
+the installed media. If those definitions differ between the two endiannesses they would show the PROM's own little-endian access
+pattern. OpenBSD and MAME Newport code is not in the Library and was not read; both target
+big-endian CPUs. The Library's Usenet archive and mailing-list inboxes had no hit for a little-endian Newport driver. The
+specification of the colour-map chip is not held, and the RAMDAC specification (`erikarn-bt445_ramdac.pdf`) is an image-only PDF
+that was not read.
 
 Three rules cover everything the sources leave open. Rule 1 is what the GIO64 text and the "addressing conventions" sentence most
 naturally mean; rule 2 is what an emulator that applies the CPU's lane view to word stores does; rule 3 is a byte-reversal done in
@@ -130,8 +135,7 @@ the chip. Grades are **unknown** for all three; "disfavoured" below is a judgmen
 2. **Fixed lanes.** REX3 ignores the endian bit for data and applies its big-endian lane map unchanged: start byte *n* is read
    from bits 31-8n:24-8n of the word, and the word is numeric. A word store then behaves exactly as on a big-endian CPU, and a
    little-endian sub-word store lands in the wrong lane (the byte store at +3 that Linux and the IRIX kernel issue would put its
-   byte in bits 31:24 where the chip looks at bits 7:0). An emulator that hands a CPU word store to its register model unchanged and mirrors sub-word lanes matches this rule (the iris Indy
-   model is reported to work that way; not read for this page, and an emulator's choice is not evidence).
+   byte in bits 31:24 where the chip looks at bits 7:0).
 3. **Memory image.** REX3 reverses the bytes of every 64-bit bus word when the endian bit is set, so each multi-byte register
    and pixel is a byte-reversed number. **Disfavoured:** it makes every 32-bit register differ between the two CPU modes, which the
    MC and GIO specifications read above do not do for any device they describe.
@@ -151,6 +155,12 @@ Derived from the rules, not observed. `V` is the value the big-endian code store
 | `HOSTRW0`, packed 12-bit pair | `p0 << 16 \| p1` | `p0 \| p1 << 16` | as big-endian | as rule 1 |
 | `HOSTRW0`, 32-bit pixel (24-bit draw depth) | word `A<<24 \| B<<16 \| G<<8 \| R` | same number | same number | `bswap32` of it |
 
+Not covered: 64-bit accesses (`RWDOUBLE` host formats, doubleword stores to `HOSTRW0`/`DCBDATA0`). The specification names `HOSTRW0`
+(0x230) the most significant word and `HOSTRW1` (0x234) the least, which is the big-endian order; under the GIO64 little-endian
+numbering the word at the lower address is the low half of a doubleword, so which register a half lands in on a little-endian
+doubleword store is **unknown**. The IRIX kernel and `ng1.so` use no doubleword access to either port, so no shipped software shows
+the expectation.
+
 What a driver can do without knowing the rule:
 
 - Use only word stores of the numeric big-endian constants for registers (right under rules 1 and 2). Probe for rule 3 once at
@@ -160,7 +170,7 @@ What a driver can do without knowing the rule:
 - Settle rule 1 against rule 2 at start with a read-back of a display-bus register that holds one byte and nothing else changes
   it: the XMAP9's cursor colour-map MSB register (CRS 3, 8 bits, read-write, "never modified by the XMAP9" per its specification).
   Write 0x5A as the word `0x5A` and read the word back; if that fails, write `0x5A000000` and read. A driver would then carry the rule
-  it found. **Inferred** and untried; a fixed-lane model such as iris's cannot tell the two apart.
+  it found. **Inferred** and untried; a model with fixed lanes cannot tell the two apart.
 
 What would settle it: a published description of REX3's GIO pad logic, the chip's source, or a recorded run of a little-endian
 CPU against real REX3. No hardware is available and none is planned; see [AGENTS.md](../../AGENTS.md).
@@ -177,7 +187,7 @@ Entered in [questions](../../questions/README.md#rex3-and-newport-from-a-little-
 - IRIX 6.5.7 source tree: `stand/arcs/lib/libsk/graphics/NEWPORT/ng1_init.c` (`Ng1Probe`, `getfbdepth`),
   `stand/arcs/ide/fforward/graphics/NEWPORT/ng1visuals.c`, `ng1visuals.h`, `minigl3.c`, `newport_init.c`, and
   `stand/arcs/IP22prom/csu.s`, `r4k_eerom.s`.
-- IRIX 6.5 base media: `usr/cpu/sysgen/IP22boot/ng1.a` (members `newport_init.o`, `newport.o`, `newport_retrace.o`, `newport_tp.o`),
+- IRIX 6.5 base media (June 1998 build; the 6.5.22 IP22 kernel, the last IP22 release, is not in the local media and was not checked): `usr/cpu/sysgen/IP22boot/ng1.a` (all six members: `newport_init.o`, `newport.o`, `newport_dma.o`, `newport_retrace.o`, `newport_tp.o`, `corona_i2c.o`),
   `usr/lib/X11/dyDDX/ng1.so`; hashes in [irix-files.md](../../references/irix-files.md).
 - Linux v7.2-rc7 `include/video/newport.h`, `drivers/video/console/newport_con.c`; NetBSD `sys/arch/sgimips/gio/newport.c` and
   `newportreg.h` (tree at `07004b2a9dac`).

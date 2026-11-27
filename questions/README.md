@@ -67,14 +67,14 @@ under each. Also open: that the MC sets the byte-count cycle's little-endian bit
 the MC and multiplexer specifications describe the Indy and Indigo2 parts. Routes tried: the REX3, GIO64, MC and multiplexer
 specifications in full text; the IRIX 6.5.7 Newport sources (no endian branch); the 6.5 IP22 kernel's `DCBDATA0` and `HOSTRW0`
 access sizes (big-endian only); Linux and NetBSD (big-endian only); the Library's Usenet and mailing-list archives by keyword.
-Not tried: the OpenBSD and MAME Newport code (big-endian machines, so unlikely to help); the REX3 specification's page images beyond
-page 79; a search of `ng1.so` and the kernel for endian-dependent code. Next: a published description of REX3's GIO pad logic or a
+Not tried: the OpenBSD and MAME Newport code (not in the Library; big-endian machines, so unlikely to help); the REX3 specification's page images beyond
+page 79; the Newport hardware header and the helper-macro headers the PROM library uses (not in the source tree or media; if an Indy PROM or `ide` image carries them as debug information they would show whether the little-endian build changes the byte-member names); the 6.5.22 IP22 kernel (not in the local media). Next: a published description of REX3's GIO pad logic or a
 run of any little-endian CPU against a real REX3, if a transcript exists in a public archive.
 
 ### Newport 24-bit board: remaining gaps
 
 Owning file: [Newport board](../platforms/newport/README.md). Open: where an Indigo2 gets its board revision (the PROM keeps a
-per-slot version from another source); the condition under which the kernel ORs 0xd0 into the XMAP9 configuration byte; the visual
+per-slot version from another source); the visual
 each entry of the X server's per-depth tables names (the arrays are filled at run time in `rex3Init`); the contents of the colour map
 and Bt445 (no colour-map specification is held, and `erikarn-bt445_ramdac.pdf` is an image-only scan that has not been read); whether
 a board with revision 2 or higher can report 24 planes with bit 7 set. Routes tried: the PROM source, the IP22 kernel's
