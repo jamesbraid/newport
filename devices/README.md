@@ -8,3 +8,4 @@
 | [rex1/](rex1/README.md) | REX1 raster engine (Indigo Entry graphics board, LG1) | REX1 is the drawing chip on the Indigo's Entry graphics board. |
 | [rex3/](rex3/README.md) | REX3 raster engine (Indy and Indigo2 Newport graphics) | REX3 is the drawing chip of the Newport graphics board in the Indy (IP24) and the Indigo2 (IP22). |
 | [vc1/](vc1/README.md) | VC1 video controller (Indigo Entry graphics board) | The chip that generates video timing, the hardware cursor and the per-pixel display-mode lookup on the Indigo's... |
+| [xmap9/](xmap9/README.md) | XMAP9 mode and overlay mapper (Newport graphics) | The pair of chips on the Newport board that sit between the frame buffer and the colour maps. |
