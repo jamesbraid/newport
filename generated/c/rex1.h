@@ -1,7 +1,7 @@
 /* generated from devices/rex1/registers.toml by defs-gen - do not edit, change
  * the source */
 /* defs-gen 3 */
-/* input sha256 4d528a646d992b25eee26b40a60312b0538b33d44bc51ee680c7e1baef88350c */
+/* input sha256 cc07f21273987514cc7a8b32f102e2ddfc4122dbb2cb86f6b88f415f2faf4b93 */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -285,9 +285,10 @@
  * + c * 2048 (bits above 19 are ignored by the chip, 9 integer and 11 fraction
  * bits are kept) and a negative c wraps modulo 512. The sibling REX3's register
  * of the same shape clamps each iteration, reading the nine integer bits as
- * -0.5 to +1.5; REX1 is inferred to clamp the same way (the only reading that
- * gives the GL's negative and positive overshoots the result it needs), not
- * shown by anything for REX1. devices/rex1/shaded-drawing.md.
+ * -0.5 to +1.5; REX1 is inferred to clamp the same way (unlike the plain
+ * unsigned and two's-complement readings, it gives the GL's negative and
+ * positive overshoots the result they need), not shown by anything for REX1.
+ * devices/rex1/shaded-drawing.md.
  */
 /* colorred: rw32, reset unknown */
 #define REX1_COLORRED_OFFSET                         0x3cu /* established */
