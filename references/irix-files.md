@@ -117,3 +117,37 @@ The IRIX source files cited with it are `stand/arcs/lib/libsk/graphics/LIGHT/lg1
 | `usr/gfx/arch/IP20LG1MC/libGLcore.so` (6.5; constants, the dither routines and the span set-up) | `7e0dcde0106d404be00342d3d6a9f0022ce61a24e397eee7354cf9670eb0fcb9` |
 
 The 6.5 `libgl.so` above was read for the same context set-up. The 5.3, 6.2 and 6.5 `lg1mc.so`, `Xsgi`, `gfxinit`, both kernels, both PROMs and the `ide` image were also scanned for the 4 by 4 ordered-dither matrix (only the two `libGLcore.so` copies hold it). The REX3 specification (listed above) was read again for its dither, rounding and colour-register sections; its use stays the same: a sibling expectation, never a REX1 fact.
+
+## Newport (REX3) pages, 2026-11-27
+
+IRIX 6.5 base media, from the disc `irix6.5_foundation1.iso` (subsystems `eoe.sw.gfx`, `eoe.sw.base` and `x_eoe`); the 6.5.30 overlay
+image is `Instalation_Tools_and_Overlays1.image`. The members of `ng1.a` were extracted with `ar x` and read as MIPS disassembly
+from the toolchain image (`mips64-linux-gnuabi64-objdump`); no decompiler was run.
+
+| Item | SHA-256 |
+|---|---|
+| `usr/cpu/sysgen/IP22boot/ng1.a` (6.5 base; members `newport_init.o`, `newport.o`, `newport_dma.o`, `newport_retrace.o`, `newport_tp.o`, `corona_i2c.o`; `initXMAP9` and `fbdepth` read in full, the rest searched for `DCBDATA0` access patterns) | `2cab6999585fced59f65bd2ea6e026afc1875cf948808370f18e8584a028962b` |
+| `usr/lib/X11/dyDDX/ng1.so` (6.5 base; data tables `rex3Depths8`, `rex3Depths24`, `rex3Formats`, function `rex3Install24Map`) | `4ff30c46ae2470691065ea5426824552d47bf4da49539e1ba056884700c66c71` |
+| `usr/lib/X11/dyDDX/ng1.so` (6.5.30; the same three tables compared) | `c1c5c4d188d8861bbdbe06d5d78d6563d7ed512356d8a513d6d74ffd9073acce` |
+| `sbin/hinv` (6.5 base; strings only) | `179e6fcef50d000480c73a644b47732fd5b933b41d422887ea5b4d0c51222c14` |
+
+IRIX 6.5.7 source tree files cited by path: `stand/arcs/lib/libsk/graphics/NEWPORT/ng1_init.c` (`d52fe300...`),
+`stand/arcs/ide/fforward/graphics/NEWPORT/` (`ng1visuals.c`, `ng1visuals.h`, `minigl3.c`, `newport_init.c`, `rex3.c`, `vram3.c`,
+`cid3.c`) and `stand/arcs/IP22prom/csu.s`, `r4k_eerom.s`, `main.c`. The Newport hardware header (`sys/ng1hw.h`) is not in the tree.
+
+Published specifications, Library `library/cache/graphics/indy/`:
+
+| File | SHA-256 |
+|---|---|
+| `erikarn-sgi_indy_rex3.pdf` (REX3 Specification, revision 1.0, 13 August 1993) | `9abe890d1a806ed67c26647e9b7ab309072d4d2a8faf2c75af52cc1530b33917` |
+| `erikarn-sgi_indy_xmap9.pdf` (XMAP9 Specification, revision 2.1, 29 October 1993) | `01f286964acbf1a843483eaad0f4448221e686bc1ef5f7c76ef12bfc02fa64a1` |
+| `erikarn-sgi_indy_ro1.pdf` (RO1 Specification) | `d34e27959a9f30a152a86dd0536c58573aa06881ac05d3c3ff33efe369696937` |
+| `erikarn-sgi_indy_vc2.pdf` (VC2 Specification; searched, not read in full) | `fe4a6a0ec593254e97443ad9e4ab5811330576c603cc72d188260010c8542fbd` |
+| `erikarn-sgi_indy_gio64.pdf` (GIO Bus specification, version 1.1 draft, 1992) | `5b8599ac622fe1b59de3357d664df5ccb943141813e6245849d5be02bd7b69f2` |
+| `erikarn-sgi_indy_mc.pdf` (MC Chip Specification) | `03e7062abcb842ea067a81b785756ad5f0d2dd28944fcc313f79c6b2738a3472` |
+| `erikarn-sgi_indy_dmux1.pdf` (MUX Chip Specification) | `232fabd4033011941045e82309eb649c8359cc897fef0aa6ae70c274fcb82ed3` |
+| `erikarn-bt445_ramdac.pdf` (image-only scan; not read) | `53df11f2aa802bb55632baf4526807dea1662ace6dfdc4d8b51c3ef4e222fe5c` |
+
+Public drivers: Linux v7.2-rc7 (`db2ddb87143519e20a95aa36c60b36107b736a58`) `include/video/newport.h` and
+`drivers/video/console/newport_con.c`; NetBSD tree `07004b2a9dac23a1cdd33b76dc45b65be56c6f1f` `sys/arch/sgimips/gio/newport.c`,
+`newportreg.h`.

@@ -55,3 +55,18 @@ The X server fills with command 0x329 and takes colour, mask and operation from 
 ### Per-window colour map and buffer: how the VC1 turns its tables into pixels
 
 The X server loads window-id line and frame tables into the VC1 SRAM and writes a mode word per id into the display-mode window ([board page](../platforms/lg1/README.md#x-server-the-colour-map-vc1-and-cursor)); the table formats, the mode-word bank field and the per-DID banks are now on [display IDs and the mode table](../devices/vc1/did-xmap.md) and [colour-map banks](../devices/bt479/banks.md). Still unknown: what the chip does with mode-word bits 0, 9:8 and 14:12 and the odd half of the table, whether the index offset adds or replaces, how pop-up pixels reach bank 3, and whether the second plane group is ever displayed (value 3 is named `CIDPLANES` in the shipped header). Also unknown: whether VC1 register 0x80 is a data latch (the retrace handler needs it to behave as one) and what generates the retrace pulse. The pixel DMA's GIO address (the CPU physical address of `RWAUX1` GO) and mode word (0x50 or 0x52, written to `dma_mode` by `MCdma`) are decoded on the board page review. Routes tried: every kernel and X server user; the `ide` VC1 test strings. Next: the Express VC1 headers under the exposure note above.
+
+## REX3 and Newport from a little-endian CPU
+
+### Which bytes REX3 takes from a store on a little-endian CPU
+
+Owning file: [REX3 byte lanes](../devices/rex3/byte-lanes.md). Open: for `DCBDATA0` writes of more than one byte, for packed `HOSTRW0`
+pixels of 12 bits or fewer and for unpacked 8-bit pixels, which of three rules REX3 follows when the CPU is little-endian (address
+order with the endian bit honoured, fixed big-endian lanes, or a byte reversal in the chip); the page tabulates what a driver stores
+under each. Also open: that the MC sets the byte-count cycle's little-endian bit from its CPU bit for a programmed-I/O access, and that
+the MC and multiplexer specifications describe the Indy and Indigo2 parts. Routes tried: the REX3, GIO64, MC and multiplexer
+specifications in full text; the IRIX 6.5.7 Newport sources (no endian branch); the 6.5 IP22 kernel's `DCBDATA0` and `HOSTRW0`
+access sizes (big-endian only); Linux and NetBSD (big-endian only); the Library's Usenet and mailing-list archives by keyword.
+Not tried: the OpenBSD and MAME Newport code (big-endian machines, so unlikely to help); the REX3 specification's page images beyond
+page 79; a search of `ng1.so` and the kernel for endian-dependent code. Next: a published description of REX3's GIO pad logic or a
+run of any little-endian CPU against a real REX3, if a transcript exists in a public archive.
