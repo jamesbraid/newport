@@ -99,7 +99,7 @@ Other big-endian facts from the same sources:
 
   | Draw depth / host depth | Unpacked word (`RWPACKED` clear) | Packed (`RWPACKED` set) |
   |---|---|---|
-  | 4-bit | pixel in bits 27:24 (mask `0xf << 24`) | eight pixels, first in the top nibble (REX3 figure; **established** as the published figure) |
+  | 4-bit | pixel in bits 27:24 (mask `0xf << 24`) | four pixels, one per byte in the low nibble, first in the top byte (REX3 figure and its 8-bit-field rule, [host pixels](host-pixels.md#packing-per-depth); **established** as the published figure) |
   | 8-bit | pixel in bits 31:24 (`0xff << 24`) | four pixels, first in bits 31:24 (figure) |
   | 12-bit | pixel in bits 27:16 (`0xfff << 16`) | two pixels, first in the upper halfword (the PROM's depth probe writes `0xabc << 16 \| 0xdef` and reads back `0x0abc0def`; **source** and the kernel's `fbdepth`, both read in full) |
   | 24-bit draw, 32-bit host | blue, green, red in bits 23:0, red least significant (mask `0xffffff`) | same, one pixel a word |

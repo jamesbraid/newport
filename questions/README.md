@@ -81,3 +81,11 @@ a board with revision 2 or higher can report 24 planes with bit 7 set. Routes tr
 `newport_init.o`, the `ng1.so` data tables and `rex3Install24Map`, the Library by part name. Next: decompile `rex3Init` and
 `rex3Probe` in `ng1.so` for the visual arrays; read the Bt445 scan page by page from images; the IRIX ide Newport sources for the
 Indigo2 version source (`lg3_version`).
+
+## REX3 host pixels
+
+### Which host depth the X server sets for each visual
+
+Owning file: [REX3 host pixels](../devices/rex3/host-pixels.md#open). All six image routines OR `RWPACKED` into a per-visual `DRAWMODE1`
+base word read from the screen record; the base words are filled elsewhere. Routes tried: the six routines, `rex3Init`, the visual setup
+by string and constant search. Next: decode the code that fills the record at offset 20 (the 24-bit visual setup).
