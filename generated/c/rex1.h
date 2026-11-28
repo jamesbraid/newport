@@ -2,7 +2,7 @@
  * the source */
 /* SPDX-License-Identifier: BSD-3-Clause */
 /* defs-gen 5 */
-/* input sha256 cc07f21273987514cc7a8b32f102e2ddfc4122dbb2cb86f6b88f415f2faf4b93 */
+/* input sha256 0cccce49eb5a97855bc1bfd39cf59d5a77bd90c84957f60b67522a9d8dece89d */
 /* REX1 raster engine on the Indigo Entry graphics board (LG1) */
 #ifndef REX1_GEN_H
 #define REX1_GEN_H
@@ -46,7 +46,7 @@
  * reads, bit 5 turns double buffering on. The X server's four-pixel tile fill
  * and PutImage store 0x28 or 0x2c (DOUBLEBUF with DBLDST1, and DBLDST0 for
  * 0x2c) and its GetImage 0x30 (DOUBLEBUF with DBLSRC). The pixel-memory probe
- * stores 0x100 (COLORCOMPGT) here before its second write. Software expects
+ * stores COLORCOMPGT (bit 8) here before its second write. Software expects
  * only bits 9:0 (a software expectation; ten bits is inferred as the hardware
  * width): both the ide register test and the 4.0.5G PROM power-on test write a
  * 32-bit pattern and require the read-back to equal the pattern masked to 0x3ff

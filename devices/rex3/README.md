@@ -2,14 +2,13 @@
 
 REX3 is the drawing chip of the Newport graphics board in the Indy (IP24) and the Indigo2 (IP22). It draws into the frame buffer,
 passes host pixel data through the `HOSTRW0` and `HOSTRW1` ports, and reaches the video controller, colour maps and DAC through a
-display control bus (`DCBMODE`, `DCBDATA0`, `DCBDATA1`). This directory is a stub: the register map has not been written. What exists
-is the part a software author needs first, how the host reaches the chip, and the way the Newport board changes between its 8-bit
-and 24-bit builds.
+display control bus (`DCBMODE`, `DCBDATA0`, `DCBDATA1`). The register map is in [registers.md](registers.md), built from the public Linux and NetBSD Newport headers. The pages below cover how the host reaches the chip and the way the Newport board changes between its 8-bit and 24-bit builds; behaviour beyond the drivers' expectations is not yet written.
 
 Grades follow [AGENTS.md](../../AGENTS.md).
 
 | Page | Covers |
 |---|---|
+| [registers.md](registers.md) | The REX3 register map: offsets, fields and grades |
 | [byte-lanes.md](byte-lanes.md) | Which bytes of a word the chip takes for register, display-bus and pixel-port writes, what the Indy and Indigo2 memory controller does to them, and what a little-endian CPU must do |
 | [host-pixels.md](host-pixels.md) | `RWPACKED`, `HOSTDEPTH` and `RWDOUBLE`: how pixels are packed into `HOSTRW0` and `HOSTRW1` at each depth, and how the X server's image puts and gets use them |
 | [../xmap9/README.md](../xmap9/README.md) | The XMAP9 mode and overlay mapper: configuration register, mode table, pixel formats |

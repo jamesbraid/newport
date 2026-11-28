@@ -1,0 +1,747 @@
+unit = "rex3"
+prefix = "REX3"
+title = "REX3 raster engine (Indy and Indigo2 graphics)"
+doc = "Register file of the REX3 chip. Offsets are bytes from the REX3 base, which is 0xf0000 from the board base the public drivers map. Every register is 32 bits wide. The draw registers can be written at their own offset (the value is stored) or at the same offset plus GO_OFFSET (the value is stored and the primitive the latched draw mode describes is started); the configuration registers further up the map have the same pair, the same distance apart. Names and offsets are the ones the public Linux and NetBSD Newport headers declare, which agree where both define a register. Where only Linux declares a register the grade is inferred and the entry says so, unless a reading already in this repository confirms the offset. The drivers show what software writes and expects, not what the chip does with it: a role given from a name alone is marked inferred in the entry. Reset values are not given: no source states one. Nothing was measured on a board."
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header"
+public_from = ["Linux Newport framebuffer header", "NetBSD sgimips Newport register header", "NetBSD sgimips Newport driver"]
+name_source = "public"
+name_cite = "Linux Newport framebuffer header and NetBSD sgimips Newport register header, which declare the register and field names used here; a name only Linux declares is noted in its entry"
+
+[constants]
+GO_OFFSET = { value = 0x800, grade = "established", doc = "Distance from a register's plain address to its GO alias. NetBSD writes the primitive's last register at its address plus this value; Linux declares the two copies of the register block exactly this far apart (checked with offsetof), for the draw registers and again for the configuration registers." }
+BASE_FROM_BOARD = { value = 0xf0000, grade = "established", doc = "Offset of the first REX3 register from the board base, NEWPORT_REX3_OFFSET in NetBSD. Linux maps the same register file at the matching place in the Indy and Indigo2 GIO window." }
+PROBE_XSTART_SHIFT = { value = 11, grade = "established", doc = "NetBSD's board probe writes 0x12345678 to XSTARTI and accepts the board when XSTART reads back the low 16 bits shifted left by this much. It follows that the integer start lives from bit 11 upward in XSTART." }
+
+[enums.planes]
+doc = "Which plane group a draw writes, as named in the public headers. NetBSD names value 1 both RGB and CI (colour index in the same plane group); value 3 and 7 are not named by either header."
+values = { none = { value = 0, grade = "established" }, rgb = { value = 1, grade = "established" }, rgba = { value = 2, grade = "established" }, olay = { value = 4, grade = "established" }, pup = { value = 5, grade = "established" }, cid = { value = 6, grade = "established" } }
+
+[enums.depth]
+doc = "Frame-buffer plane depth in bits, as the headers name the values DD4, DD8, DD12 and DD24."
+values = { d4 = { value = 0, grade = "established" }, d8 = { value = 1, grade = "established" }, d12 = { value = 2, grade = "established" }, d24 = { value = 3, grade = "established" } }
+
+[enums.hostdepth]
+doc = "Host pixel depth in bits. Linux names value 3 HD32 and NetBSD HD24; devices/rex3/host-pixels.md grades the packing, which has an 8-8-8-8 word."
+values = { h4 = { value = 0, grade = "established" }, h8 = { value = 1, grade = "established" }, h12 = { value = 2, grade = "established" }, h32 = { value = 3, grade = "established" } }
+
+[enums.sfactor]
+doc = "Blend source factor, named as the headers name them (zero, one, destination colour, its complement, source alpha, its complement). Values 6 and 7 are not named."
+values = { zero = { value = 0, grade = "established" }, one = { value = 1, grade = "established" }, dc = { value = 2, grade = "established" }, mdc = { value = 3, grade = "established" }, sa = { value = 4, grade = "established" }, msa = { value = 5, grade = "established" } }
+
+[enums.dfactor]
+doc = "Blend destination factor (zero, one, source colour, its complement, source alpha, its complement). Values 6 and 7 are not named."
+values = { zero = { value = 0, grade = "established" }, one = { value = 1, grade = "established" }, sc = { value = 2, grade = "established" }, msc = { value = 3, grade = "established" }, sa = { value = 4, grade = "established" }, msa = { value = 5, grade = "established" } }
+
+[enums.logicop]
+doc = "Logic operation applied between the new and the old pixel, in the order and with the names both headers give. The value names which operation; value 3, replace, is what NetBSD's console fill and glyph code use. The operand roles follow the names and are inferred."
+values = { zero = { value = 0, grade = "established" }, and = { value = 1, grade = "established" }, andr = { value = 2, grade = "established" }, src = { value = 3, grade = "established" }, andi = { value = 4, grade = "established" }, dst = { value = 5, grade = "established" }, xor = { value = 6, grade = "established" }, or = { value = 7, grade = "established" }, nor = { value = 8, grade = "established" }, xnor = { value = 9, grade = "established" }, ndst = { value = 10, grade = "established" }, orr = { value = 11, grade = "established" }, nsrc = { value = 12, grade = "established" }, ori = { value = 13, grade = "established" }, nand = { value = 14, grade = "established" }, one = { value = 15, grade = "established" } }
+
+[enums.opcode]
+doc = "Primitive opcode, as both headers name it."
+values = { noop = { value = 0, grade = "established" }, read = { value = 1, grade = "established" }, draw = { value = 2, grade = "established" }, scr2scr = { value = 3, grade = "established" } }
+
+[enums.adrmode]
+doc = "Addressing mode. NetBSD defines span to aline; Linux also names the last two, which no second source confirms."
+values = { span = { value = 0, grade = "established" }, block = { value = 1, grade = "established" }, iline = { value = 2, grade = "established" }, fline = { value = 3, grade = "established" }, aline = { value = 4, grade = "established" }, tline = { value = 5, grade = "inferred" }, bline = { value = 6, grade = "inferred" } }
+
+[enums.dcbwidth]
+doc = "Number of bytes of a DCBDATA word that go over the display bus, as Linux's W4, W1, W2 and W3 name the values 0 to 3 (devices/rex3/byte-lanes.md)."
+values = { w4 = { value = 0, grade = "established" }, w1 = { value = 1, grade = "established" }, w2 = { value = 2, grade = "established" }, w3 = { value = 3, grade = "established" } }
+
+[enums.dcbaddr]
+doc = "Display-bus slave address. Values 0 to 9 are in both headers (NetBSD names 7 the DAC, Linux Bt445). Values 10, 11 and 15 are in Linux alone, where they select the LG3 board-version and clock chips and a reserved slot."
+values = { vc2 = { value = 0, grade = "established" }, cmap_all = { value = 1, grade = "established" }, cmap0 = { value = 2, grade = "established" }, cmap1 = { value = 3, grade = "established" }, xmap_all = { value = 4, grade = "established" }, xmap0 = { value = 5, grade = "established" }, xmap1 = { value = 6, grade = "established" }, ramdac = { value = 7, grade = "established" }, video_cc1 = { value = 8, grade = "established" }, video_ab1 = { value = 9, grade = "established" }, lg3_bdvers0 = { value = 10, grade = "inferred" }, ics1562 = { value = 11, grade = "inferred" }, reserved = { value = 15, grade = "inferred" } }
+
+[registers.drawmode1]
+offset = 0x000
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1"
+doc = "Draw mode word 1: the plane group and depth a draw writes, the host-port packing (RWPACKED, HOSTDEPTH, RWDOUBLE, SWAPENDIAN, written up in devices/rex3/host-pixels.md), the compare, dither, blend and logic-operation state. Every bit and value here is named at the same position in both headers (two value names differ, noted on the enums); what a bit does is graded per field, and only the host-port fields have a reading beyond the name."
+
+[registers.drawmode1.fields]
+planes = { bits = [2, 0], grade = "established", enum = "planes" }
+drawdepth = { bits = [4, 3], grade = "established", enum = "depth" }
+dblsrc = { bits = [5, 5], grade = "established", doc = "Named DSRC by Linux and DBLSRC by NetBSD." }
+yflip = { bits = [6, 6], grade = "inferred", doc = "Named in both headers; no reading of its effect." }
+rwpacked = { bits = [7, 7], grade = "established" }
+hostdepth = { bits = [9, 8], grade = "established", enum = "hostdepth" }
+rwdouble = { bits = [10, 10], grade = "established" }
+swapendian = { bits = [11, 11], grade = "established" }
+compare_lt = { bits = [12, 12], grade = "established", doc = "Compare enables LT, EQ and GT, one bit each. NetBSD sets all three in every draw it issues." }
+compare_eq = { bits = [13, 13], grade = "established" }
+compare_gt = { bits = [14, 14], grade = "established" }
+rgbmode = { bits = [15, 15], grade = "established" }
+dither = { bits = [16, 16], grade = "established", doc = "Dither enable." }
+fastclear = { bits = [17, 17], grade = "established", doc = "Fast clear. NetBSD's rectangle fill sets it and loads COLORVRAM with the colour." }
+blend = { bits = [18, 18], grade = "established", doc = "Blend enable." }
+sfactor = { bits = [21, 19], grade = "established", enum = "sfactor" }
+dfactor = { bits = [24, 22], grade = "established", enum = "dfactor" }
+backblend = { bits = [25, 25], grade = "established", doc = "Back blend enable." }
+prefetch = { bits = [26, 26], grade = "established", doc = "Read-ahead for programmed-I/O pixel reads, see devices/rex3/host-pixels.md." }
+blendalpha = { bits = [27, 27], grade = "established", doc = "Alpha blend." }
+logicop = { bits = [31, 28], grade = "established", enum = "logicop" }
+
+[registers.drawmode0]
+offset = 0x004
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE0"
+doc = "Draw mode word 0, the command register: the opcode, the addressing mode and the per-primitive option bits. NetBSD's console code draws with opcode draw in block mode and copies with scr2scr; the host-pixel paths are in devices/rex3/host-pixels.md. Bit positions and names are the same in both headers, except that only Linux names addressing modes 5 and 6. What each option bit does is not read beyond its name, except where the field says otherwise."
+
+[registers.drawmode0.fields]
+opcode = { bits = [1, 0], grade = "established", enum = "opcode" }
+adrmode = { bits = [4, 2], grade = "established", enum = "adrmode" }
+dosetup = { bits = [5, 5], grade = "established" }
+colorhost = { bits = [6, 6], grade = "established", doc = "Take colour from the host port instead of the shading hardware; a host pixel write sets it (devices/rex3/host-pixels.md)." }
+alphahost = { bits = [7, 7], grade = "established", doc = "As COLORHOST, for alpha." }
+stoponx = { bits = [8, 8], grade = "established" }
+stopony = { bits = [9, 9], grade = "established" }
+skipfirst = { bits = [10, 10], grade = "established" }
+skiplast = { bits = [11, 11], grade = "established" }
+enzpattern = { bits = [12, 12], grade = "established", doc = "Use ZPATTERN as a per-pixel enable; NetBSD's glyph drawing sets it and writes the pattern at its GO alias." }
+enlspattern = { bits = [13, 13], grade = "established", doc = "Use the line stipple (LSMODE and LSPATTERN)." }
+lsadvlast = { bits = [14, 14], grade = "established" }
+length32 = { bits = [15, 15], grade = "established" }
+zpopaque = { bits = [16, 16], grade = "inferred", doc = "NetBSD's glyph drawing sets it together with COLORBACK; read as pattern zeros painting COLORBACK instead of leaving the pixel (inferred)." }
+lsopaque = { bits = [17, 17], grade = "inferred", doc = "As ZPOPAQUE for the line stipple; named only." }
+shade = { bits = [18, 18], grade = "established" }
+lronly = { bits = [19, 19], grade = "established" }
+xyoffset = { bits = [20, 20], grade = "established" }
+ciclamp = { bits = [21, 21], grade = "established" }
+endptfilter = { bits = [22, 22], grade = "established" }
+ystride = { bits = [23, 23], grade = "established" }
+
+[registers.lsmode]
+offset = 0x008
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_LSMODE"
+doc = "Line-stipple mode word. Its field layout is in neither header, so none is given here."
+
+[registers.lspattern]
+offset = 0x00c
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_LSPATTERN"
+doc = "Line-stipple pattern word."
+
+[registers.lspatsave]
+offset = 0x010
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_LSPATSAVE"
+doc = "Backup copy of the stipple pattern, named save by Linux's comment (a backup of the pattern)."
+
+[registers.zpattern]
+offset = 0x014
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_ZPATTERN"
+doc = "Per-pixel pattern word; NetBSD's glyph path writes it at the GO alias once per row, with the row's glyph bits."
+
+[registers.colorback]
+offset = 0x018
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_COLORBACK"
+doc = "Background colour. NetBSD stores the glyph background colour index here."
+
+[registers.colorvram]
+offset = 0x01c
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_COLORVRAM"
+doc = "Clear colour for the fast VRAM clear (Linux comment); NetBSD's rectangle fill writes the colour here with FASTCLEAR set."
+
+[registers.alpharef]
+offset = 0x020
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_ALPHAREF"
+doc = "Reference alpha value for the alpha-function compare (Linux comment)."
+
+[registers.stall0]
+offset = 0x024
+access = "rw"
+width = 32
+grade = "inferred"
+from = "NetBSD sgimips Newport register header REX3_REG_STALL0; Linux Newport framebuffer header leaves the word undeclared"
+doc = "NetBSD names this word a stall register and its comment says a write waits until the engine is idle. Linux declares only a pad here. Role inferred from NetBSD's name and comment; neither driver writes it."
+
+[registers.smask0x]
+offset = 0x028
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK0X"
+doc = "Screen mask 0, x extent: a minimum and a maximum packed in one word (NetBSD's comment says min and max, 16.16). Which half is which is not read."
+
+[registers.smask0y]
+offset = 0x02c
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK0Y"
+doc = "Screen mask 0, y extent, packed as SMASK0X."
+
+[registers.setup]
+offset = 0x030
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SETUP"
+doc = "Setup trigger. Both headers declare it; neither drives it in the console paths read. Linux names it with a leading underscore."
+
+[registers.stepz]
+offset = 0x034
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member _stepz"
+doc = "Linux declares a word here named stepz. Single source; role unknown beyond the name."
+
+[registers.lsrestore]
+offset = 0x038
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member _lsrestore"
+doc = "Linux declares it, next to LSPATSAVE; the name reads as restoring the stipple state. Single source; role inferred from the name only."
+
+[registers.lssave]
+offset = 0x03c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member _lssave"
+doc = "Linux declares it next to LSRESTORE; the name reads as saving the stipple state. Single source; role inferred from the name only."
+
+[registers.xstart]
+offset = 0x100
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_XSTART, member _xstart; NetBSD sgimips Newport driver board probe"
+doc = "Current x start of the primitive, integer and fraction combined. NetBSD's board probe writes 0x12345678 to XSTARTI and expects this register to read the low 16 bits of that shifted left by PROBE_XSTART_SHIFT. A qtest can discriminate: write 0x12345678 to XSTARTI and expect 0x02b3c000 from XSTART."
+
+[registers.ystart]
+offset = 0x104
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member _ystart"
+doc = "Current y start, counterpart of XSTART. Single source (the name pairs it with XSTART)."
+
+[registers.xend]
+offset = 0x108
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member _xend"
+doc = "Current x end point. Single source."
+
+[registers.yend]
+offset = 0x10c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member _yend"
+doc = "Current y end point. Single source."
+
+[registers.xsave]
+offset = 0x110
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member xsave"
+doc = "Copy of the integer x start for block addressing, from the Linux comment (a copy of xstart for block mode). Single source."
+
+[registers.xymove]
+offset = 0x114
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_XYMOVE"
+doc = "Signed x and y offset applied for relative operations such as a screen copy (Linux comment: an offset from xstart, ystart). NetBSD packs x in bits 31:16 and y in bits 15:0 and, for a copy, stores the destination minus the source."
+
+[registers.xymove.fields]
+x = { bits = [31, 16], grade = "established", doc = "Packed x offset (NetBSD REX3_XYMOVE_XSHIFT is 16)." }
+y = { bits = [15, 0], grade = "inferred", doc = "Y half, inferred as the low half of the packed word." }
+
+[registers.bresd]
+offset = 0x118
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member bresd"
+doc = "Bresenham line decision term (name only). Single source."
+
+[registers.bress1]
+offset = 0x11c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member bress1"
+doc = "Bresenham line term S1 (name only). Single source."
+
+[registers.bresoctinc1]
+offset = 0x120
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member bresoctinc1; the offset also matches the host-pixel reading in devices/rex3/host-pixels.md"
+doc = "Bresenham octant and first increment. The host-pixel image put clears it before storing pixel words (devices/rex3/host-pixels.md)."
+
+[registers.bresrndinc2]
+offset = 0x124
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member bresrndinc2"
+doc = "Bresenham rounding mode and second increment (name only). Single source."
+
+[registers.brese1]
+offset = 0x128
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member brese1"
+doc = "Bresenham error term E1 (name only). Single source."
+
+[registers.bress2]
+offset = 0x12c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member bress2"
+doc = "Bresenham term S2 (name only). Single source."
+
+[registers.aweight0]
+offset = 0x130
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member aweight0"
+doc = "Anti-aliased line weight table entry (name only). Single source."
+
+[registers.aweight1]
+offset = 0x134
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member aweight1"
+doc = "Anti-aliased line weight table entry (name only). Single source."
+
+[registers.xstartf]
+offset = 0x138
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member xstartf"
+doc = "Start x as a float-format value (Linux types it as a float or word union). Single source."
+
+[registers.ystartf]
+offset = 0x13c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member ystartf"
+doc = "Start y, same layout as XSTARTF. Single source."
+
+[registers.xendf]
+offset = 0x140
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member xendf"
+doc = "End x, same layout as XSTARTF. Single source."
+
+[registers.yendf]
+offset = 0x144
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member yendf"
+doc = "End y, same layout as XSTARTF. Single source."
+
+[registers.xstarti]
+offset = 0x148
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_XSTARTI; NetBSD sgimips Newport driver board probe"
+doc = "Start x as an integer. NetBSD's board probe writes 0x12345678 here and reads XSTART; see that register."
+
+[registers.xendf1]
+offset = 0x14c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member xendf1"
+doc = "A second end-x word Linux declares (named xendf1). Single source; MAME's model reads this offset as a copy of the XENDF word, which is a model, not evidence."
+
+[registers.xystarti]
+offset = 0x150
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_XYSTARTI"
+doc = "Start x and y as one packed integer word: x in bits 31:16, y in bits 15:0 (NetBSD packs x << 16 | y; devices/rex3/host-pixels.md records the image put writing it this way)."
+
+[registers.xystarti.fields]
+x = { bits = [31, 16], grade = "established" }
+y = { bits = [15, 0], grade = "established" }
+
+[registers.xyendi]
+offset = 0x154
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_XYENDI"
+doc = "End x and y as one packed integer word, packed as XYSTARTI."
+
+[registers.xyendi.fields]
+x = { bits = [31, 16], grade = "established" }
+y = { bits = [15, 0], grade = "established" }
+
+[registers.xstartendi]
+offset = 0x158
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member xstartendi"
+doc = "Start and end x as integers in one word (name only). Single source."
+
+[registers.colorred]
+offset = 0x200
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member colorred"
+doc = "Red (or colour-index) colour, full state. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.coloralpha]
+offset = 0x204
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member coloralpha"
+doc = "Alpha colour, full state. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.colorgrn]
+offset = 0x208
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member colorgrn"
+doc = "Green colour, full state. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.colorblue]
+offset = 0x20c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member colorblue"
+doc = "Blue colour, full state. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.slopered]
+offset = 0x210
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member slopered"
+doc = "Red (or colour-index) slope per pixel. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.slopealpha]
+offset = 0x214
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member slopealpha"
+doc = "Alpha slope per pixel. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.slopegrn]
+offset = 0x218
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member slopegrn"
+doc = "Green slope per pixel. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.slopeblue]
+offset = 0x21c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member slopeblue"
+doc = "Blue slope per pixel. Named and placed by Linux alone, whose comment calls the group iterators with full state for a context switch. Single source; the shading arithmetic is not read."
+
+[registers.wrmask]
+offset = 0x220
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_WRMASK"
+doc = "Plane write mask. NetBSD stores 0xffffffff for a fill and 0xff when drawing 8-bit glyphs."
+
+[registers.colori]
+offset = 0x224
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_COLORI"
+doc = "Packed integer colour. NetBSD stores the glyph foreground colour index here."
+
+[registers.colorx]
+offset = 0x228
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member colorx"
+doc = "Linux declares a colour word here named colorx. Single source; role unknown beyond the name."
+
+[registers.slopered1]
+offset = 0x22c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member slopered1"
+doc = "Linux declares a second red slope word here. Single source; role unknown beyond the name."
+
+[registers.hostrw0]
+offset = 0x230
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_HOSTRW0"
+doc = "Host data port, most significant word (devices/rex3/host-pixels.md for the packing at each depth and the GO alias used for pixel stores)."
+
+[registers.hostrw1]
+offset = 0x234
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_HOSTRW1"
+doc = "Host data port, least significant word; used only for 64-bit transfers (devices/rex3/host-pixels.md)."
+
+[registers.dcbmode]
+offset = 0x238
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DCBMODE"
+doc = "Display control bus mode: the data width, the slave address and register select, the acknowledge type and the chip-select timing for the next DCBDATA transfer. The two headers define the same bit positions and names. devices/rex3/byte-lanes.md records how the data bytes travel."
+
+[registers.dcbmode.fields]
+datawidth = { bits = [1, 0], grade = "established", enum = "dcbwidth" }
+endatapack = { bits = [2, 2], grade = "established", doc = "Send all four bytes of the DCBDATA word instead of DATAWIDTH of them (Linux comment)." }
+encrsinc = { bits = [3, 3], grade = "established", doc = "Increment the control-register select after each display-bus transfer (Linux comment)." }
+dcbcrs = { bits = [6, 4], grade = "established", doc = "Control register select within the slave chip; the meaning depends on the slave addressed, see the per-chip pages." }
+dcbaddr = { bits = [10, 7], grade = "established", enum = "dcbaddr" }
+ensyncack = { bits = [11, 11], grade = "established" }
+enasyncack = { bits = [12, 12], grade = "established" }
+cswidth = { bits = [17, 13], grade = "established", doc = "Chip-select pulse width in display-bus clocks, packed as the Linux DCB_CYCLES macro does." }
+cshold = { bits = [22, 18], grade = "established", doc = "Chip-select hold time." }
+cssetup = { bits = [27, 23], grade = "established", doc = "Chip-select setup time." }
+swapendian = { bits = [28, 28], grade = "established", doc = "Byte-order reversal of packed display-bus data (devices/rex3/byte-lanes.md)." }
+
+[[registers.dcbmode.tests]]
+value = 0x0084100b
+expect = { datawidth = 3, encrsinc = 1, dcbcrs = 0, dcbaddr = 0, enasyncack = 1, cshold = 1, cssetup = 1 }
+
+[registers.dcbdata0]
+offset = 0x240
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DCBDATA0"
+doc = "Display bus data, most significant word. Linux accesses it as a word, as halfword 1 at +2 and as byte 3 at +3 depending on DATAWIDTH; NetBSD packs the first byte in bits 31:24 (devices/rex3/byte-lanes.md)."
+
+[registers.dcbdata1]
+offset = 0x244
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DCBDATA1"
+doc = "Display bus data, least significant word."
+
+[registers.smask1x]
+offset = 0x1300
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK1X"
+doc = "Screen mask 1 x extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.smask1y]
+offset = 0x1304
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK1Y"
+doc = "Screen mask 1 y extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.smask2x]
+offset = 0x1308
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK2X"
+doc = "Screen mask 2 x extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.smask2y]
+offset = 0x130c
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK2Y"
+doc = "Screen mask 2 y extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.smask3x]
+offset = 0x1310
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK3X"
+doc = "Screen mask 3 x extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.smask3y]
+offset = 0x1314
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK3Y"
+doc = "Screen mask 3 y extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.smask4x]
+offset = 0x1318
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK4X"
+doc = "Screen mask 4 x extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.smask4y]
+offset = 0x131c
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_SMASK4Y"
+doc = "Screen mask 4 y extent, a minimum and a maximum packed in one word (NetBSD's comment: min and max, 16.16). Enabled through CLIPMODE."
+
+[registers.topscan]
+offset = 0x1320
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_TOPSCAN; NetBSD sgimips Newport driver writes 0x3ff"
+doc = "Top-of-screen scanline. NetBSD's console init stores 0x3ff here with a comment that it does not know why; the meaning is read from the name only."
+
+[registers.xywin]
+offset = 0x1324
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_XYWIN; NetBSD sgimips Newport driver writes (4096 << 16) | 4096"
+doc = "Window origin offset, x in bits 31:16 and y in bits 15:0 (inferred from NetBSD's console init, which stores 4096 in both halves). Linux declares it unnamed in role."
+
+[registers.xywin.fields]
+x = { bits = [31, 16], grade = "inferred" }
+y = { bits = [15, 0], grade = "inferred" }
+
+[registers.clipmode]
+offset = 0x1328
+access = "rw"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_CLIPMODE, REX3_CLIPMODE_*; Linux NPORT_CMODE_*"
+doc = "Clipping mode: one enable per screen mask (0 to 4) in bits 4:0 and four window-id match enables in bits 12:9. NetBSD stores a value at init that sets exactly the four match enables. Bits 8:5 are unnamed in both headers."
+
+[registers.clipmode.fields]
+smask0 = { bits = [0, 0], grade = "established" }
+smask1 = { bits = [1, 1], grade = "established" }
+smask2 = { bits = [2, 2], grade = "established" }
+smask3 = { bits = [3, 3], grade = "established" }
+smask4 = { bits = [4, 4], grade = "established" }
+cidmatch0 = { bits = [9, 9], grade = "established" }
+cidmatch1 = { bits = [10, 10], grade = "established" }
+cidmatch2 = { bits = [11, 11], grade = "established" }
+cidmatch3 = { bits = [12, 12], grade = "established" }
+
+[[registers.clipmode.tests]]
+value = 0x00001e00
+expect = { cidmatch0 = 1, cidmatch1 = 1, cidmatch2 = 1, cidmatch3 = 1, smask0 = 0 }
+
+[registers.stall1]
+offset = 0x132c
+access = "rw"
+width = 32
+grade = "inferred"
+from = "NetBSD sgimips Newport register header REX3_REG_STALL1; Linux Newport framebuffer header leaves the word undeclared"
+doc = "NetBSD names this word a stall register, matching STALL0. Role inferred from the name; neither driver writes it."
+
+[registers.config]
+offset = 0x1330
+access = "rw"
+width = 32
+grade = "inferred"
+from = "NetBSD sgimips Newport register header REX3_REG_CONFIG (name and offset); Linux Newport framebuffer header struct newport_cregs and NPORT_CFG_* (bit layout)"
+doc = "Configuration register. NetBSD names the offset; the bit groups are Linux's alone, and no reading of any of them exists, so every field is inferred as a position only and its role is unknown. The register grade is inferred for the same reason."
+
+[registers.config.fields]
+g32md = { bits = [0, 0], grade = "inferred" }
+bwidth = { bits = [1, 1], grade = "inferred" }
+ercvr = { bits = [2, 2], grade = "inferred" }
+bd = { bits = [6, 3], grade = "inferred" }
+bfaint = { bits = [7, 7], grade = "inferred" }
+gd = { bits = [12, 8], grade = "inferred", doc = "Linux names GD0 to GD4 for bits 8 to 12 but its group mask GDMSK also covers bit 7; the five named bits are taken here." }
+gfaint = { bits = [13, 13], grade = "inferred" }
+to = { bits = [16, 14], grade = "inferred" }
+vr = { bits = [19, 17], grade = "inferred" }
+fbtyp = { bits = [20, 20], grade = "inferred" }
+
+[registers.status]
+offset = 0x1338
+access = "r"
+width = 32
+grade = "established"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_STATUS, REX3_STATUS_*; Linux NPORT_STAT_*"
+doc = "Status. Drivers only read it, polling the busy bits and the FIFO levels before sending more work. NetBSD and Linux agree on the busy bits and on the graphics FIFO level mask; they differ by one bit on the back-end FIFO level."
+
+[registers.status.fields]
+vers = { bits = [2, 0], grade = "established", doc = "Three bits named VERS by Linux; read as a revision number (inferred from the name)." }
+gbusy = { bits = [3, 3], grade = "established", doc = "Graphics engine busy; NetBSD's wait loop polls it." }
+bbusy = { bits = [4, 4], grade = "established", doc = "Back-end (display bus) busy; both drivers poll it before display-bus transfers, and devices/vc2/README.md records the kernel doing the same." }
+vrint = { bits = [5, 5], grade = "inferred", doc = "Vertical retrace interrupt flag (Linux names it VRINT)." }
+vidint = { bits = [6, 6], grade = "inferred", doc = "Video interrupt flag (Linux names it VIDINT)." }
+glevel = { bits = [12, 7], grade = "established", doc = "Graphics FIFO level, six bits; NetBSD's wait for an empty FIFO tests it." }
+blevel = { bits = [17, 13], grade = "inferred", doc = "Back-end FIFO level. NetBSD's mask covers bits 17:13; Linux's covers 18:13, so bit 18 is left out here and its owner is unknown." }
+bfirq = { bits = [19, 19], grade = "inferred", doc = "Linux names it BFIRQ; no reading." }
+gfirq = { bits = [20, 20], grade = "inferred", doc = "Linux names it GFIRQ; no reading." }
+
+[registers.ustatus]
+offset = 0x133c
+access = "r"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member ustatus"
+doc = "Linux declares a second status word here. Single source; no reading of its bits. MAME's model returns the status word for it, which is a model, not evidence."
+
+[registers.dcbreset]
+offset = 0x1340
+access = "rw"
+width = 32
+grade = "inferred"
+from = "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs; offset from the declared layout, checked with offsetof), member dcbreset"
+doc = "Linux declares a display-bus reset word here. Single source; no driver writes it. Role inferred from the name only."
+
