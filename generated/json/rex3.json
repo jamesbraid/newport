@@ -1,7 +1,7 @@
 {
  "license": "BSD-3-Clause",
  "generator": "defs-gen 5",
- "input_sha256": "ee5e5491333c9e9d96a9a57592a7f3eddc481a4336dd6192b5e160e71e5f7324",
+ "input_sha256": "7ba54c6ee573d96e32054fc5d3a0227ba4f16cf9fe67a4c195d8202f1ea7dea4",
  "schema": "defs-flat/1",
  "source": "devices/rex3/registers.toml",
  "profile": "public",
@@ -163,7 +163,7 @@
    "name": "drawmode1.blendalpha",
    "hi": 27,
    "lo": 27,
-   "grade": "established",
+   "grade": "inferred",
    "from": "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1"
   },
   {
@@ -181,7 +181,7 @@
    "name": "drawmode1.backblend",
    "hi": 25,
    "lo": 25,
-   "grade": "established",
+   "grade": "inferred",
    "from": "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1"
   },
   {
@@ -304,7 +304,7 @@
    "name": "drawmode1.blend",
    "hi": 18,
    "lo": 18,
-   "grade": "established",
+   "grade": "inferred",
    "from": "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1"
   },
   {
@@ -322,7 +322,7 @@
    "name": "drawmode1.dither",
    "hi": 16,
    "lo": 16,
-   "grade": "established",
+   "grade": "inferred",
    "from": "Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1"
   },
   {

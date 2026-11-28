@@ -1,7 +1,7 @@
 """generated from devices/rex3/registers.toml by defs-gen - do not edit, change the source
 SPDX-License-Identifier: BSD-3-Clause
 defs-gen 5
-input sha256 ee5e5491333c9e9d96a9a57592a7f3eddc481a4336dd6192b5e160e71e5f7324
+input sha256 7ba54c6ee573d96e32054fc5d3a0227ba4f16cf9fe67a4c195d8202f1ea7dea4
 REX3 raster engine (Indy and Indigo2 graphics)"""
 
 UNIT = 'rex3'

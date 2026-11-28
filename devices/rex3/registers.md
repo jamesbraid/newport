@@ -1,7 +1,7 @@
 <!-- generated from devices/rex3/registers.toml by defs-gen - do not edit, change the source -->
 <!-- SPDX-License-Identifier: BSD-3-Clause -->
 <!-- defs-gen 5 -->
-<!-- input sha256 ee5e5491333c9e9d96a9a57592a7f3eddc481a4336dd6192b5e160e71e5f7324 -->
+<!-- input sha256 7ba54c6ee573d96e32054fc5d3a0227ba4f16cf9fe67a4c195d8202f1ea7dea4 -->
 
 # REX3 raster engine (Indy and Indigo2 graphics)
 
@@ -96,14 +96,14 @@ Draw mode word 1: the plane group and depth a draw writes, the host-port packing
 | Bits | Field | Grade | Values | Source | Description |
 |---|---|---|---|---|---|
 | 31:28 | `logicop` | established | logicop (zero=0, and=1, andr=2, src=3, andi=4, dst=5, xor=6, or=7, nor=8, xnor=9, ndst=10, orr=11, nsrc=12, ori=13, nand=14, one=15) | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 |  |
-| 27 | `blendalpha` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Alpha blend. |
+| 27 | `blendalpha` | inferred |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Alpha blend. |
 | 26 | `prefetch` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Read-ahead for programmed-I/O pixel reads, see devices/rex3/host-pixels.md. |
-| 25 | `backblend` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Back blend enable. |
+| 25 | `backblend` | inferred |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Back blend enable. |
 | 24:22 | `dfactor` | established | dfactor (zero=0, one=1, sc=2, msc=3, sa=4, msa=5) | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 |  |
 | 21:19 | `sfactor` | established | sfactor (zero=0, one=1, dc=2, mdc=3, sa=4, msa=5) | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 |  |
-| 18 | `blend` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Blend enable. |
+| 18 | `blend` | inferred |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Blend enable. |
 | 17 | `fastclear` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Fast clear. NetBSD's rectangle fill sets it and loads COLORVRAM with the colour. |
-| 16 | `dither` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Dither enable. |
+| 16 | `dither` | inferred |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 | Dither enable. |
 | 15 | `rgbmode` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 |  |
 | 14 | `compare_gt` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 |  |
 | 13 | `compare_eq` | established |  | Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1 |  |

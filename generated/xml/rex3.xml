@@ -2,7 +2,7 @@
 <!-- generated from devices/rex3/registers.toml by defs-gen - do not edit, change the source -->
 <!-- SPDX-License-Identifier: BSD-3-Clause -->
 <!-- defs-gen 5 -->
-<!-- input sha256 ee5e5491333c9e9d96a9a57592a7f3eddc481a4336dd6192b5e160e71e5f7324 -->
+<!-- input sha256 7ba54c6ee573d96e32054fc5d3a0227ba4f16cf9fe67a4c195d8202f1ea7dea4 -->
 <genxml unit="rex3" prefix="REX3" title="REX3 raster engine (Indy and Indigo2 graphics)" from="Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header">
   <doc>Register file of the REX3 chip. Offsets are bytes from the REX3 base, which is 0xf0000 from the board base the public drivers map. Every register is 32 bits wide. The draw registers can be written at their own offset (the value is stored) or at the same offset plus GO_OFFSET (the value is stored and the primitive the latched draw mode describes is started); the configuration registers further up the map have the same pair, the same distance apart. Names and offsets are the ones the public Linux and NetBSD Newport headers declare, which agree where both define a register. Where only Linux declares a register the grade is inferred and the entry says so, unless a reading already in this repository confirms the offset. The drivers show what software writes and expects, not what the chip does with it: a role given from a name alone is marked inferred in the entry. Reset values are not given: no source states one. Nothing was measured on a board.</doc>
   <enum name="adrmode">
@@ -98,14 +98,14 @@
   <struct name="DRAWMODE1" size="4" grade="established" from="Linux Newport framebuffer header (struct newport_rexregs or newport_cregs) and NetBSD sgimips Newport register header REX3_REG_DRAWMODE1" register="yes" offset="0x0" access="rw" reset="unknown">
     <doc>Draw mode word 1: the plane group and depth a draw writes, the host-port packing (RWPACKED, HOSTDEPTH, RWDOUBLE, SWAPENDIAN, written up in devices/rex3/host-pixels.md), the compare, dither, blend and logic-operation state. Every bit and value here is named at the same position in both headers (two value names differ, noted on the enums); what a bit does is graded per field, and only the host-port fields have a reading beyond the name.</doc>
     <field name="logicop" start="28" size="4" type="logicop" grade="established"/>
-    <field name="blendalpha" start="27" size="1" type="uint" grade="established"/>
+    <field name="blendalpha" start="27" size="1" type="uint" grade="inferred"/>
     <field name="prefetch" start="26" size="1" type="uint" grade="established"/>
-    <field name="backblend" start="25" size="1" type="uint" grade="established"/>
+    <field name="backblend" start="25" size="1" type="uint" grade="inferred"/>
     <field name="dfactor" start="22" size="3" type="dfactor" grade="established"/>
     <field name="sfactor" start="19" size="3" type="sfactor" grade="established"/>
-    <field name="blend" start="18" size="1" type="uint" grade="established"/>
+    <field name="blend" start="18" size="1" type="uint" grade="inferred"/>
     <field name="fastclear" start="17" size="1" type="uint" grade="established"/>
-    <field name="dither" start="16" size="1" type="uint" grade="established"/>
+    <field name="dither" start="16" size="1" type="uint" grade="inferred"/>
     <field name="rgbmode" start="15" size="1" type="uint" grade="established"/>
     <field name="compare_gt" start="14" size="1" type="uint" grade="established"/>
     <field name="compare_eq" start="13" size="1" type="uint" grade="established"/>

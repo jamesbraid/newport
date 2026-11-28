@@ -1,7 +1,7 @@
 // @generated from devices/rex3/registers.toml by defs-gen - do not edit, change the source
 // SPDX-License-Identifier: BSD-3-Clause
 // defs-gen 5
-// input sha256 ee5e5491333c9e9d96a9a57592a7f3eddc481a4336dd6192b5e160e71e5f7324
+// input sha256 7ba54c6ee573d96e32054fc5d3a0227ba4f16cf9fe67a4c195d8202f1ea7dea4
 // REX3 raster engine (Indy and Indigo2 graphics)
 #![allow(dead_code)]
 #![allow(clippy::doc_markdown)]
@@ -486,7 +486,7 @@ pub mod drawmode1 {
         #[allow(unused_imports)]
         pub use super::super::enums::logicop::Value;
     }
-    pub mod blendalpha { // bits 27:27, established
+    pub mod blendalpha { // bits 27:27, inferred
         pub const SHIFT: u32 = 27;
         pub const MASK: u32 = 0x1;
         pub const fn get(v: u32) -> u32 {
@@ -506,7 +506,7 @@ pub mod drawmode1 {
             (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
         }
     }
-    pub mod backblend { // bits 25:25, established
+    pub mod backblend { // bits 25:25, inferred
         pub const SHIFT: u32 = 25;
         pub const MASK: u32 = 0x1;
         pub const fn get(v: u32) -> u32 {
@@ -540,7 +540,7 @@ pub mod drawmode1 {
         #[allow(unused_imports)]
         pub use super::super::enums::sfactor::Value;
     }
-    pub mod blend { // bits 18:18, established
+    pub mod blend { // bits 18:18, inferred
         pub const SHIFT: u32 = 18;
         pub const MASK: u32 = 0x1;
         pub const fn get(v: u32) -> u32 {
@@ -560,7 +560,7 @@ pub mod drawmode1 {
             (v & !(MASK << SHIFT)) | ((x & MASK) << SHIFT)
         }
     }
-    pub mod dither { // bits 16:16, established
+    pub mod dither { // bits 16:16, inferred
         pub const SHIFT: u32 = 16;
         pub const MASK: u32 = 0x1;
         pub const fn get(v: u32) -> u32 {

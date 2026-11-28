@@ -1,7 +1,7 @@
 # generated from devices/ and formats/ by defs-gen - do not edit, change the source
 # SPDX-License-Identifier: BSD-3-Clause
 # defs-gen 5
-# input sha256 0ecfedbd82a61ae0a4261ed50c46a0a756aa926a7a12ae296dee56e9bcdc200c
+# input sha256 bf44f2913dbb95ea004e07aead5aebb5b679d72d619dde33dc0bad5659e396f3
 [package]
 name = "newport-defs"
 version = "0.1.0"

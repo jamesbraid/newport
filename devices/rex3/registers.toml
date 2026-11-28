@@ -73,14 +73,14 @@ compare_lt = { bits = [12, 12], grade = "established", doc = "Compare enables LT
 compare_eq = { bits = [13, 13], grade = "established" }
 compare_gt = { bits = [14, 14], grade = "established" }
 rgbmode = { bits = [15, 15], grade = "established" }
-dither = { bits = [16, 16], grade = "established", doc = "Dither enable." }
+dither = { bits = [16, 16], grade = "inferred", doc = "Dither enable." }
 fastclear = { bits = [17, 17], grade = "established", doc = "Fast clear. NetBSD's rectangle fill sets it and loads COLORVRAM with the colour." }
-blend = { bits = [18, 18], grade = "established", doc = "Blend enable." }
+blend = { bits = [18, 18], grade = "inferred", doc = "Blend enable." }
 sfactor = { bits = [21, 19], grade = "established", enum = "sfactor" }
 dfactor = { bits = [24, 22], grade = "established", enum = "dfactor" }
-backblend = { bits = [25, 25], grade = "established", doc = "Back blend enable." }
+backblend = { bits = [25, 25], grade = "inferred", doc = "Back blend enable." }
 prefetch = { bits = [26, 26], grade = "established", doc = "Read-ahead for programmed-I/O pixel reads, see devices/rex3/host-pixels.md." }
-blendalpha = { bits = [27, 27], grade = "established", doc = "Alpha blend." }
+blendalpha = { bits = [27, 27], grade = "inferred", doc = "Alpha blend." }
 logicop = { bits = [31, 28], grade = "established", enum = "logicop" }
 
 [registers.drawmode0]

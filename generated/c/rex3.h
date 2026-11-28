@@ -2,7 +2,7 @@
  * the source */
 /* SPDX-License-Identifier: BSD-3-Clause */
 /* defs-gen 5 */
-/* input sha256 ee5e5491333c9e9d96a9a57592a7f3eddc481a4336dd6192b5e160e71e5f7324 */
+/* input sha256 7ba54c6ee573d96e32054fc5d3a0227ba4f16cf9fe67a4c195d8202f1ea7dea4 */
 /* REX3 raster engine (Indy and Indigo2 graphics) */
 #ifndef REX3_GEN_H
 #define REX3_GEN_H
@@ -132,13 +132,13 @@
 #define REX3_DRAWMODE1_LOGICOP_SHIFT                 28 /* established */
 #define REX3_DRAWMODE1_LOGICOP_MASK                  0xfu
 #define REX3_DRAWMODE1_LOGICOP_INPLACE (REX3_DRAWMODE1_LOGICOP_MASK << REX3_DRAWMODE1_LOGICOP_SHIFT)
-#define REX3_DRAWMODE1_BLENDALPHA_SHIFT              27 /* established */
+#define REX3_DRAWMODE1_BLENDALPHA_SHIFT              27 /* inferred */
 #define REX3_DRAWMODE1_BLENDALPHA_MASK               0x1u
 #define REX3_DRAWMODE1_BLENDALPHA_INPLACE (REX3_DRAWMODE1_BLENDALPHA_MASK << REX3_DRAWMODE1_BLENDALPHA_SHIFT)
 #define REX3_DRAWMODE1_PREFETCH_SHIFT                26 /* established */
 #define REX3_DRAWMODE1_PREFETCH_MASK                 0x1u
 #define REX3_DRAWMODE1_PREFETCH_INPLACE (REX3_DRAWMODE1_PREFETCH_MASK << REX3_DRAWMODE1_PREFETCH_SHIFT)
-#define REX3_DRAWMODE1_BACKBLEND_SHIFT               25 /* established */
+#define REX3_DRAWMODE1_BACKBLEND_SHIFT               25 /* inferred */
 #define REX3_DRAWMODE1_BACKBLEND_MASK                0x1u
 #define REX3_DRAWMODE1_BACKBLEND_INPLACE (REX3_DRAWMODE1_BACKBLEND_MASK << REX3_DRAWMODE1_BACKBLEND_SHIFT)
 #define REX3_DRAWMODE1_DFACTOR_SHIFT                 22 /* established */
@@ -147,13 +147,13 @@
 #define REX3_DRAWMODE1_SFACTOR_SHIFT                 19 /* established */
 #define REX3_DRAWMODE1_SFACTOR_MASK                  0x7u
 #define REX3_DRAWMODE1_SFACTOR_INPLACE (REX3_DRAWMODE1_SFACTOR_MASK << REX3_DRAWMODE1_SFACTOR_SHIFT)
-#define REX3_DRAWMODE1_BLEND_SHIFT                   18 /* established */
+#define REX3_DRAWMODE1_BLEND_SHIFT                   18 /* inferred */
 #define REX3_DRAWMODE1_BLEND_MASK                    0x1u
 #define REX3_DRAWMODE1_BLEND_INPLACE (REX3_DRAWMODE1_BLEND_MASK << REX3_DRAWMODE1_BLEND_SHIFT)
 #define REX3_DRAWMODE1_FASTCLEAR_SHIFT               17 /* established */
 #define REX3_DRAWMODE1_FASTCLEAR_MASK                0x1u
 #define REX3_DRAWMODE1_FASTCLEAR_INPLACE (REX3_DRAWMODE1_FASTCLEAR_MASK << REX3_DRAWMODE1_FASTCLEAR_SHIFT)
-#define REX3_DRAWMODE1_DITHER_SHIFT                  16 /* established */
+#define REX3_DRAWMODE1_DITHER_SHIFT                  16 /* inferred */
 #define REX3_DRAWMODE1_DITHER_MASK                   0x1u
 #define REX3_DRAWMODE1_DITHER_INPLACE (REX3_DRAWMODE1_DITHER_MASK << REX3_DRAWMODE1_DITHER_SHIFT)
 #define REX3_DRAWMODE1_RGBMODE_SHIFT                 15 /* established */
