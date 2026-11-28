@@ -1,6 +1,9 @@
 [project]
 name = "newport"
 
+[gen]
+rust_crate = "newport-defs"
+
 [checks]
 address_bits = 20
 max_reg_offset = 0xfffff

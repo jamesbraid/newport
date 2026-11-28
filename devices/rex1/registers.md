@@ -1,5 +1,6 @@
 <!-- generated from devices/rex1/registers.toml by defs-gen - do not edit, change the source -->
-<!-- defs-gen 4 -->
+<!-- SPDX-License-Identifier: BSD-3-Clause -->
+<!-- defs-gen 5 -->
 <!-- input sha256 cc07f21273987514cc7a8b32f102e2ddfc4122dbb2cb86f6b88f415f2faf4b93 -->
 
 # REX1 raster engine on the Indigo Entry graphics board (LG1)
